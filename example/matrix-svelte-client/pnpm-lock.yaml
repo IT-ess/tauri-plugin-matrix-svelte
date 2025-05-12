@@ -14,6 +14,9 @@ importers:
       '@tauri-apps/plugin-opener':
         specifier: ^2.2.6
         version: 2.2.6
+      tauri-plugin-matrix-svelte-api:
+        specifier: file:../..
+        version: file:../..
     devDependencies:
       '@sveltejs/adapter-static':
         specifier: ^3.0.8
@@ -578,6 +581,9 @@ packages:
     resolution: {integrity: sha512-FbWBxgWOpQfhKvoGJv/TFwzqb4EhJbwCD17dB0tEpQiw1XyUEKZJtgm4nA4xq3LLsMo7hu5UY/BOFmroAxKTMg==}
     engines: {node: '>=18'}
 
+  tauri-plugin-matrix-svelte-api@file:../..:
+    resolution: {directory: ../.., type: directory}
+
   tinyglobby@0.2.13:
     resolution: {integrity: sha512-mEwzpUgrLySlveBwEVDMKk5B57bhLPYovRfPAXD5gA/98Opn0rCDj3GtLwFvCvH5RK9uPCExUROW5NjDwvqkxw==}
     engines: {node: '>=12.0.0'}
@@ -1072,6 +1078,10 @@ snapshots:
       locate-character: 3.0.0
       magic-string: 0.30.17
       zimmerframe: 1.1.2
+
+  tauri-plugin-matrix-svelte-api@file:../..:
+    dependencies:
+      '@tauri-apps/api': 2.5.0
 
   tinyglobby@0.2.13:
     dependencies:

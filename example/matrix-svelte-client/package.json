@@ -14,7 +14,8 @@
   "license": "MIT",
   "dependencies": {
     "@tauri-apps/api": "^2.5.0",
-    "@tauri-apps/plugin-opener": "^2.2.6"
+    "@tauri-apps/plugin-opener": "^2.2.6",
+    "tauri-plugin-matrix-svelte-api": "file:../.."
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.8",
