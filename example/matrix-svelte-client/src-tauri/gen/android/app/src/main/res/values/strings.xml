@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">matrix-svelte-client</string>
+    <string name="main_activity_title">matrix-svelte-client</string>
+</resources>
