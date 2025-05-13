@@ -14,6 +14,9 @@ importers:
       '@tauri-apps/plugin-opener':
         specifier: ^2.2.6
         version: 2.2.6
+      '@tauri-store/svelte':
+        specifier: ^2.3.0
+        version: 2.3.0
       tauri-plugin-matrix-svelte-api:
         specifier: file:../..
         version: file:../..
@@ -431,6 +434,12 @@ packages:
   '@tauri-apps/plugin-opener@2.2.6':
     resolution: {integrity: sha512-bSdkuP71ZQRepPOn8BOEdBKYJQvl6+jb160QtJX/i2H9BF6ZySY/kYljh76N2Ne5fJMQRge7rlKoStYQY5Jq1w==}
 
+  '@tauri-store/shared@0.7.4':
+    resolution: {integrity: sha512-egf2HwvuqOaPBuNT0OSVr6nCCKYt80gkHl9dDNS8PEo77UJmDQZcrJV73wRTRpGtnQeNyuKvhKaU6X3LABP0gg==}
+
+  '@tauri-store/svelte@2.3.0':
+    resolution: {integrity: sha512-fGnBn0WYvzt+7KGd4X8j+/bmSR4AWS66Ml0Z81cZE7taW+fudgC3k0kIFv2S8t4oFLUfPWCHGJrZb1JJohCxag==}
+
   '@types/cookie@0.6.0':
     resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==}
 
@@ -477,6 +486,9 @@ packages:
 
   devalue@5.1.1:
     resolution: {integrity: sha512-maua5KUiapvEwiEAe+XnlZ3Rh0GD+qI1J/nb9vrJc3muPXvcF/8gXYTWF76+5DAqHyDUtOIImEuo0YKE9mshVw==}
+
+  es-toolkit@1.37.2:
+    resolution: {integrity: sha512-ADDfk+pPFF0ofMpRAIc6on01p8heiuwuuJsYLzTP4UOjxVK9QsE2+0D1Q4J/zX2XBo6ac+27H5++YBIwmGAX/g==}
 
   esbuild@0.25.4:
     resolution: {integrity: sha512-8pgjLUcUjcgDg+2Q4NYXnPbo/vncAY4UmyaCm0jZevERqCHZIaWwdJHkf8XQtu4AxSKCdvrUbT0XUr1IdZzI8Q==}
@@ -909,6 +921,17 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.5.0
 
+  '@tauri-store/shared@0.7.4':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+      es-toolkit: 1.37.2
+
+  '@tauri-store/svelte@2.3.0':
+    dependencies:
+      '@tauri-apps/api': 2.5.0
+      '@tauri-store/shared': 0.7.4
+      svelte: 5.28.2
+
   '@types/cookie@0.6.0': {}
 
   '@types/estree@1.0.7': {}
@@ -934,6 +957,8 @@ snapshots:
   deepmerge@4.3.1: {}
 
   devalue@5.1.1: {}
+
+  es-toolkit@1.37.2: {}
 
   esbuild@0.25.4:
     optionalDependencies:
@@ -1082,6 +1107,7 @@ snapshots:
   tauri-plugin-matrix-svelte-api@file:../..:
     dependencies:
       '@tauri-apps/api': 2.5.0
+      '@tauri-store/svelte': 2.3.0
 
   tinyglobby@0.2.13:
     dependencies:
