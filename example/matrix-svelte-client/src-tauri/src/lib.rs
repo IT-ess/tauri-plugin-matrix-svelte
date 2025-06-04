@@ -1,4 +1,3 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -6,8 +5,31 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    #[cfg(debug_assertions)] // only enable instrumentation in development builds
+    let devtools = tauri_plugin_devtools::init();
+
+    let mut builder = tauri::Builder::default();
+
+    #[cfg(debug_assertions)]
+    {
+        builder = builder.plugin(devtools);
+    }
+
+    builder
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_persisted_scope::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(
+            tauri_plugin_svelte::Builder::new()
+                .on_load(|store| {
+                    if store.id().to_string() == tauri_plugin_matrix_svelte::matrix::stores::login_store::LOGIN_STATE_STORE_ID {
+                        tauri_plugin_matrix_svelte::matrix::singletons::LOGIN_STORE_READY.set(true).expect("LOGIN_STORE_READY has already been set !");
+                    }
+                    Ok(())
+                })
+                .build(),
+        )
         .plugin(tauri_plugin_matrix_svelte::init())
         .invoke_handler(tauri::generate_handler![greet])
         .run(tauri::generate_context!())

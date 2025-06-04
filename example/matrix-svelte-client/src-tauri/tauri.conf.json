@@ -18,7 +18,13 @@
 			}
 		],
 		"security": {
-			"csp": null
+			"csp": null,
+			"capabilities": ["default", "svelte"]
+		}
+	},
+	"plugins": {
+		"matrix-svelte": {
+			"stronghold_password": "password"
 		}
 	},
 	"bundle": {

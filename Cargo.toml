@@ -1,8 +1,8 @@
 [package]
 name = "tauri-plugin-matrix-svelte"
 version = "0.1.0"
-authors = ["You"]
-description = ""
+authors = ["IT-ess"]
+description = "A Tauri plugin that exposes high level Matrix data through Svelte Rune stores"
 edition = "2021"
 rust-version = "1.77.2"
 exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]

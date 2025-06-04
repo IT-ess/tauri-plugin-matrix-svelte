@@ -3,5 +3,13 @@
 	"identifier": "default",
 	"description": "Capability for the main window",
 	"windows": ["main"],
-	"permissions": ["core:default", "opener:default"]
+	"permissions": [
+		"core:default",
+		"opener:default",
+		"matrix-svelte:default",
+		"matrix-svelte:allow-ping",
+		"os:default",
+		"os:allow-hostname",
+		"fs:default"
+	]
 }

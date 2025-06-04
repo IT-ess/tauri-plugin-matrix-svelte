@@ -1,8 +1,8 @@
 [package]
 name = "matrix-svelte-client"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "A Matrix client using tauri-plugin-matrix-svelte"
+authors = ["IT-ess"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -23,6 +23,11 @@ tauri-plugin-opener = "2"
 tauri-plugin-matrix-svelte = { path = "../../../" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+tauri-plugin-devtools = "2.0.0"
+tauri-plugin-os = "2"
+tauri-plugin-persisted-scope = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-svelte = "2.6.0"
 
 [profile.dev]
 incremental = true # Compile your binary in smaller steps.
