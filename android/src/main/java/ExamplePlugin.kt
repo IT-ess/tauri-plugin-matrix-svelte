@@ -1,4 +1,4 @@
-package com.plugin.matrix-svelte
+package com.plugin.matrix.svelte
 
 import android.app.Activity
 import app.tauri.annotation.Command

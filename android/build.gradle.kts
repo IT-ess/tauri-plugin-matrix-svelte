@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.plugin.matrix-svelte"
+    namespace = "com.plugin.matrix.svelte"
     compileSdk = 34
 
     defaultConfig {

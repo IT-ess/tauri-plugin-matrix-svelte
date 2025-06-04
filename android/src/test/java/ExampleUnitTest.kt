@@ -1,4 +1,4 @@
-package com.plugin.matrix-svelte
+package com.plugin.matrix.svelte
 
 import org.junit.Test
 
