@@ -295,6 +295,18 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "Enables the login_and_create_new_session command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-login-and-create-new-session",
+          "markdownDescription": "Enables the login_and_create_new_session command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the login_and_create_new_session command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-login-and-create-new-session",
+          "markdownDescription": "Denies the login_and_create_new_session command without any pre-configured scope."
+        },
+        {
           "description": "Enables the ping command without any pre-configured scope.",
           "type": "string",
           "const": "allow-ping",
@@ -307,10 +319,22 @@
           "markdownDescription": "Denies the ping command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`",
+          "description": "Enables the submit_async_request command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-submit-async-request",
+          "markdownDescription": "Enables the submit_async_request command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the submit_async_request command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-submit-async-request",
+          "markdownDescription": "Denies the submit_async_request command without any pre-configured scope."
+        },
+        {
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`\n- `allow-login-and-create-new-session`\n- `allow-submit-async-request`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`\n- `allow-login-and-create-new-session`\n- `allow-submit-async-request`"
         }
       ]
     }

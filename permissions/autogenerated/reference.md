@@ -5,6 +5,8 @@ Default permissions for the plugin
 #### This default permission set includes the following:
 
 - `allow-ping`
+- `allow-login-and-create-new-session`
+- `allow-submit-async-request`
 
 ## Permission Table
 
@@ -14,6 +16,32 @@ Default permissions for the plugin
 <th>Description</th>
 </tr>
 
+
+<tr>
+<td>
+
+`matrix-svelte:allow-login-and-create-new-session`
+
+</td>
+<td>
+
+Enables the login_and_create_new_session command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-login-and-create-new-session`
+
+</td>
+<td>
+
+Denies the login_and_create_new_session command without any pre-configured scope.
+
+</td>
+</tr>
 
 <tr>
 <td>
@@ -37,6 +65,32 @@ Enables the ping command without any pre-configured scope.
 <td>
 
 Denies the ping command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-submit-async-request`
+
+</td>
+<td>
+
+Enables the submit_async_request command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-submit-async-request`
+
+</td>
+<td>
+
+Denies the submit_async_request command without any pre-configured scope.
 
 </td>
 </tr>

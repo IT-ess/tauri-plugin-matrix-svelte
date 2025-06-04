@@ -1,6 +1,16 @@
+use matrix::{
+    requests::MatrixRequest,
+    room::rooms_list::{enqueue_rooms_list_update, RoomsListUpdate},
+    singletons::{CLIENT, LOGIN_STORE_READY, REQUEST_SENDER},
+    stores::login_store::{update_login_state, LoginState},
+    try_restore_session_to_state,
+    workers::{async_main_loop, async_worker},
+};
+use serde::Deserialize;
+use stronghold::init_stronghold_client;
 use tauri::{
-  plugin::{Builder, TauriPlugin},
-  Manager, Runtime,
+    plugin::{Builder, TauriPlugin},
+    Manager, Runtime,
 };
 
 pub use models::*;
@@ -12,7 +22,11 @@ mod mobile;
 
 mod commands;
 mod error;
-mod models;
+
+pub mod matrix;
+pub mod models;
+pub mod stronghold;
+pub mod utils;
 
 pub use error::{Error, Result};
 
@@ -21,28 +35,143 @@ use desktop::MatrixSvelte;
 #[cfg(mobile)]
 use mobile::MatrixSvelte;
 
-/// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the matrix-svelte APIs.
+use crate::matrix::room::rooms_list::RoomsCollectionStatus;
+
+// Plugin config
+#[derive(Deserialize)]
+pub struct PluginConfig {
+    stronghold_password: String,
+}
+
+/// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the Matrix Svelte APIs.
 pub trait MatrixSvelteExt<R: Runtime> {
-  fn matrix_svelte(&self) -> &MatrixSvelte<R>;
+    fn matrix_svelte(&self) -> &MatrixSvelte<R>;
 }
 
 impl<R: Runtime, T: Manager<R>> crate::MatrixSvelteExt<R> for T {
-  fn matrix_svelte(&self) -> &MatrixSvelte<R> {
-    self.state::<MatrixSvelte<R>>().inner()
-  }
+    fn matrix_svelte(&self) -> &MatrixSvelte<R> {
+        self.state::<MatrixSvelte<R>>().inner()
+    }
 }
 
 /// Initializes the plugin.
-pub fn init<R: Runtime>() -> TauriPlugin<R> {
-  Builder::new("matrix-svelte")
-    .invoke_handler(tauri::generate_handler![commands::ping])
-    .setup(|app, api| {
-      #[cfg(mobile)]
-      let matrix_svelte = mobile::init(app, api)?;
-      #[cfg(desktop)]
-      let matrix_svelte = desktop::init(app, api)?;
-      app.manage(matrix_svelte);
-      Ok(())
-    })
-    .build()
+pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
+    Builder::<R, PluginConfig>::new("matrix-svelte")
+        .invoke_handler(tauri::generate_handler![
+            commands::ping,
+            commands::login_and_create_new_session,
+            commands::submit_async_request
+        ])
+        .setup(|app, api| {
+            // Create a channel to be used between UI thread(s) and the async worker thread.
+            crate::matrix::singletons::init_broadcaster(16)
+                .expect("Couldn't init the UI broadcaster"); // TODO: adapt capacity if needed
+
+            let (sender, receiver) = tokio::sync::mpsc::unbounded_channel::<MatrixRequest>();
+            REQUEST_SENDER
+                .set(sender)
+                .expect("BUG: REQUEST_SENDER already set!");
+
+            let init_app_handle = app.app_handle().clone();
+            let stronghold_app_handle = app.app_handle().clone();
+            let main_loop_app_handle = app.app_handle().clone();
+
+            let stronghold_handle = tauri::async_runtime::spawn(async move {
+                init_stronghold_client(&stronghold_app_handle)
+                    .expect("Couldn't init stronghold client")
+            });
+
+            let _monitor = tauri::async_runtime::spawn(async move {
+                stronghold_handle
+                    .await
+                    .expect("Couldn't init stronghold client");
+                let client = try_restore_session_to_state(&init_app_handle)
+                    .await
+                    .expect("Couldn't try to restore session");
+
+                LOGIN_STORE_READY.wait();
+                let client = match client {
+                    Some(new_login) => {
+                        // Should check that the login store is available before. With the on_load store hook ?
+                        update_login_state(&init_app_handle, LoginState::Restored)
+                            .expect("Couldn't update login state");
+                        new_login
+                    }
+                    None => {
+                        println!("Waiting for login request...");
+                        update_login_state(&init_app_handle, LoginState::AwaitingForLogin)
+                            .expect("Couldn't update login state");
+                        // We await frontend to call the login command and set the client
+                        // loop until client is set
+                        CLIENT.wait();
+                        update_login_state(&init_app_handle, LoginState::LoggedIn)
+                            .expect("Couldn't update login state");
+                        CLIENT.get().unwrap().clone()
+                    }
+                };
+
+                let mut ui_event_receiver = crate::matrix::singletons::subscribe_to_events()
+                    .expect("Couldn't get UI event receiver"); // subscribe to events so the sender(s) never fail
+
+                // Spawn the actual async worker thread.
+                let mut worker_join_handle = tauri::async_runtime::spawn(async_worker(receiver));
+
+                // // Start the main loop that drives the Matrix client SDK.
+                let mut main_loop_join_handle =
+                    tauri::async_runtime::spawn(async_main_loop(main_loop_app_handle, client));
+
+                #[allow(clippy::never_loop)] // unsure if needed, just following tokio's examples.
+                loop {
+                    tokio::select! {
+                        result = &mut main_loop_join_handle => {
+                            match result {
+                                Ok(Ok(())) => {
+                                    eprintln!("BUG: main async loop task ended unexpectedly!");
+                                }
+                                Ok(Err(e)) => {
+                                    eprintln!("Error: main async loop task ended:\n\t{e:?}");
+                                    enqueue_rooms_list_update(RoomsListUpdate::Status {
+                                        status: RoomsCollectionStatus::Error(e.to_string()),
+                                    });
+                                    // enqueue_popup_notification(format!("Rooms list update error: {e}"));
+                                },
+                                Err(e) => {
+                                    eprintln!("BUG: failed to join main async loop task: {e:?}");
+                                }
+                            }
+                            break;
+                        }
+                        result = &mut worker_join_handle => {
+                            match result {
+                                Ok(Ok(())) => {
+                                    eprintln!("BUG: async worker task ended unexpectedly!");
+                                }
+                                Ok(Err(e)) => {
+                                    eprintln!("Error: async worker task ended:\n\t{e:?}");
+                                    enqueue_rooms_list_update(RoomsListUpdate::Status {
+                                        status: RoomsCollectionStatus::Error(e.to_string()),
+                                    });
+                                    // enqueue_popup_notification(format!("Rooms list update error: {e}"));
+                                },
+                                Err(e) => {
+                                    eprintln!("BUG: failed to join async worker task: {e:?}");
+                                }
+                            }
+                            break;
+                        }
+                        _ = ui_event_receiver.recv() => {
+                            #[cfg(debug_assertions)]
+                            println!("Received UI update event");
+                        }
+                    }
+                }
+            });
+            #[cfg(mobile)]
+            let matrix_svelte = mobile::init(app, api)?;
+            #[cfg(desktop)]
+            let matrix_svelte = desktop::init(app, api)?;
+            app.manage(matrix_svelte);
+            Ok(())
+        })
+        .build()
 }

@@ -1,8 +1,12 @@
-const COMMANDS: &[&str] = &["ping"];
+const COMMANDS: &[&str] = &[
+    "ping",
+    "login_and_create_new_session",
+    "submit_async_request",
+];
 
 fn main() {
-  tauri_plugin::Builder::new(COMMANDS)
-    .android_path("android")
-    .ios_path("ios")
-    .build();
+    tauri_plugin::Builder::new(COMMANDS)
+        .android_path("android")
+        .ios_path("ios")
+        .build();
 }

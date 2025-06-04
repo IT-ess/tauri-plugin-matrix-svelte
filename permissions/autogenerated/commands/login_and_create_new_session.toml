@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-login-and-create-new-session"
+description = "Enables the login_and_create_new_session command without any pre-configured scope."
+commands.allow = ["login_and_create_new_session"]
+
+[[permission]]
+identifier = "deny-login-and-create-new-session"
+description = "Denies the login_and_create_new_session command without any pre-configured scope."
+commands.deny = ["login_and_create_new_session"]
