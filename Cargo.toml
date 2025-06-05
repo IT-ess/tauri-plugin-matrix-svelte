@@ -10,7 +10,7 @@ links = "tauri-plugin-matrix-svelte"
 keywords = ["matrix", "svelte", "tauri", "plugin", "chat"]
 repository = "https://github.com/IT-ess/tauri-plugin-matrix-svelte"
 readme = "README.md"
-license = "Apache 2.0"
+license = "Apache-2.0"
 
 [dependencies]
 tauri = { version = "2.5.1" }
