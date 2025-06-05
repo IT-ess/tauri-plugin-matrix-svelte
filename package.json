@@ -1,8 +1,17 @@
 {
   "name": "tauri-plugin-matrix-svelte-api",
   "version": "0.1.0",
-  "author": "You",
-  "description": "",
+  "author": "IT-ess",
+  "keywords": [
+    "matrix",
+    "svelte",
+    "tauri",
+    "plugin"
+  ],
+  "repository": {
+    "url": "https://github.com/IT-ess/tauri-plugin-matrix-svelte"
+  },
+  "description": "A Tauri plugin that exposes high level Matrix data through Svelte Rune stores",
   "type": "module",
   "types": "./dist-js/index.d.ts",
   "main": "./dist-js/index.cjs",

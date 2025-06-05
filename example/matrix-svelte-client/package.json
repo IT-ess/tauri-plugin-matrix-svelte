@@ -1,7 +1,20 @@
 {
 	"name": "matrix-svelte-client",
+	"author": {
+		"name": "IT-ess"
+	},
+	"keywords": [
+		"matrix",
+		"svelte",
+		"tauri",
+		"plugin",
+		"client"
+	],
+	"repository": {
+		"url": "https://github.com/IT-ess/tauri-plugin-matrix-svelte/tree/main/example/matrix-svelte-client"
+	},
 	"version": "0.1.0",
-	"description": "",
+	"description": "A Matrix client using tauri-plugin-matrix-svelte",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
