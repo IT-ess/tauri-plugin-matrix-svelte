@@ -17,7 +17,10 @@ import {
   TimelineItemData,
   VirtualTimelineItem,
 } from "./timeline-items/timeline-item";
-import { MsgLikeContent } from "./timeline-items/message-like";
+import {
+  MsgLikeContent,
+  ReactionsByKeyBySender,
+} from "./timeline-items/message-like";
 
 export async function ping(value: string): Promise<string | null> {
   return await invoke<{ value?: string }>("plugin:matrix-svelte|ping", {
@@ -56,6 +59,7 @@ export {
   TimelineItemData,
   timelineDataGuards,
   MsgLikeContent,
+  ReactionsByKeyBySender,
   VirtualTimelineItem,
   TimelineState,
   createMatrixRequest,

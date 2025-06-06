@@ -296,10 +296,10 @@ impl Serialize for TimelineUiState {
         state.end()
     }
 }
-fn serialize_timeline_items(
-    items: &Vector<Arc<TimelineItem>>,
+fn serialize_timeline_items<'a>(
+    items: &'a Vector<Arc<TimelineItem>>,
     room_id: &OwnedRoomId,
-) -> Vec<FrontendTimelineItem> {
+) -> Vec<FrontendTimelineItem<'a>> {
     items
         .iter()
         .map(|item| to_frontend_timeline_item(item, Some(room_id)))

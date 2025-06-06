@@ -6,7 +6,10 @@ use matrix_sdk_ui::timeline::{
 };
 use serde::Serialize;
 
-use crate::matrix::utils::get_or_fetch_event_sender;
+use crate::matrix::{
+    room::frontend_events::msg_like::FrontendReactionsByKeyBySender,
+    utils::get_or_fetch_event_sender,
+};
 
 use super::{
     msg_like::{FrontendMsgLikeContent, FrontendMsgLikeKind},
@@ -15,10 +18,10 @@ use super::{
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FrontendTimelineItem {
+pub struct FrontendTimelineItem<'a> {
     event_id: Option<String>,
     #[serde(flatten)]
-    data: FrontendTimelineItemData,
+    data: FrontendTimelineItemData<'a>,
     timestamp: Option<UInt>, // We keep the timestamp at root to sort events
     is_own: bool,
     is_local: bool,
@@ -31,18 +34,18 @@ pub struct FrontendTimelineItem {
     tag = "kind",
     content = "data"
 )]
-pub enum FrontendTimelineItemData {
-    MsgLike(FrontendMsgLikeContent),
+pub enum FrontendTimelineItemData<'a> {
+    MsgLike(FrontendMsgLikeContent<'a>),
     Virtual(FrontendVirtualTimelineItem),
     StateChange, // TODO add methods
     Error,       // TODO add methods
     Call,        // TODO add methods
 }
 
-pub fn to_frontend_timeline_item(
-    item: &Arc<TimelineItem>,
+pub fn to_frontend_timeline_item<'a>(
+    item: &'a Arc<TimelineItem>,
     room_id: Option<&OwnedRoomId>,
-) -> FrontendTimelineItem {
+) -> FrontendTimelineItem<'a> {
     match item.kind() {
         TimelineItemKind::Event(event_tl_item) => {
             let is_own = event_tl_item.is_own();
@@ -68,6 +71,9 @@ pub fn to_frontend_timeline_item(
                                     data: FrontendTimelineItemData::MsgLike(
                                         FrontendMsgLikeContent {
                                             edited: message.is_edited(),
+                                            reactions: FrontendReactionsByKeyBySender(
+                                                &msg_like.reactions,
+                                            ),
                                             sender_id,
                                             sender,
                                             thread_root: None,
@@ -164,20 +170,29 @@ pub fn to_frontend_timeline_item(
                     timestamp: Some(timestamp.0),
                 }
             }
-            _ => {}
-        }, // TimelineItemKind::Virtual(VirtualTimelineItem::DateDivider(millis)) => {
-           //     // let item = list.item(cx, item_id, live_id!(DateDivider));
-           //     // let text = unix_time_millis_to_datetime(millis)
-           //     //     // format the time as a shortened date (Sat, Sept 5, 2021)
-           //     //     .map(|dt| format!("{}", dt.date_naive().format("%a %b %-d, %Y")))
-           //     //     .unwrap_or_else(|| format!("{:?}", millis));
-           //     // item.label(id!(date)).set_text(cx, &text);
-           //     // (item, ItemDrawnStatus::both_drawn())
-           // }
-           // TimelineItemKind::Virtual(VirtualTimelineItem::ReadMarker) => {
-           //     // let item = list.item(cx, item_id, live_id!(ReadMarker));
-           //     // (item, ItemDrawnStatus::both_drawn())
-           // }
+            VirtualTimelineItem::ReadMarker => {
+                return FrontendTimelineItem {
+                    event_id: None,
+                    data: FrontendTimelineItemData::Virtual(
+                        FrontendVirtualTimelineItem::ReadMarker,
+                    ),
+                    is_local: true,
+                    is_own: true,
+                    timestamp: None,
+                }
+            }
+            VirtualTimelineItem::TimelineStart => {
+                return FrontendTimelineItem {
+                    event_id: None,
+                    data: FrontendTimelineItemData::Virtual(
+                        FrontendVirtualTimelineItem::TimelineStart,
+                    ),
+                    is_local: true,
+                    is_own: true,
+                    timestamp: None,
+                }
+            }
+        },
     };
     return FrontendTimelineItem {
         event_id: None,

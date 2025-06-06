@@ -48,6 +48,7 @@ crossbeam-queue = "0.3.12"
 htmlize = "1.0.6"
 linkify = "0.10.0"
 rangemap = "1.5.1"
+indexmap = { version = "2.9.0", features = ["serde"] }
 
 [build-dependencies]
 tauri-plugin = { version = "2.2.0", features = ["build"] }
