@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { Avatar, AvatarFallback } from '$lib/components/ui/avatar';
-	import type { MsgLikeContent } from 'tauri-plugin-matrix-svelte-api';
+	import {
+		createMatrixRequest,
+		submitAsyncRequest,
+		type MsgLikeContent
+	} from 'tauri-plugin-matrix-svelte-api';
 	import Reactions from './reactions.svelte';
 	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
 	import { Tooltip, TooltipContent, TooltipProvider } from '$lib/components/ui/tooltip';
@@ -11,9 +15,14 @@
 		data: MsgLikeContent;
 		timestamp: number;
 		isOwn: boolean;
+		roomId: string;
+		eventId: string;
+		currentUserId: string;
 	};
 
-	let { data, timestamp, isOwn }: Props = $props();
+	let { data, timestamp, isOwn, roomId, eventId, currentUserId }: Props = $props();
+
+	let reactionsArray = $derived(Object.keys(data.reactions));
 
 	// Get initials for avatar fallback
 	const getInitials = (name: string) => {
@@ -36,9 +45,15 @@
 	const commonEmojis = ['👍', '❤️', '😂', '😮', '😢', '🎉', '👎', '💪'];
 
 	// Add reaction to message
-	const handleAddReaction = (emoji: string) => {
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const existingReaction = Object.keys(data.reactions).find((r) => r === emoji);
+	const handleAddReaction = async (emoji: string) => {
+		const request = createMatrixRequest.toggleReaction({
+			reaction: emoji,
+			roomId,
+			timelineEventId: eventId
+		});
+		await submitAsyncRequest(request);
+
+		// const existingReaction = Object.keys(data.reactions).find((r) => r === emoji);
 
 		// if (existingReaction) {
 		// 	// Remove current user if already reacted
@@ -87,14 +102,8 @@
 			{data.body.body}
 		</p>
 	</div>
-	<div class={['flex items-center gap-2', isOwn && 'flex-row-reverse']}>
-		{#if Object.keys(data.reactions).length > 0}
-			<Reactions reactions={data.reactions} />
-		{/if}
-	</div>
 
 	<!-- Reaction button -->
-	<!-- Add reaction button -->
 	<TooltipProvider>
 		<Popover>
 			<PopoverTrigger>
@@ -111,7 +120,11 @@
 				<div class="flex gap-1">
 					{#each commonEmojis as emoji (emoji)}
 						<Button
-							variant="ghost"
+							variant={reactionsArray.includes(emoji)
+								? Object.keys(data.reactions[emoji]).includes(currentUserId)
+									? 'secondary'
+									: 'ghost'
+								: 'ghost'}
 							size="icon"
 							class="h-8 w-8"
 							onclick={() => handleAddReaction(emoji)}
@@ -123,4 +136,9 @@
 			</PopoverContent>
 		</Popover>
 	</TooltipProvider>
+	<div class={['flex items-center gap-2', isOwn && 'flex-row-reverse']}>
+		{#if reactionsArray.length > 0}
+			<Reactions reactions={data.reactions} />
+		{/if}
+	</div>
 </div>

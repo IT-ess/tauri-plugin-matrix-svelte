@@ -93,20 +93,34 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
                 let client = match client {
                     Some(new_login) => {
                         // Should check that the login store is available before. With the on_load store hook ?
-                        update_login_state(&init_app_handle, LoginState::Restored)
-                            .expect("Couldn't update login state");
+                        update_login_state(
+                            &init_app_handle,
+                            LoginState::Restored,
+                            new_login
+                                .user_id()
+                                .map_or(None, |val| Some(val.to_string())),
+                        )
+                        .expect("Couldn't update login state");
                         new_login
                     }
                     None => {
                         println!("Waiting for login request...");
-                        update_login_state(&init_app_handle, LoginState::AwaitingForLogin)
+                        update_login_state(&init_app_handle, LoginState::AwaitingForLogin, None)
                             .expect("Couldn't update login state");
                         // We await frontend to call the login command and set the client
                         // loop until client is set
                         CLIENT.wait();
-                        update_login_state(&init_app_handle, LoginState::LoggedIn)
-                            .expect("Couldn't update login state");
-                        CLIENT.get().unwrap().clone()
+                        let client = CLIENT.get().unwrap().clone();
+                        update_login_state(
+                            &init_app_handle,
+                            LoginState::LoggedIn,
+                            client
+                                .user_id()
+                                .clone()
+                                .map_or(None, |val| Some(val.to_string())),
+                        )
+                        .expect("Couldn't update login state");
+                        client
                     }
                 };
 

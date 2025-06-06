@@ -1,6 +1,7 @@
 use matrix_sdk::ruma::{
     events::room::message::RoomMessageEventContent, OwnedEventId, OwnedRoomId, OwnedUserId,
 };
+use matrix_sdk_ui::timeline::TimelineEventItemId;
 use serde::{Deserialize, Deserializer};
 use serde_json::Value;
 
@@ -168,15 +169,18 @@ impl<'de> Deserialize<'de> for MatrixRequest {
                     room_id: data.room_id,
                 })
             }
-            // "toggleReaction" => {
-            //     let data: ToggleReactionPayload =
-            //         serde_json::from_value(payload.clone()).map_err(serde::de::Error::custom)?;
-            //     Ok(MatrixRequest::ToggleReaction {
-            //         room_id: data.room_id,
-            //         timeline_event_id: data.timeline_event_id,
-            //         reaction: data.reaction,
-            //     })
-            // }
+            "toggleReaction" => {
+                let data: ToggleReactionPayload =
+                    serde_json::from_value(payload.clone()).map_err(serde::de::Error::custom)?;
+                Ok(MatrixRequest::ToggleReaction {
+                    room_id: data.room_id,
+                    timeline_event_id: TimelineEventItemId::EventId(
+                        OwnedEventId::try_from(data.timeline_event_id)
+                            .expect("Frontend sent incorrect event id"),
+                    ), // We only use eventId, not transactions.
+                    reaction: data.reaction,
+                })
+            }
             // "redactMessage" => {
             //     let data: RedactMessagePayload =
             //         serde_json::from_value(payload.clone()).map_err(serde::de::Error::custom)?;
@@ -215,7 +219,7 @@ impl<'de> Deserialize<'de> for MatrixRequest {
                     "readReceipt",
                     "fullyReadReceipt",
                     "getRoomPowerLevels",
-                    // "toggleReaction",
+                    "toggleReaction",
                     // "redactMessage",
                     // "getMatrixRoomLinkPillInfo",
                 ],
@@ -344,13 +348,13 @@ struct GetRoomPowerLevelsPayload {
     room_id: OwnedRoomId,
 }
 
-// #[derive(Deserialize)]
-// #[serde(rename_all = "camelCase")]
-// struct ToggleReactionPayload {
-//     room_id: OwnedRoomId,
-//     timeline_event_id: TimelineEventItemId,
-//     reaction: String,
-// }
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ToggleReactionPayload {
+    room_id: OwnedRoomId,
+    timeline_event_id: String,
+    reaction: String,
+}
 
 // #[derive(Deserialize)]
 // #[serde(rename_all = "camelCase")]
