@@ -5,7 +5,7 @@ use crossbeam_queue::SegQueue;
 use eyeball::Subscriber;
 use matrix_sdk::{
     ruma::{events::tag::Tags, MilliSecondsSinceUnixEpoch, OwnedRoomAliasId, OwnedRoomId},
-    RoomState,
+    RoomDisplayName, RoomState,
 };
 use matrix_sdk_ui::room_list_service::RoomListLoadingState;
 use serde::{Deserialize, Serialize};
@@ -64,7 +64,7 @@ pub enum RoomsListUpdate {
     /// Update the displayable name for the given room.
     UpdateRoomName {
         room_id: OwnedRoomId,
-        new_room_name: String,
+        new_room_name: RoomDisplayName,
     },
     /// Update the avatar (image) for the given room.
     // UpdateRoomAvatar {
@@ -361,7 +361,7 @@ impl RoomsList {
                 } => {
                     if let Some(room) = self.all_joined_rooms.get_mut(&room_id) {
                         let was_displayed = (self.display_filter)(room);
-                        room.room_name = Some(new_room_name);
+                        room.room_name = Some(new_room_name.to_string());
                         let should_display = (self.display_filter)(room);
                         match (was_displayed, should_display) {
                             (true, true) | (false, false) => {

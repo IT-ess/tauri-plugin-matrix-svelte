@@ -686,7 +686,7 @@ pub fn update_latest_event(
                 }) => {
                     enqueue_rooms_list_update(RoomsListUpdate::UpdateRoomName {
                         room_id: room_id.clone(),
-                        new_room_name: content.name.clone(),
+                        new_room_name: matrix_sdk::RoomDisplayName::Named(content.name.clone()),
                     });
                 }
                 // Check for room avatar changes.

@@ -1,4 +1,3 @@
-use matrix_sdk::ruma::UserId;
 use tauri::{AppHandle, Runtime};
 use tauri_plugin_svelte::ManagerExt;
 
