@@ -8,6 +8,7 @@ export const LOGIN_STATE_STORE_ID = "login-state";
 
 export type LoginStateType = {
   state: "initiating" | "restored" | "awaitingForLogin" | "loggedIn";
+  userId: string | null;
 };
 
 export class LoginStore extends RuneStore<LoginStateType> {
@@ -22,7 +23,7 @@ export class LoginStore extends RuneStore<LoginStateType> {
       hooks,
     };
 
-    super(LOGIN_STATE_STORE_ID, { state: "initiating" }, options);
+    super(LOGIN_STATE_STORE_ID, { state: "initiating", userId: null }, options);
   }
 
   /**

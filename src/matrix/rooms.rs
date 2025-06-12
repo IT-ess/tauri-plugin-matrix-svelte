@@ -4,13 +4,13 @@ use crate::matrix::{
     events::get_latest_event_details,
     room::rooms_list::{enqueue_rooms_list_update, JoinedRoomInfo, RoomsListUpdate},
     singletons::{ALL_JOINED_ROOMS, TOMBSTONED_ROOMS},
-    timeline::{timeline_subscriber_handler, update_latest_event},
+    timeline::timeline_subscriber_handler,
 };
 use anyhow::bail;
 use matrix_sdk::{
     event_handler::EventHandlerDropGuard, ruma::OwnedRoomId, RoomDisplayName, RoomState,
 };
-use matrix_sdk_ui::{room_list_service, RoomListService, Timeline};
+use matrix_sdk_ui::{timeline::RoomExt, RoomListService, Timeline};
 use serde::Serialize;
 use tokio::{runtime::Handle, sync::watch, task::JoinHandle};
 
@@ -68,22 +68,22 @@ impl Drop for JoinedRoomDetails {
 /// This struct is necessary in order for us to track the previous state
 /// of a room received from the room list service, so that we can
 /// determine if the room has changed state.
-/// We can't just store the `room_list_service::Room` object itself,
+/// We can't just store the `matrix_sdk::Room` object itself,
 /// because that is a shallow reference to an inner room object within
 /// the room list service
 #[derive(Clone)]
 pub struct RoomListServiceRoomInfo {
-    room: room_list_service::Room,
+    room: matrix_sdk::Room,
     pub room_id: OwnedRoomId,
     room_state: RoomState,
 }
-impl From<&room_list_service::Room> for RoomListServiceRoomInfo {
-    fn from(room: &room_list_service::Room) -> Self {
+impl From<&matrix_sdk::Room> for RoomListServiceRoomInfo {
+    fn from(room: &matrix_sdk::Room) -> Self {
         room.clone().into()
     }
 }
-impl From<room_list_service::Room> for RoomListServiceRoomInfo {
-    fn from(room: room_list_service::Room) -> Self {
+impl From<matrix_sdk::Room> for RoomListServiceRoomInfo {
+    fn from(room: matrix_sdk::Room) -> Self {
         Self {
             room_id: room.room_id().to_owned(),
             room_state: room.state(),
@@ -113,7 +113,7 @@ pub struct FrontendRoom {
 }
 
 pub async fn add_new_room(
-    room: &room_list_service::Room,
+    room: &matrix_sdk::Room,
     room_list_service: &RoomListService,
 ) -> anyhow::Result<()> {
     let room_id = room.room_id().to_owned();
@@ -188,7 +188,7 @@ pub async fn add_new_room(
     room_list_service.subscribe_to_rooms(&[&room_id]);
 
     // Do not add tombstoned rooms to the rooms list; they require special handling.
-    if let Some(tombstoned_info) = room.tombstone() {
+    if let Some(tombstoned_info) = room.tombstone_content() {
         println!("Room {room_id} has been tombstoned: {tombstoned_info:#?}");
         // Since we don't know the order in which we'll learn about new rooms,
         // we need to first check to see if the replacement for this tombstoned room
@@ -215,23 +215,22 @@ pub async fn add_new_room(
         return Ok(());
     }
 
-    let timeline = if let Some(tl_arc) = room.timeline() {
-        tl_arc
+    let timeline = if let Ok(tl) = room.timeline().await {
+        Arc::new(tl)
     } else {
-        let builder = room
-            .default_room_timeline_builder()
-            .await?
-            .track_read_marker_and_receipts();
-        room.init_timeline_with_builder(builder).await?;
-        room.timeline()
-            .ok_or_else(|| anyhow::anyhow!("BUG: room timeline not found for room {room_id}"))?
+        Arc::new(
+            room.timeline_builder()
+                .track_read_marker_and_receipts()
+                .build()
+                .await?,
+        )
     };
     let latest_event = timeline.latest_event().await;
     let (timeline_update_sender, timeline_update_receiver) = crossbeam_channel::unbounded();
 
     let (request_sender, request_receiver) = watch::channel(Vec::new());
     let timeline_subscriber_handler_task = Handle::current().spawn(timeline_subscriber_handler(
-        room.inner_room().clone(),
+        room.clone(),
         timeline.clone(),
         timeline_update_sender.clone(),
         request_receiver,
@@ -283,13 +282,13 @@ pub async fn add_new_room(
 /// Invoked when the room list service has received an update that changes an existing room.
 pub async fn update_room(
     old_room: &RoomListServiceRoomInfo,
-    new_room: &room_list_service::Room,
+    new_room: &matrix_sdk::Room,
     room_list_service: &RoomListService,
 ) -> anyhow::Result<()> {
     let new_room_id = new_room.room_id().to_owned();
     if old_room.room_id == new_room_id {
-        let new_room_name = new_room.display_name().await.map(|n| n.to_string()).ok();
-        let mut room_avatar_changed = false;
+        let new_room_name = new_room.display_name().await.ok();
+        let room_avatar_changed = false;
 
         // Handle state transitions for a room.
         let old_room_state = old_room.room_state;
@@ -336,15 +335,15 @@ pub async fn update_room(
             }
         }
 
-        if let Some(new_latest_event) = new_room.latest_event().await {
-            if let Some(old_latest_event) = old_room.room.latest_event().await {
-                if new_latest_event.timestamp() > old_latest_event.timestamp() {
-                    println!("Updating latest event for room {}", new_room_id);
-                    room_avatar_changed =
-                        update_latest_event(new_room_id.clone(), &new_latest_event, None);
-                }
-            }
-        }
+        // if let Some(new_latest_event) = new_room.latest_event() { TODO: check if this is still necessary
+        //     if let Some(old_latest_event) = old_room.room.latest_event() {
+        //         if new_latest_event. > old_latest_event.timestamp() {
+        //             println!("Updating latest event for room {}", new_room_id);
+        //             room_avatar_changed =
+        //                 update_latest_event(new_room_id.clone(), &new_latest_event, None);
+        //         }
+        //     }
+        // }
 
         if room_avatar_changed || (old_room.room.avatar_url() != new_room.avatar_url()) {
             println!("Updating avatar for room {}", new_room_id);

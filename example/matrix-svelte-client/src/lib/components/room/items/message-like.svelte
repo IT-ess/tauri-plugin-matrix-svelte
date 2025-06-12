@@ -1,14 +1,28 @@
 <script lang="ts">
 	import { Avatar, AvatarFallback } from '$lib/components/ui/avatar';
-	import type { MsgLikeContent } from 'tauri-plugin-matrix-svelte-api';
+	import {
+		createMatrixRequest,
+		submitAsyncRequest,
+		type MsgLikeContent
+	} from 'tauri-plugin-matrix-svelte-api';
+	import Reactions from './reactions.svelte';
+	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
+	import { Tooltip, TooltipContent, TooltipProvider } from '$lib/components/ui/tooltip';
+	import { Button } from '$lib/components/ui/button';
+	import { SmileIcon } from '@lucide/svelte';
 
 	type Props = {
 		data: MsgLikeContent;
 		timestamp: number;
 		isOwn: boolean;
+		roomId: string;
+		eventId: string;
+		currentUserId: string;
 	};
 
-	let { data, timestamp, isOwn }: Props = $props();
+	let { data, timestamp, isOwn, roomId, eventId, currentUserId }: Props = $props();
+
+	let reactionsArray = $derived(Object.keys(data.reactions));
 
 	// Get initials for avatar fallback
 	const getInitials = (name: string) => {
@@ -25,6 +39,46 @@
 			hour: '2-digit',
 			minute: '2-digit'
 		});
+	};
+
+	// Common emojis for reactions
+	const commonEmojis = ['👍', '❤️', '😂', '😮', '😢', '🎉', '👎', '💪'];
+
+	// Add reaction to message
+	const handleAddReaction = async (emoji: string) => {
+		const request = createMatrixRequest.toggleReaction({
+			reaction: emoji,
+			roomId,
+			timelineEventId: eventId
+		});
+		await submitAsyncRequest(request);
+
+		// const existingReaction = Object.keys(data.reactions).find((r) => r === emoji);
+
+		// if (existingReaction) {
+		// 	// Remove current user if already reacted
+		// 	if (existingReaction.users.some((u) => u.id === 'current-user')) {
+		// 		existingReaction.count--;
+		// 		existingReaction.users = existingReaction.users.filter((u) => u.id !== 'current-user');
+		// 		if (existingReaction.count === 0) {
+		// 			message.reactions = message.reactions.filter((r) => r.emoji !== emoji);
+		// 		}
+		// 	} else {
+		// 		// Add current user's reaction
+		// 		existingReaction.count++;
+		// 		existingReaction.users.push({ id: 'current-user', name: 'Current User' });
+		// 	}
+		// } else {
+		// 	// Create new reaction
+		// 	message.reactions = [
+		// 		...message.reactions,
+		// 		{
+		// 			emoji,
+		// 			count: 1,
+		// 			users: [{ id: 'current-user', name: 'Current User' }]
+		// 		}
+		// 	];
+		// }
 	};
 </script>
 
@@ -47,5 +101,44 @@
 		<p class="mt-1 text-sm">
 			{data.body.body}
 		</p>
+	</div>
+
+	<!-- Reaction button -->
+	<TooltipProvider>
+		<Popover>
+			<PopoverTrigger>
+				{#snippet child({ props: triggerProps })}
+					<Tooltip>
+						<Button variant="ghost" size="icon" class="h-6 w-6" {...triggerProps}>
+							<SmileIcon class="h-4 w-4" />
+						</Button>
+					</Tooltip>
+				{/snippet}
+				<TooltipContent>Add reaction</TooltipContent>
+			</PopoverTrigger>
+			<PopoverContent class="w-fit p-2">
+				<div class="flex gap-1">
+					{#each commonEmojis as emoji (emoji)}
+						<Button
+							variant={reactionsArray.includes(emoji)
+								? Object.keys(data.reactions[emoji]).includes(currentUserId)
+									? 'secondary'
+									: 'ghost'
+								: 'ghost'}
+							size="icon"
+							class="h-8 w-8"
+							onclick={() => handleAddReaction(emoji)}
+						>
+							{emoji}
+						</Button>
+					{/each}
+				</div>
+			</PopoverContent>
+		</Popover>
+	</TooltipProvider>
+	<div class={['flex items-center gap-2', isOwn && 'flex-row-reverse']}>
+		{#if reactionsArray.length > 0}
+			<Reactions reactions={data.reactions} />
+		{/if}
 	</div>
 </div>

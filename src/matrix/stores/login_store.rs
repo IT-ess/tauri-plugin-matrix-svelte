@@ -37,9 +37,13 @@ pub const LOGIN_STATE_STORE_ID: &str = "login-state";
 pub fn update_login_state<R: Runtime>(
     app_handle: &AppHandle<R>,
     state: LoginState,
+    user_id: Option<String>,
 ) -> anyhow::Result<()> {
     app_handle
         .svelte()
         .set(LOGIN_STATE_STORE_ID, "state", state.to_camel_case())?;
+    app_handle
+        .svelte()
+        .set(LOGIN_STATE_STORE_ID, "userId", user_id)?;
     Ok(())
 }

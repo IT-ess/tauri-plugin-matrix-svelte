@@ -7,7 +7,9 @@
 
 	let { data }: PageProps = $props();
 
-	$inspect(data.roomStore.state);
+	if (import.meta.env.DEV) {
+		$inspect(data.roomStore.state);
+	}
 
 	onDestroy(async () => {
 		// TODO: verify the behaviour
@@ -20,4 +22,5 @@
 </script>
 
 <h1>Room with id {data.roomStore.id}</h1>
-<Room roomStore={data.roomStore} />
+<Room roomStore={data.roomStore} currentUserId={data.loginStore.state.userId ?? ''} />
+<!-- userId should be defined at this point -->

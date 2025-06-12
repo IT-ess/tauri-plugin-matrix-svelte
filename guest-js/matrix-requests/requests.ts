@@ -217,8 +217,8 @@ export type MatrixRequest =
   | SubscribeToOwnUserReadReceiptsChangedRequest
   | ReadReceiptRequest
   | FullyReadReceiptRequest
-  | GetRoomPowerLevelsRequest;
-// | ToggleReactionRequest
+  | GetRoomPowerLevelsRequest
+  | ToggleReactionRequest;
 // | RedactMessageRequest
 // | GetMatrixRoomLinkPillInfoRequest;
 
@@ -242,7 +242,7 @@ export type {
   ReadReceiptRequest,
   FullyReadReceiptRequest,
   GetRoomPowerLevelsRequest,
-  // ToggleReactionRequest,
+  ToggleReactionRequest,
   // RedactMessageRequest,
   // GetMatrixRoomLinkPillInfoRequest,
   // Base types
