@@ -1,4 +1,7 @@
+use std::sync::Mutex;
+
 use matrix_sdk::{
+    media::MediaRequestParameters,
     room::{edit::EditedContent, RoomMember},
     ruma::{
         events::room::message::RoomMessageEventContent, matrix_uri::MatrixId, OwnedEventId,
@@ -7,6 +10,11 @@ use matrix_sdk::{
     OwnedServerName, RoomMemberships,
 };
 use matrix_sdk_ui::timeline::TimelineEventItemId;
+
+use crate::matrix::{
+    media_cache::{MediaCacheEntry, MediaCacheEntryRef},
+    timeline::TimelineUpdate,
+};
 
 use super::{singletons::REQUEST_SENDER, timeline::PaginationDirection};
 
@@ -93,12 +101,12 @@ pub enum MatrixRequest {
     /// Upon completion of the async media request, the `on_fetched` function
     /// will be invoked with four arguments: the `destination`, the `media_request`,
     /// the result of the media fetch, and the `update_sender`.
-    // FetchMedia {
-    //     media_request: MediaRequestParameters,
-    //     on_fetched: OnMediaFetchedFn,
-    //     destination: MediaCacheEntryRef,
-    //     update_sender: Option<crossbeam_channel::Sender<TimelineUpdate>>,
-    // },
+    FetchMedia {
+        media_request: MediaRequestParameters,
+        on_fetched: OnMediaFetchedFn,
+        destination: MediaCacheEntryRef,
+        update_sender: Option<crossbeam_channel::Sender<TimelineUpdate>>,
+    },
     /// Request to send a message to the given room.
     SendMessage {
         room_id: OwnedRoomId,
@@ -163,3 +171,11 @@ pub enum MatrixRequest {
     },
 }
 // Deserialize trait is implemented in models/matrix_requests.rs
+
+/// The function signature for the callback that gets invoked when media is fetched.
+pub type OnMediaFetchedFn = fn(
+    &Mutex<MediaCacheEntry>,
+    MediaRequestParameters,
+    matrix_sdk::Result<Vec<u8>>,
+    Option<crossbeam_channel::Sender<TimelineUpdate>>,
+);

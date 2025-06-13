@@ -26,7 +26,10 @@ use rangemap::RangeSet;
 use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use tokio::sync::watch;
 
-use crate::matrix::singletons::{broadcast_event, UIUpdateMessage, LOG_TIMELINE_DIFFS};
+use crate::matrix::{
+    media_cache::MediaCache,
+    singletons::{broadcast_event, UIUpdateMessage, LOG_TIMELINE_DIFFS},
+};
 
 use super::{
     events::get_latest_event_details,
@@ -227,7 +230,7 @@ pub struct TimelineUiState {
     /// The cache of media items (images, videos, etc.) that appear in this timeline.
     ///
     /// Currently this excludes avatars, as those are shared across multiple rooms.
-    // media_cache: MediaCache,
+    pub(crate) media_cache: MediaCache,
 
     /// Info about the event currently being replied to, if any.
     // TODO: replace repliedtoinfo struct with the latest one from the SDK (this one is broken)

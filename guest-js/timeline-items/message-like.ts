@@ -11,7 +11,9 @@ export type MsgLikeContent = {
 } & MsgLikeKind;
 
 // Discriminated union for message-like kinds (only Text for now)
-export type MsgLikeKind = { kind: "text"; body: TextMessageEventContent };
+export type MsgLikeKind =
+  | { kind: "text"; body: TextMessageEventContent }
+  | { kind: "image"; body: any };
 
 // Text message content
 export interface TextMessageEventContent {

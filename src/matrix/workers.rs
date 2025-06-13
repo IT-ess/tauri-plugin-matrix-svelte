@@ -630,21 +630,21 @@ pub async fn async_worker(
             //         });
             //     });
             // }
-            // MatrixRequest::FetchMedia {
-            //     media_request,
-            //     on_fetched,
-            //     destination,
-            //     update_sender,
-            // } => {
-            //     let Some(client) = CLIENT.get() else { continue };
-            //     let media = client.media();
+            MatrixRequest::FetchMedia {
+                media_request,
+                on_fetched,
+                destination,
+                update_sender,
+            } => {
+                let Some(client) = CLIENT.get() else { continue };
+                let media = client.media();
 
-            //     let _fetch_task = Handle::current().spawn(async move {
-            //         // println!("Sending fetch media request for {media_request:?}...");
-            //         let res = media.get_media_content(&media_request, true).await;
-            //         on_fetched(&destination, media_request, res, update_sender);
-            //     });
-            // }
+                let _fetch_task = Handle::current().spawn(async move {
+                    // println!("Sending fetch media request for {media_request:?}...");
+                    let res = media.get_media_content(&media_request, true).await;
+                    on_fetched(&destination, media_request, res, update_sender);
+                });
+            }
             MatrixRequest::SendMessage {
                 room_id,
                 message,

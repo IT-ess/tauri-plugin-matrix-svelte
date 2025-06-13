@@ -6,6 +6,7 @@ pub mod emoji_verification;
 pub mod event_preview;
 pub mod events;
 pub mod login;
+pub mod media_cache;
 pub mod notifications;
 pub mod requests;
 pub mod room;

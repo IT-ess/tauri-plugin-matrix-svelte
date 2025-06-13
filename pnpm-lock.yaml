@@ -94,6 +94,9 @@ importers:
       bits-ui:
         specifier: ^2.5.0
         version: 2.5.0(@internationalized/date@3.8.2)(svelte@5.33.18)
+      blurhash:
+        specifier: ^2.0.5
+        version: 2.0.5
       eslint:
         specifier: ^9.28.0
         version: 9.28.0(jiti@2.4.2)
@@ -1173,6 +1176,9 @@ packages:
     peerDependencies:
       '@internationalized/date': ^3.8.1
       svelte: ^5.33.0
+
+  blurhash@2.0.5:
+    resolution: {integrity: sha512-cRygWd7kGBQO3VEhPiTgq4Wc43ctsM+o46urrmPOiuAe+07fzlSB9OJVdpgDL0jPqXUVQ9ht7aq7kxOeJHRK+w==}
 
   brace-expansion@1.1.11:
     resolution: {integrity: sha512-iCuPHDFgrHX7H2vEI/5xpz07zSHB00TpugqhmYtVmMO6518mCuRMoOYFldEBl0g187ufozdaHgWKcYFb61qGiA==}
@@ -3308,6 +3314,8 @@ snapshots:
       svelte: 5.33.18
       svelte-toolbelt: 0.9.1(svelte@5.33.18)
       tabbable: 6.2.0
+
+  blurhash@2.0.5: {}
 
   brace-expansion@1.1.11:
     dependencies:

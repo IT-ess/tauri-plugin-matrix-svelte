@@ -35,7 +35,10 @@ use desktop::MatrixSvelte;
 #[cfg(mobile)]
 use mobile::MatrixSvelte;
 
-use crate::matrix::room::rooms_list::RoomsCollectionStatus;
+use crate::{
+    matrix::{room::rooms_list::RoomsCollectionStatus, singletons::TEMP_DIR},
+    utils::fs::get_temp_dir_or_create_it,
+};
 
 // Plugin config
 #[derive(Deserialize)]
@@ -75,6 +78,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
             let init_app_handle = app.app_handle().clone();
             let stronghold_app_handle = app.app_handle().clone();
             let main_loop_app_handle = app.app_handle().clone();
+
+            let temp_dir = get_temp_dir_or_create_it(&init_app_handle)?;
+
+            TEMP_DIR.set(temp_dir).expect("Couldn't set temporary dir");
 
             let stronghold_handle = tauri::async_runtime::spawn(async move {
                 init_stronghold_client(&stronghold_app_handle)

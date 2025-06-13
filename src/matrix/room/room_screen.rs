@@ -11,6 +11,7 @@ use tauri::{AppHandle, Runtime};
 use tauri_plugin_svelte::{ManagerExt, StoreState};
 
 use crate::matrix::{
+    media_cache::MediaCache,
     requests::{submit_async_request, MatrixRequest},
     timeline::{
         take_timeline_endpoints, PaginationDirection, TimelineUiState, TimelineUpdate,
@@ -495,7 +496,7 @@ impl RoomScreen {
         let (mut tl_state, first_time_showing_room) = if let Some(existing) = state_opt {
             (existing, false)
         } else {
-            let (_update_sender, update_receiver, request_sender) =
+            let (update_sender, update_receiver, request_sender) =
                 take_timeline_endpoints(&room_id)
                     .expect("BUG: couldn't get timeline state for first-viewed room.");
             let new_tl_state = TimelineUiState {
@@ -511,7 +512,7 @@ impl RoomScreen {
                 profile_drawn_since_last_update: RangeSet::new(),
                 update_receiver,
                 request_sender,
-                // media_cache: MediaCache::new(Some(update_sender)),
+                media_cache: MediaCache::new(Some(update_sender)),
                 // replying_to: None,
                 saved_state: SavedState::default(),
                 last_scrolled_index: usize::MAX,
