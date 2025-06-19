@@ -6,3 +6,6 @@ export type OwnedRoomAliasId = string;
 export type OwnedServerName = string;
 export type MatrixId = string;
 export type TimelineEventItemId = string;
+export type Base64 = string;
+export type UInt = number;
+export type OwnedMxcUri = string;

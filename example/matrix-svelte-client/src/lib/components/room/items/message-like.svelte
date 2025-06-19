@@ -77,11 +77,7 @@
 				{data.body.body}
 			</p>
 		{:else if data.kind === 'image'}
-			<ImageMessage
-				blurhash={data.body.info['xyz.amorgan.blurhash']}
-				alt="test"
-				src="/favicon.png"
-			/>
+			<ImageMessage itemContent={data.body} />
 		{/if}
 	</div>
 

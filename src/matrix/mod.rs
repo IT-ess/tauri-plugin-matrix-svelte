@@ -1,12 +1,15 @@
-use matrix_sdk::Client;
+use anyhow::anyhow;
+use matrix_sdk::{media::MediaRequestParameters, Client};
 use session::{restore_client_from_session, try_get_session};
-use tauri::{AppHandle, Manager, Runtime};
+use tauri::{ipc::Channel, AppHandle, Manager, Runtime};
+use tokio::sync::oneshot;
+
+use crate::{matrix::requests::MatrixRequest, models::matrix::MediaStreamEvent};
 
 pub mod emoji_verification;
 pub mod event_preview;
 pub mod events;
 pub mod login;
-pub mod media_cache;
 pub mod notifications;
 pub mod requests;
 pub mod room;
@@ -54,4 +57,41 @@ pub async fn try_restore_session_to_state<R: Runtime>(
         } // TODO : handle restore errors
         None => Ok(None),
     }
+}
+
+pub(crate) async fn fetch_media(
+    media_request: MediaRequestParameters,
+    on_event: &Channel<MediaStreamEvent>,
+) -> anyhow::Result<usize> {
+    let (tx, rx) = oneshot::channel();
+    crate::matrix::requests::submit_async_request(MatrixRequest::FetchMedia {
+        media_request,
+        content_sender: tx,
+    });
+
+    let image_data: Vec<u8> = match rx.await {
+        Ok(data) => match data {
+            Ok(data) => data,
+            Err(e) => return Err(anyhow!("Failed to fetch image: {}", e)),
+        },
+        Err(e) => return Err(anyhow!("Media receiver failed: {}", e)),
+    };
+
+    // Stream the image in chunks of 8KB
+    const CHUNK_SIZE: usize = 8192;
+    let mut bytes_sent = 0;
+
+    for chunk in image_data.chunks(CHUNK_SIZE) {
+        bytes_sent += chunk.len();
+
+        on_event
+            .send(MediaStreamEvent::Chunk {
+                data: chunk.to_vec(),
+                chunk_size: chunk.len(),
+                bytes_received: bytes_sent,
+            })
+            .unwrap();
+    }
+
+    Ok(bytes_sent)
 }

@@ -2,72 +2,100 @@
 	import { decode } from 'blurhash';
 	import { fade, scale } from 'svelte/transition';
 	import { Button } from '$lib/components/ui/button';
-	import { ImageIcon, XIcon } from '@lucide/svelte';
+	import { ImageIcon, Loader, XIcon } from '@lucide/svelte';
+	import type { events, ImageMessageEventContent } from 'tauri-plugin-matrix-svelte-api';
+	import { Channel, invoke } from '@tauri-apps/api/core';
 
 	type Props = {
-		src: string;
-		blurhash: string;
-		alt: string;
+		itemContent: ImageMessageEventContent;
 	};
 
-	// let json = {
-	// 	body: 'a capitalist dream.jpg',
-	// 	file: {
-	// 		hashes: { sha256: 'nOAhf17EI29KSsw2VCPmx8r13QRDIZ77KpKeN1lWY4I' },
-	// 		iv: '/wIzIcHJ/m8AAAAAAAAAAA',
-	// 		key: {
-	// 			alg: 'A256CTR',
-	// 			ext: true,
-	// 			k: '3oQUwh6yknodlreZSBf7NZKeZdzwTJnLyaZlOZRT5ho',
-	// 			key_ops: ['encrypt', 'decrypt'],
-	// 			kty: 'oct'
-	// 		},
-	// 		url: 'mxc://matrix.lucide.space/qEWPqaI06FzhPNGvhunR6Qsv1s1cBRqJ',
-	// 		v: 'v2'
-	// 	},
-	// 	info: {
-	// 		h: 898,
-	// 		mimetype: 'image/jpeg',
-	// 		size: 245733,
-	// 		w: 650,
-	// 		'xyz.amorgan.blurhash': 'LQHx$:t8*JEj*0WqtlNd9@WUIVsT'
-	// 	},
-	// 	msgtype: 'm.image'
-	// };
+	let { itemContent }: Props = $props();
 
-	let { src, blurhash, alt }: Props = $props();
+	let blurhash = itemContent.info?.['xyz.amorgan.blurhash'] ?? 'LQHx$:t8*JEj*0WqtlNd9@WUIVsT'; // use this blurhash as a placeholder
+	let alt = itemContent.body;
 
 	// State variables
 	let isLoaded = $state(false);
 	let isFullscreen = $state(false);
-
-	// Handle blurhash decoding
-	// const decodeBlurhash = () => {
-	// 	const pixels = decode(blurhash, 32, 32);
-	// 	const ctx = canvas?.getContext('2d');
-	// 	const imageData = ctx?.createImageData(32, 32);
-	// 	if (imageData) {
-	// 		imageData.data.set(pixels);
-	// 		ctx?.putImageData(imageData, 0, 0);
-	// 	}
-	// };
-
-	// const blurhashCanvas: Attachment = (element) => {
-	// 	const pixels = decode(blurhash, 32, 32);
-	// 	const ctx = element.getContext('2d');
-
-	// 	return () => {
-	// 		console.log('cleaning up');
-	// 	};
-	// };
+	let imageSrc = $state<string>('');
+	let isLoading = $state(false);
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	let error = $state<string | null>(null);
+	let totalSize = $derived(itemContent.info?.size ?? 1);
+	let bytesReceived = $state(0);
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	let progress = $derived(bytesReceived / totalSize);
 
 	// Load image when button is clicked
-	// const loadImage = () => {
-	// 	imageElement.src = src;
-	// 	imageElement.onload = () => {
-	// 		isLoaded = true;
-	// 	};
-	// };
+	const loadImage = async () => {
+		isLoading = true;
+		error = null;
+		bytesReceived = 0;
+
+		const chunks: Uint8Array[] = [];
+		try {
+			const onEvent = new Channel<events.MediaStreamEvent>();
+
+			onEvent.onmessage = (message) => {
+				if (message.event === 'started') {
+					console.log(`Starting image fetch, total size: ${totalSize} bytes`);
+					return;
+				}
+
+				if (message.event === 'chunk') {
+					chunks.push(new Uint8Array(message.data.data));
+					bytesReceived = message.data.bytesReceived;
+
+					console.log(
+						`Received chunk: ${message.data.chunkSize} bytes, total: ${bytesReceived}/${totalSize}`
+					);
+					return;
+				}
+
+				if (message.event === 'finished') {
+					// Combine all chunks into a single Uint8Array
+					const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+					const combined = new Uint8Array(totalLength);
+					let offset = 0;
+
+					for (const chunk of chunks) {
+						combined.set(chunk, offset);
+						offset += chunk.length;
+					}
+
+					// Create blob URL for display
+					const blob = new Blob([combined], { type: itemContent.info?.mimetype ?? 'image/jpeg' });
+					imageSrc = URL.createObjectURL(blob);
+
+					isLoading = false;
+					console.log(`Image fetch completed: ${message.data.totalBytes} bytes`);
+					return;
+				}
+
+				if (message.event === 'error') {
+					error = message.data.message;
+					isLoading = false;
+					console.error('Image fetch error:', message.data.message);
+					return;
+				}
+			};
+
+			await invoke('plugin:matrix-svelte|fetch_media', {
+				mediaRequest: {
+					format: 'File', // We do not handle thumbnails yet
+					source: { file: itemContent.file }
+				},
+				onEvent
+			});
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Unknown error occurred';
+			isLoading = false;
+			console.error('Invoke error:', err);
+		}
+
+		isLoaded = true;
+	};
 
 	// Toggle fullscreen view
 	const toggleFullscreen = () => {
@@ -75,30 +103,24 @@
 			isFullscreen = !isFullscreen;
 		}
 	};
-
-	// Initialize blurhash
-	// $effect(() => {
-	// 	if (canvas) {
-	// 		decodeBlurhash();
-	// 	}
-	// });
 </script>
 
 <div class="bg-card relative overflow-hidden rounded-lg border">
 	<!-- Blurhash Canvas -->
 	<canvas
 		{@attach (canvas) => {
+			// TODO: optimise this because this is ran multiple times since the blurhash store is updated. See attachments docs
 			console.log('Attaching canvas. Blurhash is', blurhash);
-			const pixels = decode(blurhash, 200, 200);
+			const pixels = decode(blurhash, itemContent.info?.w, itemContent.info?.h);
 			const context = canvas.getContext('2d');
-			const imageData = context.createImageData(200, 200);
+			const imageData = context?.createImageData(itemContent.info?.w, itemContent.info?.h);
 			if (imageData) {
 				imageData.data.set(pixels);
-				context.putImageData(imageData, 0, 0);
+				context?.putImageData(imageData, 0, 0);
 			}
 		}}
-		width="200"
-		height="200"
+		width={itemContent.info?.w ?? 400 / 2}
+		height={itemContent.info?.h ?? 400 / 2}
 		class:hidden={isLoaded}
 	></canvas>
 
@@ -106,6 +128,7 @@
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<img
+		src={imageSrc}
 		{alt}
 		class="aspect-video w-full cursor-pointer object-cover"
 		onclick={toggleFullscreen}
@@ -115,8 +138,12 @@
 	<!-- Load Button -->
 	{#if !isLoaded}
 		<div class="absolute inset-0 flex items-center justify-center" transition:fade>
-			<Button onclick={() => null}>
-				<ImageIcon class="mr-2 h-4 w-4" />
+			<Button onclick={() => loadImage()}>
+				{#if isLoading}
+					<Loader class="mr-2 h-4 w-4" />
+				{:else}
+					<ImageIcon class="mr-2 h-4 w-4" />
+				{/if}
 				Load Image
 			</Button>
 		</div>
@@ -124,6 +151,7 @@
 </div>
 
 <!-- Fullscreen Modal -->
+<!-- TODO: add onOutsideClick -->
 {#if isFullscreen}
 	<div
 		class="bg-background/80 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
@@ -138,7 +166,7 @@
 			>
 				<XIcon class="h-4 w-4" />
 			</Button>
-			<img {src} {alt} class="max-h-[90vh] max-w-[90vw] rounded-lg object-contain" />
+			<img src={imageSrc} {alt} class="max-h-[90vh] max-w-[90vw] rounded-lg object-contain" />
 		</div>
 	</div>
 {/if}

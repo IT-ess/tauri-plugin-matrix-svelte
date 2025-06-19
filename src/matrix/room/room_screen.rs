@@ -11,7 +11,6 @@ use tauri::{AppHandle, Runtime};
 use tauri_plugin_svelte::{ManagerExt, StoreState};
 
 use crate::matrix::{
-    media_cache::MediaCache,
     requests::{submit_async_request, MatrixRequest},
     timeline::{
         take_timeline_endpoints, PaginationDirection, TimelineUiState, TimelineUpdate,
@@ -512,7 +511,6 @@ impl RoomScreen {
                 profile_drawn_since_last_update: RangeSet::new(),
                 update_receiver,
                 request_sender,
-                media_cache: MediaCache::new(Some(update_sender)),
                 // replying_to: None,
                 saved_state: SavedState::default(),
                 last_scrolled_index: usize::MAX,

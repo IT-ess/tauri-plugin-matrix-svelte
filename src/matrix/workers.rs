@@ -632,17 +632,18 @@ pub async fn async_worker(
             // }
             MatrixRequest::FetchMedia {
                 media_request,
-                on_fetched,
-                destination,
-                update_sender,
+                content_sender,
             } => {
                 let Some(client) = CLIENT.get() else { continue };
                 let media = client.media();
 
                 let _fetch_task = Handle::current().spawn(async move {
-                    // println!("Sending fetch media request for {media_request:?}...");
+                    println!("Sending fetch media request for {media_request:?}...");
+                    media.clean_up_media_cache().await.unwrap();
                     let res = media.get_media_content(&media_request, true).await;
-                    on_fetched(&destination, media_request, res, update_sender);
+                    content_sender
+                        .send(res)
+                        .expect("Couldn't send back fetched media")
                 });
             }
             MatrixRequest::SendMessage {

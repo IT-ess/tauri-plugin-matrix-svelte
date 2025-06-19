@@ -63,7 +63,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
         .invoke_handler(tauri::generate_handler![
             commands::ping,
             commands::login_and_create_new_session,
-            commands::submit_async_request
+            commands::submit_async_request,
+            commands::fetch_media
         ])
         .setup(|app, api| {
             // Create a channel to be used between UI thread(s) and the async worker thread.
