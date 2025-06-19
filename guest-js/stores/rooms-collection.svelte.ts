@@ -25,6 +25,8 @@ export class RoomsCollection extends RuneStore<RoomsCollectionType> {
       // see : https://tb.dev.br/tauri-store/plugin-svelte/guide/synchronization
       // saveStrategy: "debounce",
       // saveInterval: 500,
+      syncStrategy: "debounce",
+      syncInterval: 1000,
     };
 
     super(

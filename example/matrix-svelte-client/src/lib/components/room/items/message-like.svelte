@@ -10,6 +10,7 @@
 	import { Tooltip, TooltipContent, TooltipProvider } from '$lib/components/ui/tooltip';
 	import { Button } from '$lib/components/ui/button';
 	import { SmileIcon } from '@lucide/svelte';
+	import ImageMessage from './image-message.svelte';
 
 	type Props = {
 		data: MsgLikeContent;
@@ -52,33 +53,6 @@
 			timelineEventId: eventId
 		});
 		await submitAsyncRequest(request);
-
-		// const existingReaction = Object.keys(data.reactions).find((r) => r === emoji);
-
-		// if (existingReaction) {
-		// 	// Remove current user if already reacted
-		// 	if (existingReaction.users.some((u) => u.id === 'current-user')) {
-		// 		existingReaction.count--;
-		// 		existingReaction.users = existingReaction.users.filter((u) => u.id !== 'current-user');
-		// 		if (existingReaction.count === 0) {
-		// 			message.reactions = message.reactions.filter((r) => r.emoji !== emoji);
-		// 		}
-		// 	} else {
-		// 		// Add current user's reaction
-		// 		existingReaction.count++;
-		// 		existingReaction.users.push({ id: 'current-user', name: 'Current User' });
-		// 	}
-		// } else {
-		// 	// Create new reaction
-		// 	message.reactions = [
-		// 		...message.reactions,
-		// 		{
-		// 			emoji,
-		// 			count: 1,
-		// 			users: [{ id: 'current-user', name: 'Current User' }]
-		// 		}
-		// 	];
-		// }
 	};
 </script>
 
@@ -98,9 +72,13 @@
 			<p class="text-sm font-medium">{data.sender}</p>
 			<span class="text-xs opacity-70">{formatTime(timestamp ?? 0)}</span>
 		</div>
-		<p class="mt-1 text-sm">
-			{data.body.body}
-		</p>
+		{#if data.kind === 'text'}
+			<p class="mt-1 text-sm">
+				{data.body.body}
+			</p>
+		{:else if data.kind === 'image'}
+			<ImageMessage itemContent={data.body} />
+		{/if}
 	</div>
 
 	<!-- Reaction button -->

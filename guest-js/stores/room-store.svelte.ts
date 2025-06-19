@@ -31,6 +31,8 @@ export class RoomStore extends RuneStore<Room> {
 
     options = {
       hooks,
+      syncStrategy: "debounce",
+      syncInterval: 1000,
     };
 
     super(id, defaultRoom, options);

@@ -224,11 +224,6 @@ pub struct TimelineUiState {
     /// Not included in frontend serialization
     pub(crate) request_sender: TimelineRequestSender,
 
-    /// The cache of media items (images, videos, etc.) that appear in this timeline.
-    ///
-    /// Currently this excludes avatars, as those are shared across multiple rooms.
-    // media_cache: MediaCache,
-
     /// Info about the event currently being replied to, if any.
     // TODO: replace repliedtoinfo struct with the latest one from the SDK (this one is broken)
     // replying_to: Option<(EventTimelineItem, RepliedToInfo)>,

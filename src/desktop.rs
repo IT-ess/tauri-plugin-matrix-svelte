@@ -1,5 +1,6 @@
+use matrix_sdk::media::MediaRequestParameters;
 use serde::de::DeserializeOwned;
-use tauri::{plugin::PluginApi, AppHandle, Runtime};
+use tauri::{ipc::Channel, plugin::PluginApi, AppHandle, Runtime};
 
 use crate::{
     matrix::{
@@ -7,6 +8,7 @@ use crate::{
         login::{LoginRequest, MatrixClientConfig},
         requests::{submit_async_request, MatrixRequest},
     },
+    models::matrix::MediaStreamEvent,
     ping::{PingRequest, PingResponse},
 };
 
@@ -38,5 +40,13 @@ impl<R: Runtime> MatrixSvelte<R> {
     pub fn submit_async_request(&self, request: MatrixRequest) -> crate::Result<()> {
         submit_async_request(request);
         Ok(())
+    }
+
+    pub async fn fetch_media(
+        &self,
+        media_request: MediaRequestParameters,
+        on_event: &Channel<MediaStreamEvent>,
+    ) -> anyhow::Result<usize> {
+        crate::matrix::fetch_media(media_request, on_event).await
     }
 }

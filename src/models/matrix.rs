@@ -100,3 +100,27 @@ impl MatrixRoomStoreCreateRequest {
         Self { id }
     }
 }
+
+// Channel events
+
+#[derive(Clone, Serialize)]
+#[serde(
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase",
+    tag = "event",
+    content = "data"
+)]
+pub enum MediaStreamEvent {
+    Started,
+    Chunk {
+        data: Vec<u8>,
+        chunk_size: usize,
+        bytes_received: usize,
+    },
+    Finished {
+        total_bytes: usize,
+    },
+    Error {
+        message: String,
+    },
+}

@@ -491,13 +491,6 @@ impl RoomsList {
                     // the room_screen will be dropped,
                     // and hide_timeline() will be called on drop
                 });
-
-                // Notify frontend through the RoomsList store that the thread is started
-                // TODO: we let this to the frontend for now, decide later if I remove this
-                // rooms_collection::update_current_active_room(
-                //     app_handle,
-                //     &self.current_active_room,
-                // )?;
                 Ok(())
             }
             None => {

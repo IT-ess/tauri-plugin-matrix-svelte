@@ -41,3 +41,30 @@ export type MessageTextEventType = {
   sender: string;
   body: string;
 };
+
+// Channel events
+
+export type MediaStreamEvent =
+  | {
+      event: "started";
+    }
+  | {
+      event: "chunk";
+      data: {
+        data: number[];
+        chunkSize: number;
+        bytesReceived: number;
+      };
+    }
+  | {
+      event: "finished";
+      data: {
+        totalBytes: number;
+      };
+    }
+  | {
+      event: "error";
+      data: {
+        message: string;
+      };
+    };

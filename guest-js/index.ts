@@ -18,9 +18,11 @@ import {
   VirtualTimelineItem,
 } from "./timeline-items/timeline-item";
 import {
+  ImageMessageEventContent,
   MsgLikeContent,
   ReactionsByKeyBySender,
 } from "./timeline-items/message-like";
+import { MediaRequestParameters } from "./matrix-requests/media";
 
 export async function ping(value: string): Promise<string | null> {
   return await invoke<{ value?: string }>("plugin:matrix-svelte|ping", {
@@ -59,6 +61,8 @@ export {
   TimelineItemData,
   timelineDataGuards,
   MsgLikeContent,
+  ImageMessageEventContent,
+  MediaRequestParameters,
   ReactionsByKeyBySender,
   VirtualTimelineItem,
   TimelineState,

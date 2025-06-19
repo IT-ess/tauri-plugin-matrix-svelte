@@ -4,4 +4,5 @@ permissions = [
     "allow-ping",
     "allow-login-and-create-new-session",
     "allow-submit-async-request",
+    "allow-fetch-media",
 ]

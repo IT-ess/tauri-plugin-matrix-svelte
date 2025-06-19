@@ -60,6 +60,7 @@ pub fn to_frontend_timeline_item<'a>(
             };
             match event_tl_item.content() {
                 TimelineItemContent::MsgLike(msg_like) => {
+                    // TODO: create a MsgLike mapper to refacto
                     match msg_like.kind.clone() {
                         MsgLikeKind::Message(message) => match message.msgtype().clone() {
                             MessageType::Text(text_msg) => {
@@ -78,6 +79,26 @@ pub fn to_frontend_timeline_item<'a>(
                                             sender,
                                             thread_root: None,
                                             kind: FrontendMsgLikeKind::Text(text_msg),
+                                        },
+                                    ),
+                                }
+                            }
+                            MessageType::Image(img_msg) => {
+                                return FrontendTimelineItem {
+                                    event_id,
+                                    is_own,
+                                    is_local,
+                                    timestamp,
+                                    data: FrontendTimelineItemData::MsgLike(
+                                        FrontendMsgLikeContent {
+                                            kind: FrontendMsgLikeKind::Image(img_msg),
+                                            edited: message.is_edited(),
+                                            reactions: FrontendReactionsByKeyBySender(
+                                                &msg_like.reactions,
+                                            ),
+                                            sender_id,
+                                            sender,
+                                            thread_root: None,
                                         },
                                     ),
                                 }
@@ -202,3 +223,129 @@ pub fn to_frontend_timeline_item<'a>(
         timestamp: None,
     };
 }
+
+// fn to_image_item<'a>(
+//     image_info_source: Option<(Option<ImageInfo>, MediaSource)>,
+//     body: &str,
+//     media_cache: &mut MediaCache,
+// ) -> FrontendTimelineItem<'a> {
+//     // We don't use thumbnails, as their resolution is too low to be visually useful.
+//     // We also don't trust the provided mimetype, as it can be incorrect.
+//     let (mimetype, _width, _height) = image_info_source
+//         .as_ref()
+//         .and_then(|(info, _)| {
+//             info.as_ref()
+//                 .map(|info| (info.mimetype.as_deref(), info.width, info.height))
+//         })
+//         .unwrap_or_default();
+
+//     // If we have a known mimetype and it's not a static image,
+//     // then show a message about it being unsupported (e.g., for animated gifs).
+//     if let Some(mime) = mimetype.as_ref() {
+//         if ImageFormat::from_mimetype(mime).is_none() {
+//             text_or_image_ref.show_text(format!(
+//                 "{body}\n\nImages/Stickers of type {mime:?} are not yet supported."
+//             ));
+//             return true; // consider this as fully drawn
+//         }
+//     }
+
+//     let mut fully_drawn = false;
+
+//     // A closure that fetches and shows the image from the given `mxc_uri`,
+//     // marking it as fully drawn if the image was available.
+//     let mut fetch_and_show_image_uri = |mxc_uri: OwnedMxcUri, image_info: Option<&ImageInfo>| {
+//         match media_cache.try_get_media_or_fetch(mxc_uri.clone(), MEDIA_THUMBNAIL_FORMAT.into()) {
+//             (MediaCacheEntry::Loaded(data), _media_format) => {
+//                 let show_image_result = text_or_image_ref.show_image(cx, |cx, img| {
+//                     utils::load_png_or_jpg(&img, cx, &data)
+//                         .map(|()| img.size_in_pixels(cx).unwrap_or_default())
+//                 });
+//                 if let Err(e) = show_image_result {
+//                     let err_str = format!("{body}\n\nFailed to display image: {e:?}");
+//                     error!("{err_str}");
+//                     text_or_image_ref.show_text(cx, &err_str);
+//                 }
+
+//                 // We're done drawing the image, so mark it as fully drawn.
+//                 fully_drawn = true;
+//             }
+//             (MediaCacheEntry::Requested, _media_format) => {
+//                 if let Some(image_info) = image_info {
+//                     if let (Some(ref blurhash), Some(width), Some(height)) = (
+//                         image_info.thumbhash.clone(),
+//                         image_info.width,
+//                         image_info.height,
+//                     ) {
+//                         let show_image_result = text_or_image_ref.show_image(cx, |cx, img| {
+//                             let (Ok(width), Ok(height)) = (width.try_into(), height.try_into())
+//                             else {
+//                                 return Err(image_cache::ImageError::EmptyData);
+//                             };
+//                             if let Ok(data) = thumbhash::decode(blurhash, width, height, 1.0) {
+//                                 ImageBuffer::new(&data, width as usize, height as usize).map(
+//                                     |img_buff| {
+//                                         let texture = Some(img_buff.into_new_texture(cx));
+//                                         img.set_texture(cx, texture);
+//                                         img.size_in_pixels(cx).unwrap_or_default()
+//                                     },
+//                                 )
+//                             } else {
+//                                 Err(image_cache::ImageError::EmptyData)
+//                             }
+//                         });
+//                         if let Err(e) = show_image_result {
+//                             let err_str = format!("{body}\n\nFailed to display image: {e:?}");
+//                             error!("{err_str}");
+//                             text_or_image_ref.show_text(cx, &err_str);
+//                         }
+//                     }
+//                 }
+//                 fully_drawn = false;
+//             }
+//             (MediaCacheEntry::Failed, _media_format) => {
+//                 text_or_image_ref.show_text(
+//                     cx,
+//                     format!("{body}\n\nFailed to fetch image from {:?}", mxc_uri),
+//                 );
+//                 // For now, we consider this as being "complete". In the future, we could support
+//                 // retrying to fetch thumbnail of the image on a user click/tap.
+//                 fully_drawn = true;
+//             }
+//         }
+//     };
+
+//     let mut fetch_and_show_media_source =
+//         |media_source: MediaSource, image_info: Option<&ImageInfo>| {
+//             match media_source {
+//                 MediaSource::Encrypted(encrypted) => {
+//                     // We consider this as "fully drawn" since we don't yet support encryption.
+//                     text_or_image_ref.show_text(
+//                         cx,
+//                         format!(
+//                             "{body}\n\n[TODO] fetch encrypted image at {:?}",
+//                             encrypted.url
+//                         ),
+//                     );
+//                 }
+//                 MediaSource::Plain(mxc_uri) => fetch_and_show_image_uri(mxc_uri, image_info),
+//             }
+//         };
+
+//     match image_info_source {
+//         Some((image_info, original_source)) => {
+//             // Use the provided thumbnail URI if it exists; otherwise use the original URI.
+//             let media_source = image_info
+//                 .clone()
+//                 .and_then(|image_info| image_info.thumbnail_source)
+//                 .unwrap_or(original_source);
+//             fetch_and_show_media_source(media_source, image_info.as_ref());
+//         }
+//         None => {
+//             text_or_image_ref.show_text("{body}\n\nImage message had no source URL.");
+//             fully_drawn = true;
+//         }
+//     }
+
+//     fully_drawn
+// }

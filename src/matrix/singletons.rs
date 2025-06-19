@@ -1,5 +1,6 @@
 use std::{
     collections::BTreeMap,
+    path::PathBuf,
     sync::{Mutex, OnceLock},
 };
 
@@ -51,6 +52,8 @@ static GLOBAL_BROADCASTER: OnceLock<GlobalBroadcaster> = OnceLock::new();
 pub struct GlobalBroadcaster {
     sender: broadcast::Sender<UIUpdateMessage>,
 }
+
+pub static TEMP_DIR: OnceLock<PathBuf> = OnceLock::new();
 
 impl GlobalBroadcaster {
     fn new(capacity: usize) -> Self {
