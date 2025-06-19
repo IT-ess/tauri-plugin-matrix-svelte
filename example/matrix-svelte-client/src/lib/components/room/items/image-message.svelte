@@ -5,6 +5,7 @@
 	import { ImageIcon, Loader, XIcon } from '@lucide/svelte';
 	import type { events, ImageMessageEventContent } from 'tauri-plugin-matrix-svelte-api';
 	import { Channel, invoke } from '@tauri-apps/api/core';
+	import { onClickOutside } from 'runed';
 
 	type Props = {
 		itemContent: ImageMessageEventContent;
@@ -26,6 +27,13 @@
 	let bytesReceived = $state(0);
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	let progress = $derived(bytesReceived / totalSize);
+
+	let fullscreenContainer = $state<HTMLDivElement>()!;
+
+	onClickOutside(
+		() => fullscreenContainer,
+		() => (isFullscreen = false)
+	);
 
 	// Load image when button is clicked
 	const loadImage = async () => {
@@ -157,7 +165,7 @@
 		class="bg-background/80 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
 		transition:scale
 	>
-		<div class="relative max-h-[90vh] max-w-[90vw]">
+		<div bind:this={fullscreenContainer} class="relative max-h-[90vh] max-w-[90vw]">
 			<Button
 				variant="ghost"
 				size="icon"

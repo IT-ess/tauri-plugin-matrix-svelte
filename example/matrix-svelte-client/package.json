@@ -34,6 +34,7 @@
 		"@tauri-apps/plugin-opener": "^2.2.7",
 		"@tauri-apps/plugin-os": "^2.2.1",
 		"clsx": "^2.1.1",
+		"runed": "^0.28.0",
 		"tailwind-merge": "^3.3.0",
 		"tailwindcss": "^4.1.8",
 		"tauri-plugin-matrix-svelte-api": "file:../.."
