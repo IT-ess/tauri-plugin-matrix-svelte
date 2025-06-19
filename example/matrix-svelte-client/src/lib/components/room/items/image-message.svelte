@@ -119,16 +119,16 @@
 		{@attach (canvas) => {
 			// TODO: optimise this because this is ran multiple times since the blurhash store is updated. See attachments docs
 			console.log('Attaching canvas. Blurhash is', blurhash);
-			const pixels = decode(blurhash, itemContent.info?.w, itemContent.info?.h);
+			const pixels = decode(blurhash, 200, 200);
 			const context = canvas.getContext('2d');
-			const imageData = context?.createImageData(itemContent.info?.w, itemContent.info?.h);
+			const imageData = context?.createImageData(200, 200);
 			if (imageData) {
 				imageData.data.set(pixels);
 				context?.putImageData(imageData, 0, 0);
 			}
 		}}
-		width={itemContent.info?.w ?? 400 / 2}
-		height={itemContent.info?.h ?? 400 / 2}
+		width={200}
+		height={200}
 		class:hidden={isLoaded}
 	></canvas>
 
