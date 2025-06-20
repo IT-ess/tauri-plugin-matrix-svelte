@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { decode } from 'blurhash';
-	import { fade, scale } from 'svelte/transition';
+	import { scale } from 'svelte/transition';
 	import { Button } from '$lib/components/ui/button';
-	import { ImageIcon, Loader, XIcon } from '@lucide/svelte';
+	import { XIcon } from '@lucide/svelte';
 	import type { events, ImageMessageEventContent } from 'tauri-plugin-matrix-svelte-api';
 	import { Channel, invoke } from '@tauri-apps/api/core';
 	import { onClickOutside } from 'runed';
@@ -13,19 +13,17 @@
 
 	let { itemContent }: Props = $props();
 
-	let blurhash = itemContent.info?.['xyz.amorgan.blurhash'] ?? 'LQHx$:t8*JEj*0WqtlNd9@WUIVsT'; // use this blurhash as a placeholder
+	let blurhash = itemContent.info?.['xyz.amorgan.blurhash'] ?? 'LQHx$:t8*JEj*0WqtlNd9@WUIVsT'; // Placeholder blurhash
 	let alt = itemContent.body;
 
 	// State variables
 	let isLoaded = $state(false);
 	let isFullscreen = $state(false);
-	let imageSrc = $state<string>('');
 	let isLoading = $state(false);
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	let error = $state<string | null>(null);
+	let imageSrc = $state<string>('');
 	let totalSize = $derived(itemContent.info?.size ?? 1);
 	let bytesReceived = $state(0);
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	let progress = $derived(bytesReceived / totalSize);
 
 	let fullscreenContainer = $state<HTMLDivElement>()!;
@@ -35,8 +33,10 @@
 		() => (isFullscreen = false)
 	);
 
-	// Load image when button is clicked
+	// Load image function
 	const loadImage = async () => {
+		if (isLoaded || isLoading) return;
+
 		isLoading = true;
 		error = null;
 		bytesReceived = 0;
@@ -54,7 +54,6 @@
 				if (message.event === 'chunk') {
 					chunks.push(new Uint8Array(message.data.data));
 					bytesReceived = message.data.bytesReceived;
-
 					console.log(
 						`Received chunk: ${message.data.chunkSize} bytes, total: ${bytesReceived}/${totalSize}`
 					);
@@ -75,7 +74,7 @@
 					// Create blob URL for display
 					const blob = new Blob([combined], { type: itemContent.info?.mimetype ?? 'image/jpeg' });
 					imageSrc = URL.createObjectURL(blob);
-
+					isLoaded = true;
 					isLoading = false;
 					console.log(`Image fetch completed: ${message.data.totalBytes} bytes`);
 					return;
@@ -91,7 +90,7 @@
 
 			await invoke('plugin:matrix-svelte|fetch_media', {
 				mediaRequest: {
-					format: 'File', // We do not handle thumbnails yet
+					format: 'File',
 					source: { file: itemContent.file }
 				},
 				onEvent
@@ -101,11 +100,13 @@
 			isLoading = false;
 			console.error('Invoke error:', err);
 		}
-
-		isLoaded = true;
 	};
 
-	// Toggle fullscreen view
+	// Auto-start loading when component mounts
+	$effect(() => {
+		loadImage();
+	});
+
 	const toggleFullscreen = () => {
 		if (isLoaded) {
 			isFullscreen = !isFullscreen;
@@ -114,53 +115,64 @@
 </script>
 
 <div class="bg-card relative overflow-hidden rounded-lg border">
-	<!-- Blurhash Canvas -->
-	<canvas
-		{@attach (canvas) => {
-			// TODO: optimise this because this is ran multiple times since the blurhash store is updated. See attachments docs
-			console.log('Attaching canvas. Blurhash is', blurhash);
-			const pixels = decode(blurhash, 200, 200);
-			const context = canvas.getContext('2d');
-			const imageData = context?.createImageData(200, 200);
-			if (imageData) {
-				imageData.data.set(pixels);
-				context?.putImageData(imageData, 0, 0);
-			}
-		}}
-		width={200}
-		height={200}
-		class:hidden={isLoaded}
-	></canvas>
-
-	<!-- Main Image -->
-	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<img
-		src={imageSrc}
-		{alt}
-		class="aspect-video w-full cursor-pointer object-cover"
-		onclick={toggleFullscreen}
-		class:hidden={!isLoaded}
-	/>
-
-	<!-- Load Button -->
 	{#if !isLoaded}
-		<div class="absolute inset-0 flex items-center justify-center" transition:fade>
-			<Button onclick={() => loadImage()}>
-				{#if isLoading}
-					<Loader class="mr-2 h-4 w-4" />
-				{:else}
-					<ImageIcon class="mr-2 h-4 w-4" />
-				{/if}
-				Load Image
-			</Button>
+		<!-- Blurhash Canvas as optimistic UI -->
+		<div class="relative">
+			<canvas
+				{@attach (canvas) => {
+					console.log('Attaching canvas. Blurhash is', blurhash);
+					const pixels = decode(blurhash, 200, 200);
+					const context = canvas.getContext('2d');
+					const imageData = context?.createImageData(200, 200);
+					if (imageData) {
+						imageData.data.set(pixels);
+						context?.putImageData(imageData, 0, 0);
+					}
+				}}
+				width={200}
+				height={200}
+				class="aspect-video w-full object-cover"
+			></canvas>
+
+			{#if isLoading}
+				<div class="absolute inset-0 flex items-center justify-center bg-black/20">
+					<div class="rounded-full bg-white/90 px-3 py-1 text-xs">
+						{Math.round(progress * 100)}%
+					</div>
+				</div>
+			{/if}
+
+			{#if error}
+				<div class="bg-destructive/80 absolute inset-0 flex items-center justify-center">
+					<div class="text-center text-white">
+						<p class="mb-2 text-sm">Failed to load</p>
+						<Button variant="secondary" size="sm" onclick={loadImage}>Retry</Button>
+					</div>
+				</div>
+			{/if}
 		</div>
+	{:else}
+		<!-- Loaded Image -->
+		<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
+		<img
+			src={imageSrc}
+			{alt}
+			class="aspect-video w-full cursor-pointer object-cover"
+			role="button"
+			tabindex="0"
+			onclick={toggleFullscreen}
+			onkeydown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					toggleFullscreen();
+				}
+			}}
+		/>
 	{/if}
 </div>
 
 <!-- Fullscreen Modal -->
-<!-- TODO: add onOutsideClick -->
-{#if isFullscreen}
+{#if isFullscreen && imageSrc}
 	<div
 		class="bg-background/80 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
 		transition:scale
