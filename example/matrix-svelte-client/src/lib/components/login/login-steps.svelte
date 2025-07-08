@@ -14,7 +14,7 @@
 	import * as Form from '$lib/components/ui/form/index';
 
 	import { type SuperValidated, type Infer, superForm, setMessage } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { loginFormSchema, type LoginFormSchema } from '$lib/schemas/login';
 	import { onMount } from 'svelte';
 
@@ -37,7 +37,7 @@
 
 	const form = superForm(dataForm, {
 		SPA: true,
-		validators: zodClient(loginFormSchema),
+		validators: zod4Client(loginFormSchema),
 		onUpdate({ form }) {
 			// Form validation
 			if (form.valid) {
