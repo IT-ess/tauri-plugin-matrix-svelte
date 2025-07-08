@@ -639,7 +639,6 @@ pub async fn async_worker(
 
                 let _fetch_task = Handle::current().spawn(async move {
                     println!("Sending fetch media request for {media_request:?}...");
-                    media.clean_up_media_cache().await.unwrap();
                     let res = media.get_media_content(&media_request, true).await;
                     content_sender
                         .send(res)

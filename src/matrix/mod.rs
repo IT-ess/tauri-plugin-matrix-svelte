@@ -84,13 +84,13 @@ pub(crate) async fn fetch_media(
     for chunk in image_data.chunks(CHUNK_SIZE) {
         bytes_sent += chunk.len();
 
-        on_event
-            .send(MediaStreamEvent::Chunk {
-                data: chunk.to_vec(),
-                chunk_size: chunk.len(),
-                bytes_received: bytes_sent,
-            })
-            .unwrap();
+        if let Err(e) = on_event.send(MediaStreamEvent::Chunk {
+            data: chunk.to_vec(),
+            chunk_size: chunk.len(),
+            bytes_received: bytes_sent,
+        }) {
+            return Err(anyhow!("Failed to send media chunk: {}", e));
+        }
     }
 
     Ok(bytes_sent)
