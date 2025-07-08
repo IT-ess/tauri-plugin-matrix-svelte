@@ -13,7 +13,7 @@ readme = "README.md"
 license = "Apache-2.0"
 
 [dependencies]
-tauri = { version = "2.5.1" }
+tauri = { version = "2.6.2" }
 serde = "1.0"
 thiserror = "2"
 anyhow = "1.0.97"
@@ -39,7 +39,7 @@ futures-util = "0.3.31"
 blake2 = "0.10.6"
 rand = "0.9.1"
 tokio = { version = "1.45.1", features = ["macros", "rt-multi-thread"] }
-tauri-plugin-svelte = "2.6.0"
+tauri-plugin-svelte = "2.6.1"
 futures = "0.3.31"
 eyeball = "0.8.8"
 crossbeam-channel = "0.5.15"
@@ -51,4 +51,4 @@ rangemap = "1.5.1"
 indexmap = { version = "2.9.0", features = ["serde"] }
 
 [build-dependencies]
-tauri-plugin = { version = "2.2.0", features = ["build"] }
+tauri-plugin = { version = "2.3.0", features = ["build"] }

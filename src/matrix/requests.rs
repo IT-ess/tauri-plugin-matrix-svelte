@@ -1,4 +1,5 @@
 use matrix_sdk::{
+    media::MediaRequestParameters,
     room::{edit::EditedContent, RoomMember},
     ruma::{
         events::room::message::RoomMessageEventContent, matrix_uri::MatrixId, OwnedEventId,
@@ -7,6 +8,7 @@ use matrix_sdk::{
     OwnedServerName, RoomMemberships,
 };
 use matrix_sdk_ui::timeline::TimelineEventItemId;
+use tokio::sync::oneshot;
 
 use super::{singletons::REQUEST_SENDER, timeline::PaginationDirection};
 
@@ -93,12 +95,10 @@ pub enum MatrixRequest {
     /// Upon completion of the async media request, the `on_fetched` function
     /// will be invoked with four arguments: the `destination`, the `media_request`,
     /// the result of the media fetch, and the `update_sender`.
-    // FetchMedia {
-    //     media_request: MediaRequestParameters,
-    //     on_fetched: OnMediaFetchedFn,
-    //     destination: MediaCacheEntryRef,
-    //     update_sender: Option<crossbeam_channel::Sender<TimelineUpdate>>,
-    // },
+    FetchMedia {
+        media_request: MediaRequestParameters,
+        content_sender: oneshot::Sender<Result<Vec<u8>, matrix_sdk::Error>>,
+    },
     /// Request to send a message to the given room.
     SendMessage {
         room_id: OwnedRoomId,

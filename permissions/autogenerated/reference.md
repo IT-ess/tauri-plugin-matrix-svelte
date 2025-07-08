@@ -7,6 +7,7 @@ Default permissions for the plugin
 - `allow-ping`
 - `allow-login-and-create-new-session`
 - `allow-submit-async-request`
+- `allow-fetch-media`
 
 ## Permission Table
 
@@ -16,6 +17,32 @@ Default permissions for the plugin
 <th>Description</th>
 </tr>
 
+
+<tr>
+<td>
+
+`matrix-svelte:allow-fetch-media`
+
+</td>
+<td>
+
+Enables the fetch_media command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-fetch-media`
+
+</td>
+<td>
+
+Denies the fetch_media command without any pre-configured scope.
+
+</td>
+</tr>
 
 <tr>
 <td>

@@ -60,6 +60,7 @@ pub fn to_frontend_timeline_item<'a>(
             };
             match event_tl_item.content() {
                 TimelineItemContent::MsgLike(msg_like) => {
+                    // TODO: create a MsgLike mapper to refacto
                     match msg_like.kind.clone() {
                         MsgLikeKind::Message(message) => match message.msgtype().clone() {
                             MessageType::Text(text_msg) => {
@@ -78,6 +79,26 @@ pub fn to_frontend_timeline_item<'a>(
                                             sender,
                                             thread_root: None,
                                             kind: FrontendMsgLikeKind::Text(text_msg),
+                                        },
+                                    ),
+                                }
+                            }
+                            MessageType::Image(img_msg) => {
+                                return FrontendTimelineItem {
+                                    event_id,
+                                    is_own,
+                                    is_local,
+                                    timestamp,
+                                    data: FrontendTimelineItemData::MsgLike(
+                                        FrontendMsgLikeContent {
+                                            kind: FrontendMsgLikeKind::Image(img_msg),
+                                            edited: message.is_edited(),
+                                            reactions: FrontendReactionsByKeyBySender(
+                                                &msg_like.reactions,
+                                            ),
+                                            sender_id,
+                                            sender,
+                                            thread_root: None,
                                         },
                                     ),
                                 }
