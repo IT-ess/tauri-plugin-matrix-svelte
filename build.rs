@@ -3,6 +3,7 @@ const COMMANDS: &[&str] = &[
     "login_and_create_new_session",
     "submit_async_request",
     "fetch_media",
+    "fetch_user_profile",
 ];
 
 fn main() {

@@ -1,11 +1,19 @@
 import type { ClientInit } from '@sveltejs/kit';
-import { RoomStore, RoomsCollection, LoginStore, events } from 'tauri-plugin-matrix-svelte-api';
+import {
+	RoomStore,
+	RoomsCollection,
+	LoginStore,
+	ProfileStore,
+	events
+} from 'tauri-plugin-matrix-svelte-api';
 import { type UnlistenFn } from '@tauri-apps/api/event';
 import { roomStoresMap } from '$lib/stores/rooms.map.svelte';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 
 // Create the store that will track the login state
 const loginStore = new LoginStore();
+// Create the store that gathers the user profiles
+const profileStore = new ProfileStore();
 // Init the room ids store that syncs available rooms with backend
 const roomsCollection = new RoomsCollection();
 
@@ -13,6 +21,7 @@ let storeListener: UnlistenFn;
 
 export const init: ClientInit = async () => {
 	await loginStore.start();
+	await profileStore.start();
 	await roomsCollection.startStoreAndSendConfirmationEvent();
 	const roomIds = roomsCollection.getDisplayedJoinedRoomsIds();
 	console.log(roomIds);
@@ -49,4 +58,4 @@ export const init: ClientInit = async () => {
 	window.dispatchEvent(splashscreenEvent);
 };
 
-export { roomsCollection, roomStoresMap, storeListener, loginStore };
+export { roomsCollection, roomStoresMap, storeListener, loginStore, profileStore };

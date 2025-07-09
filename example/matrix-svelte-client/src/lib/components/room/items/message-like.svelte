@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { Avatar, AvatarFallback } from '$lib/components/ui/avatar';
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import {
 		createMatrixRequest,
+		events,
+		ProfileStore,
 		submitAsyncRequest,
 		type MsgLikeContent
 	} from 'tauri-plugin-matrix-svelte-api';
@@ -11,6 +13,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import { SmileIcon } from '@lucide/svelte';
 	import ImageMessage from './image-message.svelte';
+	import { Channel, invoke } from '@tauri-apps/api/core';
+	import { onMount } from 'svelte';
 
 	type Props = {
 		data: MsgLikeContent;
@@ -19,9 +23,12 @@
 		roomId: string;
 		eventId: string;
 		currentUserId: string;
+		profileStore: ProfileStore;
 	};
 
-	let { data, timestamp, isOwn, roomId, eventId, currentUserId }: Props = $props();
+	let { data, timestamp, isOwn, roomId, eventId, currentUserId, profileStore }: Props = $props();
+
+	const { senderId, sender } = data;
 
 	let reactionsArray = $derived(Object.keys(data.reactions));
 
@@ -32,6 +39,61 @@
 			.map((n) => n[0])
 			.join('')
 			.toUpperCase();
+	};
+
+	// Load image function
+	const loadImage = async (mxcUri: string) => {
+		const chunks: Uint8Array[] = [];
+		try {
+			let imageSrc: string = '';
+			const onEvent = new Channel<events.MediaStreamEvent>();
+
+			onEvent.onmessage = (message) => {
+				if (message.event === 'started') {
+					return;
+				}
+
+				if (message.event === 'chunk') {
+					chunks.push(new Uint8Array(message.data.data));
+					console.log(`Received chunk: ${message.data.chunkSize} bytes`);
+					return;
+				}
+
+				if (message.event === 'finished') {
+					// Combine all chunks into a single Uint8Array
+					const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+					const combined = new Uint8Array(totalLength);
+					let offset = 0;
+
+					for (const chunk of chunks) {
+						combined.set(chunk, offset);
+						offset += chunk.length;
+					}
+
+					// Create blob URL for display
+					const blob = new Blob([combined]);
+					imageSrc = URL.createObjectURL(blob);
+					console.log(`Image fetch completed: ${message.data.totalBytes} bytes`);
+					return;
+				}
+
+				if (message.event === 'error') {
+					console.error('Image fetch error:', message.data.message);
+					return;
+				}
+			};
+
+			await invoke('plugin:matrix-svelte|fetch_media', {
+				mediaRequest: {
+					format: 'File', // Maybe switch to a thumbnail instead ?
+					source: { url: mxcUri }
+				},
+				onEvent
+			});
+			return imageSrc;
+		} catch (err) {
+			console.error('Invoke error:', err);
+		}
 	};
 
 	// Format timestamp
@@ -54,12 +116,34 @@
 		});
 		await submitAsyncRequest(request);
 	};
+
+	onMount(async () => {
+		if (profileStore.state[senderId] === undefined) {
+			await invoke('plugin:matrix-svelte|fetch_user_profile', {
+				userId: senderId,
+				roomId
+			});
+		}
+	});
 </script>
 
 <div class={['flex gap-2', isOwn && 'flex-row-reverse']}>
 	<Avatar>
-		<!-- <AvatarImage src={message.sender.avatar} alt={message.sender.name} /> -->
-		<AvatarFallback>{getInitials(data.sender ?? 'John Doe')}</AvatarFallback>
+		<!-- Reactive store, once the profile is loaded we load the image -->
+		{#if profileStore.state[senderId]?.state === 'loaded'}
+			<!-- We obviously try to load the avatar only if the url exists. -->
+			{#if profileStore.state[senderId].data.avatarUrl}
+				{#await loadImage(profileStore.state[senderId].data.avatarUrl)}
+					{@render avatarFallback(sender)}
+				{:then url}
+					<AvatarImage src={url} alt={sender} />
+				{/await}
+			{:else}
+				{@render avatarFallback(sender)}
+			{/if}
+		{:else}
+			{@render avatarFallback(sender)}
+		{/if}
 	</Avatar>
 
 	<div
@@ -120,3 +204,7 @@
 		{/if}
 	</div>
 </div>
+
+{#snippet avatarFallback(sender?: string)}
+	<AvatarFallback>{getInitials(sender ?? 'John Doe')}</AvatarFallback>
+{/snippet}

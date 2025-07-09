@@ -16,9 +16,11 @@ export interface EncryptedFile {
   v: "v2";
 }
 
-export type MediaSource =
-  // | { url: OwnedMxcUri } // Corresponds to Plain variant, renamed to "url". We don't support Plain for now
-  { file: EncryptedFile }; // Corresponds to Encrypted variant, renamed to "file"
+export type MediaSource = PlainMediaSource | EncryptedMediaSource;
+
+export type PlainMediaSource = { url: MxcUri }; // Corresponds to Plain variant, renamed to "url". We don't support Plain for now
+
+export type EncryptedMediaSource = { file: EncryptedFile }; // Corresponds to Encrypted variant, renamed to "file"
 
 export type MediaFormat = "File" | { Thumbnail: MediaThumbnailSettings };
 

@@ -1,6 +1,10 @@
 import { UserId } from "../matrix-requests/common";
 import { TimelineItem } from "./timeline-item";
-import { MediaSource, MediaThumbnailSettings } from "../matrix-requests/media";
+import {
+  EncryptedMediaSource,
+  MediaSource,
+  MediaThumbnailSettings,
+} from "../matrix-requests/media";
 
 // Discriminated union for message-like content
 export type MsgLikeContent = {
@@ -28,7 +32,7 @@ export type ImageMessageEventContent = {
   msgtype: "m.image";
   formatted?: FormattedBody;
   info?: ImageInfo;
-} & MediaSource;
+} & EncryptedMediaSource; // We assume that we'll only use encrypted media.
 
 export interface ImageInfo {
   h?: number;

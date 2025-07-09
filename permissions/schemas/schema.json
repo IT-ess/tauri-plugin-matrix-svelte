@@ -307,6 +307,18 @@
           "markdownDescription": "Denies the fetch_media command without any pre-configured scope."
         },
         {
+          "description": "Enables the fetch_user_profile command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-fetch-user-profile",
+          "markdownDescription": "Enables the fetch_user_profile command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the fetch_user_profile command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-fetch-user-profile",
+          "markdownDescription": "Denies the fetch_user_profile command without any pre-configured scope."
+        },
+        {
           "description": "Enables the login_and_create_new_session command without any pre-configured scope.",
           "type": "string",
           "const": "allow-login-and-create-new-session",
@@ -343,10 +355,10 @@
           "markdownDescription": "Denies the submit_async_request command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`\n- `allow-login-and-create-new-session`\n- `allow-submit-async-request`\n- `allow-fetch-media`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`\n- `allow-login-and-create-new-session`\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`\n- `allow-login-and-create-new-session`\n- `allow-submit-async-request`\n- `allow-fetch-media`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`\n- `allow-login-and-create-new-session`\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`"
         }
       ]
     }

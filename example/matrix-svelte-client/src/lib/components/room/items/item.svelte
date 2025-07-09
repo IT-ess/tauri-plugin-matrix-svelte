@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { TimelineItem } from 'tauri-plugin-matrix-svelte-api';
+	import type { ProfileStore, TimelineItem } from 'tauri-plugin-matrix-svelte-api';
 	import MessageLike from './message-like.svelte';
 	import Virtual from './virtual.svelte';
 
@@ -7,9 +7,10 @@
 		item: TimelineItem;
 		roomId: string;
 		currentUserId: string;
+		profileStore: ProfileStore;
 	};
 
-	let { item, roomId, currentUserId }: Props = $props();
+	let { item, roomId, currentUserId, profileStore }: Props = $props();
 </script>
 
 {#if item.kind === 'msgLike'}
@@ -20,6 +21,7 @@
 		{roomId}
 		eventId={item.eventId ?? ''}
 		{currentUserId}
+		{profileStore}
 	/>
 	<!-- eventId should always be defined in msgLike -->
 {:else if item.kind === 'virtual'}
