@@ -1,4 +1,4 @@
-import { Base64, UInt, OwnedMxcUri } from "./common";
+import { Base64, UInt, MxcUri } from "./common";
 
 export interface JsonWebKey {
   kty: "oct";
@@ -9,7 +9,7 @@ export interface JsonWebKey {
 }
 
 export interface EncryptedFile {
-  url: OwnedMxcUri;
+  url: MxcUri;
   key: JsonWebKey;
   iv: Base64;
   hashes: Record<string, Base64>;

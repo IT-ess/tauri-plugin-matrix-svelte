@@ -1,4 +1,4 @@
-import { OwnedUserId } from "../matrix-requests/common";
+import { UserId } from "../matrix-requests/common";
 import { TimelineItem } from "./timeline-item";
 import { MediaSource, MediaThumbnailSettings } from "../matrix-requests/media";
 
@@ -71,7 +71,7 @@ export interface ReactionInfo {
 }
 
 // The inner map: sender → reaction info
-export type ReactionsBySender = Record<OwnedUserId, ReactionInfo>;
+export type ReactionsBySender = Record<UserId, ReactionInfo>;
 
 // The full map: reaction key → sender map
 export type ReactionsByKeyBySender = Record<string, ReactionsBySender>;

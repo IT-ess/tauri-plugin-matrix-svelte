@@ -12,7 +12,7 @@ const roomsCollection = new RoomsCollection();
 let storeListener: UnlistenFn;
 
 export const init: ClientInit = async () => {
-	await loginStore.startStoreAndSendConfirmationEvent();
+	await loginStore.start();
 	await roomsCollection.startStoreAndSendConfirmationEvent();
 	const roomIds = roomsCollection.getDisplayedJoinedRoomsIds();
 	console.log(roomIds);

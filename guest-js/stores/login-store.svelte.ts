@@ -27,14 +27,4 @@ export class LoginStore extends RuneStore<LoginStateType> {
 
     super(LOGIN_STATE_STORE_ID, { state: "initiating", userId: null }, options);
   }
-
-  /**
-   * Start the Rune store
-   */
-  async startStoreAndSendConfirmationEvent(): Promise<void> {
-    await this.start();
-    await this.save();
-    // await emit(MatrixSvelteEmitEvent.RoomsCollectionStarted);
-    // emit event to warn backend that the store has started ?
-  }
 }
