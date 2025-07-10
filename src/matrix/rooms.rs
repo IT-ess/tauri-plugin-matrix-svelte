@@ -101,17 +101,6 @@ pub enum UnreadMessageCount {
     Known(u64),
 }
 
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FrontendRoom {
-    id: String,
-    name: RoomDisplayName,
-    avatar: Option<Vec<u8>>,
-    highlight_count: u64,
-    notification_count: u64,
-    latest_message: String,
-}
-
 pub async fn add_new_room(
     room: &matrix_sdk::Room,
     room_list_service: &RoomListService,
@@ -266,15 +255,13 @@ pub async fn add_new_room(
         num_unread_messages: room.num_unread_messages(),
         num_unread_mentions: room.num_unread_mentions(),
         // start with a basic text avatar; the avatar image will be fetched asynchronously below.
-        // avatar: avatar_from_room_name(room_name.as_deref()),
+        avatar: room.avatar_url(),
         room_name,
         canonical_alias: room.canonical_alias(),
         alt_aliases: room.alt_aliases(),
         has_been_paginated: false,
         is_selected: false,
     }));
-
-    // spawn_fetch_room_avatar(room.inner_room().clone());
 
     Ok(())
 }

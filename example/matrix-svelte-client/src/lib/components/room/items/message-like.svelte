@@ -2,7 +2,6 @@
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import {
 		createMatrixRequest,
-		events,
 		ProfileStore,
 		submitAsyncRequest,
 		type MsgLikeContent
@@ -13,8 +12,9 @@
 	import { Button } from '$lib/components/ui/button';
 	import { SmileIcon } from '@lucide/svelte';
 	import ImageMessage from './image-message.svelte';
-	import { Channel, invoke } from '@tauri-apps/api/core';
+	import { invoke } from '@tauri-apps/api/core';
 	import { onMount } from 'svelte';
+	import { loadAvatar } from '$lib/utils';
 
 	type Props = {
 		data: MsgLikeContent;
@@ -39,61 +39,6 @@
 			.map((n) => n[0])
 			.join('')
 			.toUpperCase();
-	};
-
-	// Load image function
-	const loadImage = async (mxcUri: string) => {
-		const chunks: Uint8Array[] = [];
-		try {
-			let imageSrc: string = '';
-			const onEvent = new Channel<events.MediaStreamEvent>();
-
-			onEvent.onmessage = (message) => {
-				if (message.event === 'started') {
-					return;
-				}
-
-				if (message.event === 'chunk') {
-					chunks.push(new Uint8Array(message.data.data));
-					console.log(`Received chunk: ${message.data.chunkSize} bytes`);
-					return;
-				}
-
-				if (message.event === 'finished') {
-					// Combine all chunks into a single Uint8Array
-					const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
-					const combined = new Uint8Array(totalLength);
-					let offset = 0;
-
-					for (const chunk of chunks) {
-						combined.set(chunk, offset);
-						offset += chunk.length;
-					}
-
-					// Create blob URL for display
-					const blob = new Blob([combined]);
-					imageSrc = URL.createObjectURL(blob);
-					console.log(`Image fetch completed: ${message.data.totalBytes} bytes`);
-					return;
-				}
-
-				if (message.event === 'error') {
-					console.error('Image fetch error:', message.data.message);
-					return;
-				}
-			};
-
-			await invoke('plugin:matrix-svelte|fetch_media', {
-				mediaRequest: {
-					format: 'File', // Maybe switch to a thumbnail instead ?
-					source: { url: mxcUri }
-				},
-				onEvent
-			});
-			return imageSrc;
-		} catch (err) {
-			console.error('Invoke error:', err);
-		}
 	};
 
 	// Format timestamp
@@ -133,10 +78,12 @@
 		{#if profileStore.state[senderId]?.state === 'loaded'}
 			<!-- We obviously try to load the avatar only if the url exists. -->
 			{#if profileStore.state[senderId].data.avatarUrl}
-				{#await loadImage(profileStore.state[senderId].data.avatarUrl)}
+				{#await loadAvatar(profileStore.state[senderId].data.avatarUrl)}
 					{@render avatarFallback(sender)}
 				{:then url}
 					<AvatarImage src={url} alt={sender} />
+				{:catch}
+					{@render avatarFallback(sender)}
 				{/await}
 			{:else}
 				{@render avatarFallback(sender)}

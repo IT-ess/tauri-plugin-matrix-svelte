@@ -25,6 +25,7 @@ export class ProfileStore extends RuneStore<ProfileRecord> {
   /**
    * Creates a new ProfileStore instance
    */
+
   constructor() {
     const hooks: StoreHooks<ProfileRecord> = {
       error: (err) => console.error(err),
@@ -34,7 +35,6 @@ export class ProfileStore extends RuneStore<ProfileRecord> {
       syncStrategy: "debounce",
       syncInterval: 1000,
     };
-
     super(PROFILES_STORE_ID, {}, options);
   }
 }

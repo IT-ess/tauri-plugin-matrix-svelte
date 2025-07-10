@@ -50,9 +50,9 @@ export type JoinedRoomInfo = {
   numUnreadMentions: number;
   canonicalAlias: string | null;
   altAlias: string[] | null;
-  // tags: string[] ???
+  tags: any;
   latest: [number, string] | null;
-  // avatar: string | null;
+  avatar: string | null;
   hasBeenPaginated: boolean;
   isSelected: boolean;
 };
