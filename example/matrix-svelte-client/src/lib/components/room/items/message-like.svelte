@@ -14,7 +14,7 @@
 	import ImageMessage from './image-message.svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { onMount } from 'svelte';
-	import { loadAvatar } from '$lib/utils';
+	import { mediaCache } from '$lib/media-cache';
 
 	type Props = {
 		data: MsgLikeContent;
@@ -78,7 +78,7 @@
 		{#if profileStore.state[senderId]?.state === 'loaded'}
 			<!-- We obviously try to load the avatar only if the url exists. -->
 			{#if profileStore.state[senderId].data.avatarUrl}
-				{#await loadAvatar(profileStore.state[senderId].data.avatarUrl)}
+				{#await mediaCache.get(profileStore.state[senderId].data.avatarUrl)}
 					{@render avatarFallback(sender)}
 				{:then url}
 					<AvatarImage src={url} alt={sender} />

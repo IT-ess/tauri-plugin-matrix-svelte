@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Badge } from '$lib/components/ui/badge';
-	import { loadAvatar } from '$lib/utils';
+	import { mediaCache } from '$lib/media-cache';
 	import type { JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
@@ -49,7 +49,7 @@
     }}} -->
 	<Avatar>
 		{#if room.avatar !== null}
-			{#await loadAvatar(room.avatar)}
+			{#await mediaCache.get(room.avatar)}
 				{@render avatarFallback(room.roomName)}
 			{:then url}
 				<AvatarImage src={url} alt={room.roomName} />
