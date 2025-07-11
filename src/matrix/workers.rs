@@ -4,8 +4,8 @@ use anyhow::bail;
 use futures::{pin_mut, StreamExt};
 use matrix_sdk::{
     ruma::{
-        api::client::receipt::create_receipt::v3::ReceiptType, events::receipt::ReceiptThread,
-        matrix_uri::MatrixId, OwnedRoomId, RoomOrAliasId,
+        api::client::receipt::create_receipt::v3::ReceiptType, matrix_uri::MatrixId, OwnedRoomId,
+        RoomOrAliasId,
     },
     Client,
 };
@@ -700,7 +700,7 @@ pub async fn async_worker(
                     room_info.timeline.clone()
                 };
                 let _send_rr_task = Handle::current().spawn(async move {
-                    match timeline.send_single_receipt(ReceiptType::Read, ReceiptThread::Unthreaded, event_id.clone()).await {
+                    match timeline.send_single_receipt(ReceiptType::Read, event_id.clone()).await {
                         Ok(sent) => println!("{} read receipt to room {room_id} for event {event_id}", if sent { "Sent" } else { "Already sent" }),
                         Err(_e) => eprintln!("Failed to send read receipt to room {room_id} for event {event_id}; error: {_e:?}"),
                     }
@@ -725,7 +725,7 @@ pub async fn async_worker(
                     room_info.timeline.clone()
                 };
                 let _send_frr_task = Handle::current().spawn(async move {
-                    match timeline.send_single_receipt(ReceiptType::FullyRead, ReceiptThread::Unthreaded, event_id.clone()).await {
+                    match timeline.send_single_receipt(ReceiptType::FullyRead, event_id.clone()).await {
                         Ok(sent) => println!("{} fully read receipt to room {room_id} for event {event_id}",
                             if sent { "Sent" } else { "Already sent" }
                         ),

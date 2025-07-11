@@ -7,7 +7,7 @@ use std::{
 use crossbeam_queue::SegQueue;
 use matrix_sdk::{
     room::RoomMember,
-    ruma::{OwnedMxcUri, OwnedRoomId, OwnedUserId, RoomId},
+    ruma::{OwnedMxcUri, OwnedRoomId, OwnedUserId},
 };
 use serde::Serialize;
 use serde_json::Value;

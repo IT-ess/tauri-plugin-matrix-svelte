@@ -7,11 +7,8 @@ use crate::matrix::{
     timeline::timeline_subscriber_handler,
 };
 use anyhow::bail;
-use matrix_sdk::{
-    event_handler::EventHandlerDropGuard, ruma::OwnedRoomId, RoomDisplayName, RoomState,
-};
+use matrix_sdk::{event_handler::EventHandlerDropGuard, ruma::OwnedRoomId, RoomState};
 use matrix_sdk_ui::{timeline::RoomExt, RoomListService, Timeline};
-use serde::Serialize;
 use tokio::{runtime::Handle, sync::watch, task::JoinHandle};
 
 use super::{
@@ -174,7 +171,7 @@ pub async fn add_new_room(
     }
 
     // Subscribe to all updates for this room in order to properly receive all of its states.
-    room_list_service.subscribe_to_rooms(&[&room_id]);
+    room_list_service.subscribe_to_rooms(&[&room_id]).await;
 
     // Do not add tombstoned rooms to the rooms list; they require special handling.
     if let Some(tombstoned_info) = room.tombstone_content() {
