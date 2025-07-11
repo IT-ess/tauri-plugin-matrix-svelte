@@ -1,7 +1,5 @@
-import { Channel, invoke } from '@tauri-apps/api/core';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import type { events } from 'tauri-plugin-matrix-svelte-api';
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));

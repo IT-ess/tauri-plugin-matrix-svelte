@@ -78,6 +78,7 @@
 		{#if profileStore.state[senderId]?.state === 'loaded'}
 			<!-- We obviously try to load the avatar only if the url exists. -->
 			{#if profileStore.state[senderId].data.avatarUrl}
+			<!-- TODO: Try to call the cache once for each room member instead of once by message. -->
 				{#await mediaCache.get(profileStore.state[senderId].data.avatarUrl)}
 					{@render avatarFallback(sender)}
 				{:then url}
