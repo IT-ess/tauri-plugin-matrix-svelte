@@ -6,6 +6,7 @@
 	import { fade } from 'svelte/transition';
 	import {
 		createMatrixRequest,
+		ProfileStore,
 		submitAsyncRequest,
 		type RoomStore
 	} from 'tauri-plugin-matrix-svelte-api';
@@ -13,16 +14,17 @@
 	import Item from './items/item.svelte';
 
 	// Pagination settings
-	const PAGE_SIZE = 10;
+	// const PAGE_SIZE = 10;
+	// let page = $state(1);
 	let isLoadingMore = $state(false);
-	let page = $state(1);
 
 	type Props = {
 		roomStore: RoomStore;
+		profileStore: ProfileStore;
 		currentUserId: string;
 	};
 
-	let { roomStore, currentUserId }: Props = $props();
+	let { roomStore, profileStore, currentUserId }: Props = $props();
 
 	// Messages state
 	let newMessage: string = $state('');
@@ -121,7 +123,7 @@
 			{#if roomStore.state.tlState?.items}
 				{#each roomStore.state.tlState?.items as item (item.eventId ?? crypto.randomUUID())}
 					<div transition:fade|local>
-						<Item {item} roomId={roomStore.id} {currentUserId} />
+						<Item {item} {profileStore} roomId={roomStore.id} {currentUserId} />
 					</div>
 				{/each}
 			{:else}

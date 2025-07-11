@@ -1,4 +1,5 @@
 use matrix_sdk::media::MediaRequestParameters;
+use matrix_sdk::ruma::{OwnedRoomId, OwnedUserId};
 use tauri::ipc::Channel;
 use tauri::{command, AppHandle, Runtime};
 
@@ -67,4 +68,15 @@ pub(crate) async fn fetch_media<R: Runtime>(
             Err(Error::Anyhow(e))
         }
     }
+}
+
+#[command]
+pub(crate) async fn fetch_user_profile<R: Runtime>(
+    app: AppHandle<R>,
+    user_id: OwnedUserId,
+    room_id: Option<OwnedRoomId>,
+) -> Result<bool> {
+    app.matrix_svelte()
+        .fetch_user_profile(user_id, room_id)
+        .await
 }

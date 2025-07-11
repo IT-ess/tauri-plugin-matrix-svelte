@@ -9,6 +9,7 @@
 
 	if (import.meta.env.DEV) {
 		$inspect(data.roomStore.state);
+		$inspect(data.profileStore.state);
 	}
 
 	onDestroy(async () => {
@@ -22,5 +23,9 @@
 </script>
 
 <h1>Room with id {data.roomStore.id}</h1>
-<Room roomStore={data.roomStore} currentUserId={data.loginStore.state.userId ?? ''} />
+<Room
+	roomStore={data.roomStore}
+	profileStore={data.profileStore}
+	currentUserId={data.loginStore.state.userId ?? ''}
+/>
 <!-- userId should be defined at this point -->

@@ -9,6 +9,7 @@ import {
 import { RoomStore } from "./stores/room-store.svelte";
 import { RoomsCollection } from "./stores/rooms-collection.svelte";
 import { LoginStore } from "./stores/login-store.svelte";
+import { ProfileStore } from "./stores/profiles-store.svelte";
 import * as events from "./tauri-events";
 import { MatrixRequest, createMatrixRequest } from "./matrix-requests/requests";
 import {
@@ -56,6 +57,7 @@ export {
   RoomsCollection,
   JoinedRoomInfo,
   LoginStore,
+  ProfileStore,
   events,
   TimelineItem,
   TimelineItemData,

@@ -1,4 +1,4 @@
-import { Base64, UInt, OwnedMxcUri } from "./common";
+import { Base64, UInt, MxcUri } from "./common";
 
 export interface JsonWebKey {
   kty: "oct";
@@ -9,16 +9,18 @@ export interface JsonWebKey {
 }
 
 export interface EncryptedFile {
-  url: OwnedMxcUri;
+  url: MxcUri;
   key: JsonWebKey;
   iv: Base64;
   hashes: Record<string, Base64>;
   v: "v2";
 }
 
-export type MediaSource =
-  // | { url: OwnedMxcUri } // Corresponds to Plain variant, renamed to "url". We don't support Plain for now
-  { file: EncryptedFile }; // Corresponds to Encrypted variant, renamed to "file"
+export type MediaSource = PlainMediaSource | EncryptedMediaSource;
+
+export type PlainMediaSource = { url: MxcUri }; // Corresponds to Plain variant, renamed to "url". We don't support Plain for now
+
+export type EncryptedMediaSource = { file: EncryptedFile }; // Corresponds to Encrypted variant, renamed to "file"
 
 export type MediaFormat = "File" | { Thumbnail: MediaThumbnailSettings };
 

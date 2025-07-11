@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { Avatar, AvatarFallback } from '$lib/components/ui/avatar';
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import {
 		createMatrixRequest,
+		ProfileStore,
 		submitAsyncRequest,
 		type MsgLikeContent
 	} from 'tauri-plugin-matrix-svelte-api';
@@ -11,6 +12,9 @@
 	import { Button } from '$lib/components/ui/button';
 	import { SmileIcon } from '@lucide/svelte';
 	import ImageMessage from './image-message.svelte';
+	import { invoke } from '@tauri-apps/api/core';
+	import { onMount } from 'svelte';
+	import { mediaCache } from '$lib/media-cache';
 
 	type Props = {
 		data: MsgLikeContent;
@@ -19,9 +23,12 @@
 		roomId: string;
 		eventId: string;
 		currentUserId: string;
+		profileStore: ProfileStore;
 	};
 
-	let { data, timestamp, isOwn, roomId, eventId, currentUserId }: Props = $props();
+	let { data, timestamp, isOwn, roomId, eventId, currentUserId, profileStore }: Props = $props();
+
+	const { senderId, sender } = data;
 
 	let reactionsArray = $derived(Object.keys(data.reactions));
 
@@ -54,12 +61,37 @@
 		});
 		await submitAsyncRequest(request);
 	};
+
+	onMount(async () => {
+		if (profileStore.state[senderId] === undefined) {
+			await invoke('plugin:matrix-svelte|fetch_user_profile', {
+				userId: senderId,
+				roomId
+			});
+		}
+	});
 </script>
 
 <div class={['flex gap-2', isOwn && 'flex-row-reverse']}>
 	<Avatar>
-		<!-- <AvatarImage src={message.sender.avatar} alt={message.sender.name} /> -->
-		<AvatarFallback>{getInitials(data.sender ?? 'John Doe')}</AvatarFallback>
+		<!-- Reactive store, once the profile is loaded we load the image -->
+		{#if profileStore.state[senderId]?.state === 'loaded'}
+			<!-- We obviously try to load the avatar only if the url exists. -->
+			{#if profileStore.state[senderId].data.avatarUrl}
+			<!-- TODO: Try to call the cache once for each room member instead of once by message. -->
+				{#await mediaCache.get(profileStore.state[senderId].data.avatarUrl)}
+					{@render avatarFallback(sender)}
+				{:then url}
+					<AvatarImage src={url} alt={sender} />
+				{:catch}
+					{@render avatarFallback(sender)}
+				{/await}
+			{:else}
+				{@render avatarFallback(sender)}
+			{/if}
+		{:else}
+			{@render avatarFallback(sender)}
+		{/if}
 	</Avatar>
 
 	<div
@@ -120,3 +152,7 @@
 		{/if}
 	</div>
 </div>
+
+{#snippet avatarFallback(sender?: string)}
+	<AvatarFallback>{getInitials(sender ?? 'John Doe')}</AvatarFallback>
+{/snippet}

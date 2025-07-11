@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { Avatar, AvatarFallback } from '$lib/components/ui/avatar';
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Badge } from '$lib/components/ui/badge';
+	import { mediaCache } from '$lib/media-cache';
 	import type { JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
@@ -47,8 +48,17 @@
       onClick?.();
     }}} -->
 	<Avatar>
-		<!-- <AvatarImage src={room.state.avatar} alt={room.state.name} /> -->
-		<AvatarFallback>{getInitials(room.roomName)}</AvatarFallback>
+		{#if room.avatar !== null}
+			{#await mediaCache.get(room.avatar)}
+				{@render avatarFallback(room.roomName)}
+			{:then url}
+				<AvatarImage src={url} alt={room.roomName} />
+			{:catch}
+				{@render avatarFallback(room.roomName)}
+			{/await}
+		{:else}
+			{@render avatarFallback(room.roomName)}
+		{/if}
 	</Avatar>
 	<button {disabled} class="flex-1 space-y-1" onclick={() => onRoomClick(room.roomId)}>
 		<div class="flex items-center justify-between">
@@ -59,6 +69,8 @@
 		</div>
 		<div class="flex items-center justify-between">
 			<p class="text-muted-foreground line-clamp-1 text-sm">
+				<!-- the latest event is sanitized by the backend before being rendered -->
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html latestEvent}
 			</p>
 			{#if room.numUnreadMessages > 0}
@@ -67,3 +79,7 @@
 		</div>
 	</button>
 </div>
+
+{#snippet avatarFallback(roomName: string)}
+	<AvatarFallback>{getInitials(roomName)}</AvatarFallback>
+{/snippet}

@@ -8,6 +8,7 @@ Default permissions for the plugin
 - `allow-login-and-create-new-session`
 - `allow-submit-async-request`
 - `allow-fetch-media`
+- `allow-fetch-user-profile`
 
 ## Permission Table
 
@@ -40,6 +41,32 @@ Enables the fetch_media command without any pre-configured scope.
 <td>
 
 Denies the fetch_media command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-fetch-user-profile`
+
+</td>
+<td>
+
+Enables the fetch_user_profile command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-fetch-user-profile`
+
+</td>
+<td>
+
+Denies the fetch_user_profile command without any pre-configured scope.
 
 </td>
 </tr>

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-fetch-user-profile"
+description = "Enables the fetch_user_profile command without any pre-configured scope."
+commands.allow = ["fetch_user_profile"]
+
+[[permission]]
+identifier = "deny-fetch-user-profile"
+description = "Denies the fetch_user_profile command without any pre-configured scope."
+commands.deny = ["fetch_user_profile"]

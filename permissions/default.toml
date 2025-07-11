@@ -5,4 +5,5 @@ permissions = [
     "allow-login-and-create-new-session",
     "allow-submit-async-request",
     "allow-fetch-media",
+    "allow-fetch-user-profile",
 ]

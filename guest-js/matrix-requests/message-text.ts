@@ -1,4 +1,4 @@
-import { OwnedRoomId } from "./common";
+import { RoomId } from "./common";
 
 // Main RoomMessageEventContent matching the Rust struct
 export interface RoomMessageEventContent {
@@ -48,7 +48,7 @@ export interface Relation {
 export interface SendMessageRequest {
   event: "sendMessage";
   payload: {
-    roomId: OwnedRoomId;
+    roomId: RoomId;
     message: RoomMessageEventContent;
   };
 }
@@ -61,7 +61,7 @@ export const sendMessage = (
 });
 
 export const sendTextMessage = (
-  roomId: OwnedRoomId,
+  roomId: RoomId,
   body: string,
   options?: {
     formatted?: FormattedBody;

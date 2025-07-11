@@ -4,8 +4,8 @@ use anyhow::bail;
 use futures::{pin_mut, StreamExt};
 use matrix_sdk::{
     ruma::{
-        api::client::receipt::create_receipt::v3::ReceiptType, events::receipt::ReceiptThread,
-        matrix_uri::MatrixId, OwnedRoomId, RoomOrAliasId,
+        api::client::receipt::create_receipt::v3::ReceiptType, matrix_uri::MatrixId, OwnedRoomId,
+        RoomOrAliasId,
     },
     Client,
 };
@@ -26,7 +26,10 @@ use crate::{
         sync::sync,
         timeline::{PaginationDirection, TimelineUpdate},
         user_power_level::UserPowerLevels,
-        user_profile::{enqueue_user_profile_update, UserProfileUpdate},
+        user_profile::{
+            enqueue_user_profile_update, process_user_profile_updates, UserProfile,
+            UserProfileUpdate,
+        },
         utils::current_user_id,
     },
     models::matrix::{MatrixSvelteListenEvent, MatrixUpdateCurrentActiveRoom},
@@ -320,77 +323,77 @@ pub async fn async_worker(
                 });
             }
 
-            // MatrixRequest::GetUserProfile {
-            //     user_id,
-            //     room_id,
-            //     local_only,
-            // } => {
-            //     let Some(client) = CLIENT.get() else { continue };
-            //     let _fetch_task = Handle::current().spawn(async move {
-            //         // println!("Sending get user profile request: user: {user_id}, \
-            //         //     room: {room_id:?}, local_only: {local_only}...",
-            //         // );
+            MatrixRequest::GetUserProfile {
+                user_id,
+                room_id,
+                local_only,
+            } => {
+                let Some(client) = CLIENT.get() else { continue };
+                let _fetch_task = Handle::current().spawn(async move {
+                    // println!("Sending get user profile request: user: {user_id}, \
+                    //     room: {room_id:?}, local_only: {local_only}...",
+                    // );
 
-            //         let mut update = None;
+                    let mut update = None;
 
-            //         if let Some(room_id) = room_id.as_ref() {
-            //             if let Some(room) = client.get_room(room_id) {
-            //                 let member = if local_only {
-            //                     room.get_member_no_sync(&user_id).await
-            //                 } else {
-            //                     room.get_member(&user_id).await
-            //                 };
-            //                 if let Ok(Some(room_member)) = member {
-            //                     update = Some(UserProfileUpdate::Full {
-            //                         new_profile: UserProfile {
-            //                             username: room_member.display_name().map(|u| u.to_owned()),
-            //                             user_id: user_id.clone(),
-            //                             avatar_state: AvatarState::Known(room_member.avatar_url().map(|u| u.to_owned())),
-            //                         },
-            //                         room_id: room_id.to_owned(),
-            //                         room_member,
-            //                     });
-            //                 } else {
-            //                     println!("User profile request: user {user_id} was not a member of room {room_id}");
-            //                 }
-            //             } else {
-            //                 println!("User profile request: client could not get room with ID {room_id}");
-            //             }
-            //         }
+                    if let Some(room_id) = room_id.as_ref() {
+                        if let Some(room) = client.get_room(room_id) {
+                            let member = if local_only {
+                                room.get_member_no_sync(&user_id).await
+                            } else {
+                                room.get_member(&user_id).await
+                            };
+                            if let Ok(Some(room_member)) = member {
+                                update = Some(UserProfileUpdate::Full {
+                                    new_profile: UserProfile {
+                                        username: room_member.display_name().map(|u| u.to_owned()),
+                                        user_id: user_id.clone(),
+                                        avatar_url: room_member.avatar_url().map(|u| u.to_owned()),
+                                    },
+                                    room_id: room_id.to_owned(),
+                                    room_member,
+                                });
+                            } else {
+                                println!("User profile request: user {user_id} was not a member of room {room_id}");
+                            }
+                        } else {
+                            println!("User profile request: client could not get room with ID {room_id}");
+                        }
+                    }
 
-            //         if !local_only {
-            //             if update.is_none() {
-            //                 if let Ok(response) = client.account().fetch_user_profile_of(&user_id).await {
-            //                     update = Some(UserProfileUpdate::UserProfileOnly(
-            //                         UserProfile {
-            //                             username: response.displayname,
-            //                             user_id: user_id.clone(),
-            //                             avatar_state: AvatarState::Known(response.avatar_url),
-            //                         }
-            //                     ));
-            //                 } else {
-            //                     println!("User profile request: client could not get user with ID {user_id}");
-            //                 }
-            //             }
+                    if !local_only {
+                        if update.is_none() {
+                            if let Ok(response) = client.account().fetch_user_profile_of(&user_id).await {
+                                update = Some(UserProfileUpdate::UserProfileOnly(
+                                    UserProfile {
+                                        username: response.displayname,
+                                        user_id: user_id.clone(),
+                                        avatar_url: response.avatar_url,
+                                    }
+                                ));
+                            } else {
+                                println!("User profile request: client could not get user with ID {user_id}");
+                            }
+                        }
 
-            //             match update.as_mut() {
-            //                 Some(UserProfileUpdate::Full { new_profile: UserProfile { username, .. }, .. }) if username.is_none() => {
-            //                     if let Ok(response) = client.account().fetch_user_profile_of(&user_id).await {
-            //                         *username = response.displayname;
-            //                     }
-            //                 }
-            //                 _ => { }
-            //             }
-            //         }
+                        match update.as_mut() {
+                            Some(UserProfileUpdate::Full { new_profile: UserProfile { username, .. }, .. }) if username.is_none() => {
+                                if let Ok(response) = client.account().fetch_user_profile_of(&user_id).await {
+                                    *username = response.displayname;
+                                }
+                            }
+                            _ => { }
+                        }
+                    }
 
-            //         if let Some(upd) = update {
-            //             // println!("Successfully completed get user profile request: user: {user_id}, room: {room_id:?}, local_only: {local_only}.");
-            //             enqueue_user_profile_update(upd);
-            //         } else {
-            //             println!("Failed to get user profile: user: {user_id}, room: {room_id:?}, local_only: {local_only}.");
-            //         }
-            //     });
-            // }
+                    if let Some(upd) = update {
+                        // println!("Successfully completed get user profile request: user: {user_id}, room: {room_id:?}, local_only: {local_only}.");
+                        enqueue_user_profile_update(upd);
+                    } else {
+                        println!("Failed to get user profile: user: {user_id}, room: {room_id:?}, local_only: {local_only}.");
+                    }
+                });
+            }
             MatrixRequest::GetNumberUnreadMessages { room_id } => {
                 let (timeline, sender) = {
                     let mut all_joined_rooms = ALL_JOINED_ROOMS.lock().unwrap();
@@ -697,7 +700,7 @@ pub async fn async_worker(
                     room_info.timeline.clone()
                 };
                 let _send_rr_task = Handle::current().spawn(async move {
-                    match timeline.send_single_receipt(ReceiptType::Read, ReceiptThread::Unthreaded, event_id.clone()).await {
+                    match timeline.send_single_receipt(ReceiptType::Read, event_id.clone()).await {
                         Ok(sent) => println!("{} read receipt to room {room_id} for event {event_id}", if sent { "Sent" } else { "Already sent" }),
                         Err(_e) => eprintln!("Failed to send read receipt to room {room_id} for event {event_id}; error: {_e:?}"),
                     }
@@ -722,7 +725,7 @@ pub async fn async_worker(
                     room_info.timeline.clone()
                 };
                 let _send_frr_task = Handle::current().spawn(async move {
-                    match timeline.send_single_receipt(ReceiptType::FullyRead, ReceiptThread::Unthreaded, event_id.clone()).await {
+                    match timeline.send_single_receipt(ReceiptType::FullyRead, event_id.clone()).await {
                         Ok(sent) => println!("{} fully read receipt to room {room_id} for event {event_id}",
                             if sent { "Sent" } else { "Already sent" }
                         ),
@@ -917,6 +920,8 @@ pub async fn ui_worker<R: Runtime>(app_handle: AppHandle<R>) -> anyhow::Result<(
             _ = ui_subscriber.recv() => {
                 let mut lock = rooms_list.lock().await;
                 lock.handle_rooms_list_updates(&app_handle).await;
+
+                process_user_profile_updates(&app_handle).await; // Each time the UI is refreshed we check the profiles update queue.
             }
         }
     }

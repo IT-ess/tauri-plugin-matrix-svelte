@@ -1,10 +1,10 @@
 import {
   MatrixId,
-  OwnedEventId,
-  OwnedRoomAliasId,
-  OwnedRoomId,
-  OwnedServerName,
-  OwnedUserId,
+  EventId,
+  RoomAliasId,
+  RoomId,
+  ServerName,
+  UserId,
   TimelineEventItemId,
 } from "./common";
 import {
@@ -42,7 +42,7 @@ interface RoomMember {
 interface PaginateRoomTimelineRequest {
   event: "paginateRoomTimeline";
   payload: {
-    roomId: OwnedRoomId;
+    roomId: RoomId;
     numEvents: number;
     direction: PaginationDirection;
   };
@@ -51,7 +51,7 @@ interface PaginateRoomTimelineRequest {
 interface EditMessageRequest {
   event: "editMessage";
   payload: {
-    roomId: OwnedRoomId;
+    roomId: RoomId;
     timelineEventItemId: TimelineEventItemId;
     editedContent: EditedContent;
   };
@@ -60,36 +60,36 @@ interface EditMessageRequest {
 interface FetchDetailsForEventRequest {
   event: "fetchDetailsForEvent";
   payload: {
-    roomId: OwnedRoomId;
-    eventId: OwnedEventId;
+    roomId: RoomId;
+    eventId: EventId;
   };
 }
 
 interface SyncRoomMemberListRequest {
   event: "syncRoomMemberList";
   payload: {
-    roomId: OwnedRoomId;
+    roomId: RoomId;
   };
 }
 
 interface JoinRoomRequest {
   event: "joinRoom";
   payload: {
-    roomId: OwnedRoomId;
+    roomId: RoomId;
   };
 }
 
 interface LeaveRoomRequest {
   event: "leaveRoom";
   payload: {
-    roomId: OwnedRoomId;
+    roomId: RoomId;
   };
 }
 
 interface GetRoomMembersRequest {
   event: "getRoomMembers";
   payload: {
-    roomId: OwnedRoomId;
+    roomId: RoomId;
     memberships: RoomMemberships;
     localOnly: boolean;
   };
@@ -98,8 +98,8 @@ interface GetRoomMembersRequest {
 interface GetUserProfileRequest {
   event: "getUserProfile";
   payload: {
-    userId: OwnedUserId;
-    roomId?: OwnedRoomId;
+    userId: UserId;
+    roomId?: RoomId;
     localOnly: boolean;
   };
 }
@@ -107,7 +107,7 @@ interface GetUserProfileRequest {
 interface GetNumberUnreadMessagesRequest {
   event: "getNumberUnreadMessages";
   payload: {
-    roomId: OwnedRoomId;
+    roomId: RoomId;
   };
 }
 
@@ -116,19 +116,19 @@ interface IgnoreUserRequest {
   payload: {
     ignore: boolean;
     roomMember: RoomMember;
-    roomId: OwnedRoomId;
+    roomId: RoomId;
   };
 }
 
 interface ResolveRoomAliasRequest {
   event: "resolveRoomAlias";
-  payload: OwnedRoomAliasId;
+  payload: RoomAliasId;
 }
 
 interface SendTypingNoticeRequest {
   event: "sendTypingNotice";
   payload: {
-    roomId: OwnedRoomId;
+    roomId: RoomId;
     typing: boolean;
   };
 }
@@ -136,7 +136,7 @@ interface SendTypingNoticeRequest {
 interface SubscribeToTypingNoticesRequest {
   event: "subscribeToTypingNotices";
   payload: {
-    roomId: OwnedRoomId;
+    roomId: RoomId;
     subscribe: boolean;
   };
 }
@@ -144,7 +144,7 @@ interface SubscribeToTypingNoticesRequest {
 interface SubscribeToOwnUserReadReceiptsChangedRequest {
   event: "subscribeToOwnUserReadReceiptsChanged";
   payload: {
-    roomId: OwnedRoomId;
+    roomId: RoomId;
     subscribe: boolean;
   };
 }
@@ -152,30 +152,30 @@ interface SubscribeToOwnUserReadReceiptsChangedRequest {
 interface ReadReceiptRequest {
   event: "readReceipt";
   payload: {
-    roomId: OwnedRoomId;
-    eventId: OwnedEventId;
+    roomId: RoomId;
+    eventId: EventId;
   };
 }
 
 interface FullyReadReceiptRequest {
   event: "fullyReadReceipt";
   payload: {
-    roomId: OwnedRoomId;
-    eventId: OwnedEventId;
+    roomId: RoomId;
+    eventId: EventId;
   };
 }
 
 interface GetRoomPowerLevelsRequest {
   event: "getRoomPowerLevels";
   payload: {
-    roomId: OwnedRoomId;
+    roomId: RoomId;
   };
 }
 
 interface ToggleReactionRequest {
   event: "toggleReaction";
   payload: {
-    roomId: OwnedRoomId;
+    roomId: RoomId;
     timelineEventId: TimelineEventItemId;
     reaction: string;
   };
@@ -184,7 +184,7 @@ interface ToggleReactionRequest {
 interface RedactMessageRequest {
   event: "redactMessage";
   payload: {
-    roomId: OwnedRoomId;
+    roomId: RoomId;
     timelineEventId: TimelineEventItemId;
     reason?: string;
   };
@@ -194,7 +194,7 @@ interface GetMatrixRoomLinkPillInfoRequest {
   event: "getMatrixRoomLinkPillInfo";
   payload: {
     matrixId: MatrixId;
-    via: OwnedServerName[];
+    via: ServerName[];
   };
 }
 

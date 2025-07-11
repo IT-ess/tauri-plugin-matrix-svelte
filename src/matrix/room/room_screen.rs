@@ -86,7 +86,7 @@ impl RoomScreen {
                 TimelineUpdate::NewItems {
                     new_items,
                     changed_indices,
-                    is_append,
+                    is_append: _,
                     clear_cache,
                 } => {
                     if new_items.is_empty() {
@@ -315,7 +315,7 @@ impl RoomScreen {
                     // Here, to be most efficient, we could redraw only the user avatars and names in the timeline,
                     // but for now we just fall through and let the final `redraw()` call re-draw the whole timeline view.
                 }
-                TimelineUpdate::RoomMembersListFetched { members } => {
+                TimelineUpdate::RoomMembersListFetched { members: _ } => {
                     // Use `pub/sub` pattern here to let multiple components share room members data
                     // use crate::room::room_member_manager::room_members;
                     // room_members::update(tl.room_id.clone(), members);
@@ -329,8 +329,8 @@ impl RoomScreen {
                     // but for now we just fall through and let the final `redraw()` call re-draw the whole timeline view.
                 }
                 TimelineUpdate::MessageEdited {
-                    timeline_event_id,
-                    result,
+                    timeline_event_id: _,
+                    result: _,
                 } => {
                     // self.view
                     //     .editing_pane(id!(editing_pane))
@@ -495,7 +495,7 @@ impl RoomScreen {
         let (mut tl_state, first_time_showing_room) = if let Some(existing) = state_opt {
             (existing, false)
         } else {
-            let (update_sender, update_receiver, request_sender) =
+            let (_update_sender, update_receiver, request_sender) =
                 take_timeline_endpoints(&room_id)
                     .expect("BUG: couldn't get timeline state for first-viewed room.");
             let new_tl_state = TimelineUiState {
@@ -634,10 +634,10 @@ impl RoomScreen {
     /// so this function must not try to re-obtain it by accessing `self.tl_state`.
     fn restore_state(&mut self, tl_state: &mut TimelineUiState) {
         let SavedState {
-            first_index_and_scroll,
+            first_index_and_scroll: _,
             // message_input_state,
             // replying_to,
-            editing_event,
+            editing_event: _,
         } = &mut tl_state.saved_state;
         // 1. Restore the position of the timeline.
         // if let Some((first_index, scroll_from_first_id)) = first_index_and_scroll {

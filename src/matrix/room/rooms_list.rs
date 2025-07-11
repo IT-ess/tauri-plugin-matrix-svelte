@@ -4,7 +4,9 @@ use anyhow::{anyhow, bail, Ok};
 use crossbeam_queue::SegQueue;
 use eyeball::Subscriber;
 use matrix_sdk::{
-    ruma::{events::tag::Tags, MilliSecondsSinceUnixEpoch, OwnedRoomAliasId, OwnedRoomId},
+    ruma::{
+        events::tag::Tags, MilliSecondsSinceUnixEpoch, OwnedMxcUri, OwnedRoomAliasId, OwnedRoomId,
+    },
     RoomDisplayName, RoomState,
 };
 use matrix_sdk_ui::room_list_service::RoomListLoadingState;
@@ -121,9 +123,8 @@ pub struct JoinedRoomInfo {
     pub(crate) tags: Tags,
     /// The timestamp and Html text content of the latest message in this room.
     pub(crate) latest: Option<(MilliSecondsSinceUnixEpoch, String)>,
-    /// The avatar for this room: either an array of bytes holding the avatar image
-    /// or a string holding the first Unicode character of the room name.
-    // pub avatar: RoomPreviewAvatar,
+    /// The avatar for this room
+    pub avatar: Option<OwnedMxcUri>,
     /// Whether this room has been paginated at least once.
     /// We pre-paginate visible rooms at least once in order to
     /// be able to display the latest message in the room preview,

@@ -1,6 +1,10 @@
-import { OwnedUserId } from "../matrix-requests/common";
+import { UserId } from "../matrix-requests/common";
 import { TimelineItem } from "./timeline-item";
-import { MediaSource, MediaThumbnailSettings } from "../matrix-requests/media";
+import {
+  EncryptedMediaSource,
+  MediaSource,
+  MediaThumbnailSettings,
+} from "../matrix-requests/media";
 
 // Discriminated union for message-like content
 export type MsgLikeContent = {
@@ -28,7 +32,7 @@ export type ImageMessageEventContent = {
   msgtype: "m.image";
   formatted?: FormattedBody;
   info?: ImageInfo;
-} & MediaSource;
+} & EncryptedMediaSource; // We assume that we'll only use encrypted media.
 
 export interface ImageInfo {
   h?: number;
@@ -71,7 +75,7 @@ export interface ReactionInfo {
 }
 
 // The inner map: sender → reaction info
-export type ReactionsBySender = Record<OwnedUserId, ReactionInfo>;
+export type ReactionsBySender = Record<UserId, ReactionInfo>;
 
 // The full map: reaction key → sender map
 export type ReactionsByKeyBySender = Record<string, ReactionsBySender>;

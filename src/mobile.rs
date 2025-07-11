@@ -1,4 +1,7 @@
-use matrix_sdk::media::MediaRequestParameters;
+use matrix_sdk::{
+    media::MediaRequestParameters,
+    ruma::{OwnedRoomId, OwnedUserId},
+};
 use serde::de::DeserializeOwned;
 use tauri::{
     ipc::Channel,
@@ -11,6 +14,7 @@ use crate::{
         create_session_to_state,
         login::{LoginRequest, MatrixClientConfig},
         requests::{submit_async_request, MatrixRequest},
+        user_profile::fetch_user_profile,
     },
     models::matrix::MediaStreamEvent,
     ping::{PingRequest, PingResponse},
@@ -60,5 +64,13 @@ impl<R: Runtime> MatrixSvelte<R> {
         on_event: &Channel<MediaStreamEvent>,
     ) -> anyhow::Result<usize> {
         crate::matrix::fetch_media(media_request, on_event).await
+    }
+
+    pub async fn fetch_user_profile(
+        &self,
+        user_id: OwnedUserId,
+        room_id: Option<OwnedRoomId>,
+    ) -> crate::Result<bool> {
+        Ok(fetch_user_profile(user_id, room_id).await)
     }
 }
