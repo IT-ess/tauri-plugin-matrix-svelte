@@ -2,7 +2,7 @@
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import { SendIcon, LoaderIcon } from '@lucide/svelte';
+	import { SendIcon, LoaderIcon, ArrowDownIcon } from '@lucide/svelte';
 	import { fade } from 'svelte/transition';
 	import {
 		createMatrixRequest,
@@ -10,26 +10,28 @@
 		submitAsyncRequest,
 		type RoomStore
 	} from 'tauri-plugin-matrix-svelte-api';
-	import { tick } from 'svelte';
 	import Item from './items/item.svelte';
-
-	// Pagination settings
-	// const PAGE_SIZE = 10;
-	// let page = $state(1);
-	let isLoadingMore = $state(false);
+	import { ScrollState } from 'runed';
 
 	type Props = {
 		roomStore: RoomStore;
 		profileStore: ProfileStore;
 		currentUserId: string;
 	};
-
 	let { roomStore, profileStore, currentUserId }: Props = $props();
 
-	// Messages state
-	let newMessage: string = $state('');
+	// Pagination settings
+	// const PAGE_SIZE = 10;
+	// let page = $state(1);
+	let isLoadingMore = $state(false);
+	let showScrollToBottom = $state(false);
 	let viewport: HTMLDivElement | null = $state(null);
-	let prevScrollHeight = 0;
+	let prevScrollHeight = $state(0);
+	let newMessage: string = $state('');
+
+	const scrollState = new ScrollState({
+		element: () => viewport
+	});
 
 	// Load more messages when scrolling up
 	const loadMoreMessages = async () => {
@@ -62,7 +64,12 @@
 	// Handle scroll to check when we need to load more messages
 	const handleScroll = async (e: Event) => {
 		const target = e.target as HTMLDivElement;
-		if (target.scrollTop < 100) {
+		const scrollTop = target.scrollTop;
+		const threshold = 100;
+
+		showScrollToBottom = scrollTop < -threshold;
+
+		if (scrollTop <= 0 && !isLoadingMore) {
 			// Load more when near top
 			console.log('Almost reached the top !');
 			await loadMoreMessages();
@@ -90,50 +97,70 @@
 		}
 	};
 
-	$effect.pre(() => {
-		if (!viewport) return; // not yet mounted
+	// TODO: rework this behaviour
+	// $effect.pre(() => {
+	// 	if (!viewport) return; // not yet mounted
 
-		// reference `messages` array length so that this code re-runs whenever it changes
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		roomStore.state.tlState?.items.length;
+	// 	// reference `messages` array length so that this code re-runs whenever it changes
+	// 	// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+	// 	roomStore.state.tlState?.items.length;
 
-		// autoscroll when new messages are added
-		if (viewport.offsetHeight + viewport.scrollTop > viewport.scrollHeight - 20) {
-			tick().then(() => {
-				viewport?.scrollTo(0, viewport.scrollHeight);
-			});
-		}
-	});
+	// 	// autoscroll when new messages are added
+	// 	if (viewport.offsetHeight + viewport.scrollTop > viewport.scrollHeight - 20) {
+	// 		tick().then(() => {
+	// 			viewport?.scrollTo(0, viewport.scrollHeight);
+	// 		});
+	// 	}
+	// });
 </script>
 
-<div class="bg-background flex h-[600px] flex-col rounded-lg border">
-	<!-- Chat messages -->
-	<ScrollArea bind:viewport onscroll={handleScroll} class="flex-1 p-4">
-		<div class="flex flex-col gap-4">
-			<!-- Loading indicator -->
-			{#if isLoadingMore}
-				<div class="flex justify-center py-2" transition:fade|local>
-					<LoaderIcon class="text-muted-foreground h-6 w-6 animate-spin" />
-				</div>
-			{:else if !roomStore.state.tlState?.fullyPaginated}
-				<p class="text-muted-foreground text-center text-sm">No more messages</p>
-			{/if}
-
-			<!-- Messages list -->
-			{#if roomStore.state.tlState?.items}
-				{#each roomStore.state.tlState?.items as item (item.eventId ?? crypto.randomUUID())}
-					<div transition:fade|local>
-						<Item {item} {profileStore} roomId={roomStore.id} {currentUserId} />
+<div class="bg-background relative flex h-[600px] flex-col rounded-lg border">
+	<!-- Chat messages container -->
+	<div class="flex-1 overflow-hidden">
+		<ScrollArea class="h-full" bind:ref={viewport} onscroll={handleScroll}>
+			<div class="flex flex-col gap-4 p-4 pb-0">
+				<!-- Loading indicator -->
+				{#if isLoadingMore}
+					<div class="flex justify-center py-2" transition:fade|local>
+						<LoaderIcon class="text-muted-foreground h-6 w-6 animate-spin" />
 					</div>
-				{/each}
-			{:else}
-				<b>Error: timeline state should be defined</b>
-			{/if}
-		</div>
-	</ScrollArea>
+				{:else if !roomStore.state.tlState?.fullyPaginated}
+					<p class="text-muted-foreground text-center text-sm">No more messages</p>
+				{/if}
 
-	<!-- Message input -->
-	<div class="border-t p-4">
+				<!-- Messages list -->
+				{#if roomStore.state.tlState?.items}
+					{#each roomStore.state.tlState?.items as item (item.eventId ?? crypto.randomUUID())}
+						<div transition:fade|local>
+							<Item {item} {profileStore} roomId={roomStore.id} {currentUserId} />
+						</div>
+					{/each}
+				{:else}
+					<b>Error: timeline state should be defined</b>
+				{/if}
+
+				<!-- Spacer to ensure last message isn't hidden behind input -->
+				<div class="h-2"></div>
+			</div>
+		</ScrollArea>
+	</div>
+
+	<!-- Scroll to bottom button: TODO: FIXME -->
+	{#if showScrollToBottom}
+		<div transition:fade class="absolute right-4 bottom-20 z-10">
+			<Button
+				size="icon"
+				variant="secondary"
+				onclick={scrollState.scrollToBottom}
+				class="rounded-full shadow-lg"
+			>
+				<ArrowDownIcon class="h-4 w-4" />
+			</Button>
+		</div>
+	{/if}
+
+	<!-- Message input - fixed at bottom -->
+	<div class="bg-background border-t p-4">
 		<div class="flex gap-2">
 			<Input
 				bind:value={newMessage}
