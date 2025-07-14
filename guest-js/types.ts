@@ -12,6 +12,7 @@ export type Room = {
   roomId: string;
   roomName: string;
   tlState?: TimelineState;
+  members: Record<string, RoomMember>;
 };
 
 export type TimelineState = {
@@ -23,6 +24,13 @@ export type TimelineState = {
   prevFirstIndex?: number;
   scrolledPastReadMarker: boolean;
   latestOwnUserReceipt?: any; // Not handled for the moment
+};
+
+export type RoomMember = {
+  name: string;
+  maxPowerLevel: number;
+  displayNameAmbiguous: boolean;
+  isIgnored: boolean;
 };
 
 // Equivalent to RoomsList Rust Struct

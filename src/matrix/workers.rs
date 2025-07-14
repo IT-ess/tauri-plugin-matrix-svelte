@@ -7,7 +7,7 @@ use matrix_sdk::{
         api::client::receipt::create_receipt::v3::ReceiptType, matrix_uri::MatrixId, OwnedRoomId,
         RoomOrAliasId,
     },
-    Client,
+    Client, RoomMemberships,
 };
 use tauri::{AppHandle, Listener, Manager, Runtime};
 use tokio::{
@@ -214,6 +214,13 @@ pub async fn async_worker(
                     timeline.fetch_members().await;
                     println!("Completed sync room members request for room {room_id}.");
                     sender.send(TimelineUpdate::RoomMembersSynced).unwrap();
+
+                    // Get room members details after the list sync.
+                    submit_async_request(MatrixRequest::GetRoomMembers {
+                        room_id,
+                        memberships: RoomMemberships::all(),
+                        local_only: false,
+                    });
                     broadcast_event(UIUpdateMessage::RefreshUI)
                         .expect("Couldn't broadcast event to UI");
                 });
@@ -614,25 +621,6 @@ pub async fn async_worker(
                     todo!("Send the resolved room alias back to the UI thread somehow.");
                 });
             }
-            // MatrixRequest::FetchAvatar {
-            //     mxc_uri,
-            //     on_fetched,
-            // } => {
-            //     let Some(client) = CLIENT.get() else { continue };
-            //     let _fetch_task = Handle::current().spawn(async move {
-            //         // println!("Sending fetch avatar request for {mxc_uri:?}...");
-            //         let media_request = MediaRequestParameters {
-            //             source: MediaSource::Plain(mxc_uri.clone()),
-            //             format: AVATAR_THUMBNAIL_FORMAT.into(),
-            //         };
-            //         let res = client.media().get_media_content(&media_request, true).await;
-            //         // println!("Fetched avatar for {mxc_uri:?}, succeeded? {}", res.is_ok());
-            //         on_fetched(AvatarUpdate {
-            //             mxc_uri,
-            //             avatar_data: res.map(|v| v.into()),
-            //         });
-            //     });
-            // }
             MatrixRequest::FetchMedia {
                 media_request,
                 content_sender,

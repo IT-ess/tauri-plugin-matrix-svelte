@@ -1,6 +1,9 @@
-use std::sync::Arc;
+use std::{collections::BTreeMap, sync::Arc};
 
-use matrix_sdk::ruma::{OwnedEventId, OwnedRoomId};
+use matrix_sdk::{
+    ruma::{OwnedEventId, OwnedRoomId, OwnedUserId},
+    RoomMemberships,
+};
 use matrix_sdk_ui::{
     eyeball_im::Vector,
     timeline::{EventTimelineItem, TimelineItem},
@@ -30,6 +33,8 @@ pub struct RoomScreen {
     room_name: String,
     /// The persistent UI-relevant states for the room that this widget is currently displaying.
     tl_state: Option<TimelineUiState>,
+    /// Known members of this room
+    members: BTreeMap<OwnedUserId, FrontendRoomMember>,
 }
 impl Drop for RoomScreen {
     fn drop(&mut self) {
@@ -48,6 +53,7 @@ impl RoomScreen {
             room_id,
             room_name,
             tl_state: None,
+            members: BTreeMap::new(),
         }
     }
 
@@ -315,10 +321,20 @@ impl RoomScreen {
                     // Here, to be most efficient, we could redraw only the user avatars and names in the timeline,
                     // but for now we just fall through and let the final `redraw()` call re-draw the whole timeline view.
                 }
-                TimelineUpdate::RoomMembersListFetched { members: _ } => {
-                    // Use `pub/sub` pattern here to let multiple components share room members data
-                    // use crate::room::room_member_manager::room_members;
-                    // room_members::update(tl.room_id.clone(), members);
+                TimelineUpdate::RoomMembersListFetched { members } => {
+                    println!("RoomMembers list fetched !");
+                    members.iter().for_each(|member| {
+                        self.members.insert(
+                            member.user_id().to_owned(),
+                            FrontendRoomMember {
+                                name: member.name().to_string(),
+                                display_name_ambiguous: member.name_ambiguous(),
+                                is_ignored: member.is_ignored(),
+                                max_power_level: member.normalized_power_level(),
+                            },
+                        );
+                    });
+                    println!("{:?}", self.members);
                 }
                 TimelineUpdate::MediaFetched => {
                     println!(
@@ -419,11 +435,14 @@ impl RoomScreen {
         let json_room_id = serde_json::to_value(&self.room_id).expect("Couldn't serialize room_id");
         state.set("roomId", json_room_id);
         let json_room_name =
-            serde_json::to_value(&self.room_name).expect("Couldn't serialize room_id");
+            serde_json::to_value(&self.room_name).expect("Couldn't serialize room_name");
         state.set("roomName", json_room_name);
         let json_tl_state =
-            serde_json::to_value(&self.tl_state).expect("Couldn't serialize room_id");
+            serde_json::to_value(&self.tl_state).expect("Couldn't serialize tl_state");
         state.set("tlState", json_tl_state);
+        let json_tl_state =
+            serde_json::to_value(&self.members).expect("Couldn't serialize members");
+        state.set("members", json_tl_state);
 
         app_handle
             .svelte()
@@ -545,12 +564,12 @@ impl RoomScreen {
                 num_events: 50,
                 direction: PaginationDirection::Backwards,
             });
-
-            // Even though we specify that room member profiles should be lazy-loaded,
-            // the matrix server still doesn't consistently send them to our client properly.
-            // So we kick off a request to fetch the room members here upon first viewing the room.
-            submit_async_request(MatrixRequest::SyncRoomMemberList { room_id });
         }
+
+        // This fetches the room members of the displayed timeline.
+        submit_async_request(MatrixRequest::SyncRoomMemberList {
+            room_id: room_id.clone(),
+        });
 
         // Now, restore the visual state of this timeline from its previously-saved state.
         self.restore_state(&mut tl_state);
@@ -785,4 +804,12 @@ fn find_new_item_matching_current_item(
     }
 
     None
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct FrontendRoomMember {
+    name: String,
+    max_power_level: i64,
+    display_name_ambiguous: bool,
+    is_ignored: bool,
 }

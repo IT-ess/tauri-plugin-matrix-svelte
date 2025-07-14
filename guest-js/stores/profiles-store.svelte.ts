@@ -15,6 +15,7 @@ export type ProfileType =
         userId: string;
         username: string;
         avatarUrl?: string;
+        avatarDataUrl?: string;
         rooms: string[];
       };
     };

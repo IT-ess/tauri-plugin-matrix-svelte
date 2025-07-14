@@ -32,7 +32,8 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2.5.0",
-    "@tauri-store/svelte": "^2.6.0"
+    "@tauri-store/svelte": "^2.6.0",
+    "file-type": "^21.0.0"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",

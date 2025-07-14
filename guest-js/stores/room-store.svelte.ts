@@ -23,6 +23,7 @@ export class RoomStore extends RuneStore<Room> {
       roomId: "Not known yet",
       roomName: "Not known yet",
       tlState: undefined,
+      members: {},
     };
 
     const hooks: StoreHooks = {
