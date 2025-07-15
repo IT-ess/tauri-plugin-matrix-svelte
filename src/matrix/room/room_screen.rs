@@ -1,9 +1,6 @@
 use std::{collections::BTreeMap, sync::Arc};
 
-use matrix_sdk::{
-    ruma::{OwnedEventId, OwnedRoomId, OwnedUserId},
-    RoomMemberships,
-};
+use matrix_sdk::ruma::{OwnedEventId, OwnedRoomId, OwnedUserId};
 use matrix_sdk_ui::{
     eyeball_im::Vector,
     timeline::{EventTimelineItem, TimelineItem},
@@ -280,6 +277,10 @@ impl RoomScreen {
                     // self.view.redraw(cx);
                 }
                 TimelineUpdate::PaginationRunning(direction) => {
+                    println!(
+                        "Pagination running in room {} in {direction} direction",
+                        tl.room_id
+                    );
                     if direction == PaginationDirection::Backwards {
                         // top_space.set_visible(cx, true);
                         done_loading = false;
@@ -381,6 +382,7 @@ impl RoomScreen {
         }
 
         if should_continue_backwards_pagination {
+            println!("Continuing backwards pagination...");
             submit_async_request(MatrixRequest::PaginateRoomTimeline {
                 room_id: tl.room_id.clone(),
                 num_events: 50,

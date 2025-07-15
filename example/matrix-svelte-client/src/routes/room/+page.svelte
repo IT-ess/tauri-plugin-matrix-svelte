@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import type { PageProps } from './$types';
-	import { events, mediaCache } from 'tauri-plugin-matrix-svelte-api';
+	import {
+		createMatrixRequest,
+		events,
+		mediaCache,
+		submitAsyncRequest
+	} from 'tauri-plugin-matrix-svelte-api';
 	import { emit } from '@tauri-apps/api/event';
 	import Room from '$lib/components/room/room.svelte';
 	import { invoke } from '@tauri-apps/api/core';
@@ -55,9 +60,19 @@
 			});
 		}
 	};
+
+	const paginateBackwards = async () => {
+		const request = createMatrixRequest.paginateRoomTimeline({
+			roomId: data.roomStore.id,
+			numEvents: 50,
+			direction: 'backwards'
+		});
+		await submitAsyncRequest(request);
+	};
 </script>
 
 <h1>Room with id {data.roomStore.id}</h1>
+<button onclick={paginateBackwards}>Paginate more</button>
 <Room
 	roomStore={data.roomStore}
 	profileStore={data.profileStore}

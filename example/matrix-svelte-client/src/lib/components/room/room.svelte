@@ -20,9 +20,6 @@
 	};
 	let { roomStore, profileStore, currentUserId }: Props = $props();
 
-	// Pagination settings
-	// const PAGE_SIZE = 10;
-	// let page = $state(1);
 	let isLoadingMore = $state(false);
 	let showScrollToBottom = $state(false);
 	let viewport: HTMLDivElement | null = $state(null);
@@ -33,15 +30,31 @@
 		element: () => viewport
 	});
 
+	if (import.meta.env.DEV) {
+		$inspect(scrollState);
+	}
+
 	// Load more messages when scrolling up
 	const loadMoreMessages = async () => {
-		if (isLoadingMore || !roomStore.state.tlState?.fullyPaginated) return;
+		if (
+			isLoadingMore ||
+			roomStore.state.tlState?.fullyPaginated ||
+			(roomStore.state.tlState?.items[0].kind === 'virtual' &&
+				roomStore.state.tlState?.items[0].data.kind === 'timelineStart')
+		)
+			return;
 
 		isLoadingMore = true;
 		prevScrollHeight = viewport?.scrollHeight || 0;
 		console.log('Loading more messages !');
 
 		try {
+			const request = createMatrixRequest.paginateRoomTimeline({
+				roomId: roomStore.id,
+				numEvents: 50,
+				direction: 'backwards'
+			});
+			await submitAsyncRequest(request);
 			// const olderMessages = await fetchMessages(page + 1);
 			// Check if we have more messages
 			// if (olderMessages.length < PAGE_SIZE) {
@@ -69,7 +82,7 @@
 
 		showScrollToBottom = scrollTop < -threshold;
 
-		if (scrollTop <= 0 && !isLoadingMore) {
+		if (scrollTop <= 100 && !isLoadingMore) {
 			// Load more when near top
 			console.log('Almost reached the top !');
 			await loadMoreMessages();
@@ -124,7 +137,7 @@
 					<div class="flex justify-center py-2" transition:fade|local>
 						<LoaderIcon class="text-muted-foreground h-6 w-6 animate-spin" />
 					</div>
-				{:else if !roomStore.state.tlState?.fullyPaginated}
+				{:else if roomStore.state.tlState?.fullyPaginated}
 					<p class="text-muted-foreground text-center text-sm">No more messages</p>
 				{/if}
 
