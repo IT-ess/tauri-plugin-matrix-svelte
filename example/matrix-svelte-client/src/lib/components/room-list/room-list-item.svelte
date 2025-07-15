@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Badge } from '$lib/components/ui/badge';
-	import { mediaCache } from '$lib/media-cache';
-	import type { JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
+	import { mediaCache, type JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
 		room: JoinedRoomInfo;

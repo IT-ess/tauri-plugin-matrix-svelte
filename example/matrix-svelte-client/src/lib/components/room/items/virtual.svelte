@@ -65,7 +65,7 @@
 		</div>
 	</div>
 {:else if data.kind === 'timelineStart'}
-	<p>No more messages</p>
+	<p class="text-muted-foreground text-center text-sm">No more messages</p>
 {:else if data.kind === 'readMarker'}
 	<p>Read</p>
 {/if}

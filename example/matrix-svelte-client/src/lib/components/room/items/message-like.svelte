@@ -14,7 +14,6 @@
 	import ImageMessage from './image-message.svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { onMount } from 'svelte';
-	import { mediaCache } from '$lib/media-cache';
 
 	type Props = {
 		data: MsgLikeContent;
@@ -75,20 +74,8 @@
 <div class={['flex gap-2', isOwn && 'flex-row-reverse']}>
 	<Avatar>
 		<!-- Reactive store, once the profile is loaded we load the image -->
-		{#if profileStore.state[senderId]?.state === 'loaded'}
-			<!-- We obviously try to load the avatar only if the url exists. -->
-			{#if profileStore.state[senderId].data.avatarUrl}
-			<!-- TODO: Try to call the cache once for each room member instead of once by message. -->
-				{#await mediaCache.get(profileStore.state[senderId].data.avatarUrl)}
-					{@render avatarFallback(sender)}
-				{:then url}
-					<AvatarImage src={url} alt={sender} />
-				{:catch}
-					{@render avatarFallback(sender)}
-				{/await}
-			{:else}
-				{@render avatarFallback(sender)}
-			{/if}
+		{#if profileStore.state[senderId]?.state === 'loaded' && profileStore.state[senderId].data.avatarDataUrl}
+			<AvatarImage src={profileStore.state[senderId].data.avatarDataUrl} alt={sender} />
 		{:else}
 			{@render avatarFallback(sender)}
 		{/if}
