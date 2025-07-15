@@ -30,7 +30,7 @@
 	const scroll = new ScrollState({
 		element: () => viewportElement,
 		idle: 100, // Shorter idle time for messaging
-		offset: { top: 100 }, // Consider "at bottom" when within 50px
+		offset: { top: 100 }, // Consider "on top" when within 100px
 		onScroll: () => {
 			if (scroll.arrived.top && !isLoadingMore) {
 				loadMoreMessages();

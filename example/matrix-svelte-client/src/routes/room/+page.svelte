@@ -60,19 +60,9 @@
 			});
 		}
 	};
-
-	const paginateBackwards = async () => {
-		const request = createMatrixRequest.paginateRoomTimeline({
-			roomId: data.roomStore.id,
-			numEvents: 50,
-			direction: 'backwards'
-		});
-		await submitAsyncRequest(request);
-	};
 </script>
 
 <h1>Room with id {data.roomStore.id}</h1>
-<button onclick={paginateBackwards}>Paginate more</button>
 <Room
 	roomStore={data.roomStore}
 	profileStore={data.profileStore}
