@@ -1,12 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import type { PageProps } from './$types';
-	import {
-		createMatrixRequest,
-		events,
-		mediaCache,
-		submitAsyncRequest
-	} from 'tauri-plugin-matrix-svelte-api';
+	import { events, mediaCache } from 'tauri-plugin-matrix-svelte-api';
 	import { emit } from '@tauri-apps/api/event';
 	import Room from '$lib/components/room/room.svelte';
 	import { invoke } from '@tauri-apps/api/core';

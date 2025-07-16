@@ -35,10 +35,10 @@ export type RoomMember = {
 
 // Equivalent to RoomsList Rust Struct
 export type RoomsCollectionType = {
-	// invitedRooms: ... ???
+	invitedRooms: Record<string, InvitedRoomInfo>;
 	allJoinedRooms: Record<string, JoinedRoomInfo>;
 	// displayFilter: ???
-	// displayedInvitedRooms: string[] ???
+	displayedInvitedRooms: string[];
 	displayedJoinedRooms: string[];
 	status: RoomsCollectionStatus;
 	currentActiveRoom: string | null;
@@ -63,4 +63,31 @@ export type JoinedRoomInfo = {
 	avatar: string | null;
 	hasBeenPaginated: boolean;
 	isSelected: boolean;
+};
+
+export type InvitedRoomInfo = {
+	roomId: string;
+	roomName: string;
+	canonicalAlias: string | null;
+	altAlias: string[] | null;
+	roomAvatar: string | null;
+	inviterInfo: InviterInfo | null;
+	latest: [number, string] | null;
+	inviteState: InviteState;
+	hasBeenPaginated: boolean;
+	isSelected: boolean;
+	isDirect: boolean;
+};
+
+export type InviteState =
+	| 'waitingOnUserInput'
+	| 'waitingForJoinResult'
+	| 'waitingForLeaveResult'
+	| 'waitingForJoinedRoom'
+	| 'roomLeft';
+
+export type InviterInfo = {
+	userId: string;
+	displayName: string;
+	avatar: string | null;
 };
