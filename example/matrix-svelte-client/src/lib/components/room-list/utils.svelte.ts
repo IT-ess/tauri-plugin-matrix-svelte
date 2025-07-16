@@ -4,6 +4,7 @@ export function getSortedRoomArray(roomsCollection: RoomsCollection): () => Join
 	const entriesArray = $derived.by(() =>
 		Array.from(Object.values(roomsCollection.state.allJoinedRooms))
 	);
+	// TODO: use displayedJoinedRooms to filter the array
 
 	// Sort the array by latestUpdate (newest first)
 	return () =>

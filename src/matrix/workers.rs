@@ -225,62 +225,67 @@ pub async fn async_worker(
                         .expect("Couldn't broadcast event to UI");
                 });
             }
-
-            // MatrixRequest::JoinRoom { room_id } => {
-            //     let Some(client) = CLIENT.get() else { continue };
-            //     let _join_room_task = Handle::current().spawn(async move {
-            //         println!("Sending request to join room {room_id}...");
-            //         let result_action = if let Some(room) = client.get_room(&room_id) {
-            //             match room.join().await {
-            //                 Ok(()) => {
-            //                     println!("Successfully joined room {room_id}.");
-            //                     JoinRoomAction::Joined { room_id }
-            //                 }
-            //                 Err(e) => {
-            //                     eprintln!("Error joining room {room_id}: {e:?}");
-            //                     JoinRoomAction::Failed { room_id, error: e }
-            //                 }
-            //             }
-            //         } else {
-            //             eprintln!("BUG: client could not get room with ID {room_id}");
-            //             JoinRoomAction::Failed {
-            //                 room_id,
-            //                 error: matrix_sdk::Error::UnknownError(
-            //                     String::from("Client couldn't locate room to join it.").into(),
-            //                 ),
-            //             }
-            //         };
-            //         Cx::post_action(result_action);
-            //     });
-            // }
-            // MatrixRequest::LeaveRoom { room_id } => {
-            //     let Some(client) = CLIENT.get() else { continue };
-            //     let _leave_room_task = Handle::current().spawn(async move {
-            //         println!("Sending request to leave room {room_id}...");
-            //         let result_action = if let Some(room) = client.get_room(&room_id) {
-            //             match room.leave().await {
-            //                 Ok(()) => {
-            //                     println!("Successfully left room {room_id}.");
-            //                     LeaveRoomAction::Left { room_id }
-            //                 }
-            //                 Err(e) => {
-            //                     eprintln!("Error leaving room {room_id}: {e:?}");
-            //                     LeaveRoomAction::Failed {
-            //                         room_id,
-            //                         error: e.to_string(),
-            //                     }
-            //                 }
-            //             }
-            //         } else {
-            //             eprintln!("BUG: client could not get room with ID {room_id}");
-            //             LeaveRoomAction::Failed {
-            //                 room_id,
-            //                 error: String::from("Client couldn't locate room to leave it."),
-            //             }
-            //         };
-            //         Cx::post_action(result_action);
-            //     });
-            // }
+            MatrixRequest::JoinRoom { room_id } => {
+                let Some(client) = CLIENT.get() else { continue };
+                let _join_room_task = Handle::current().spawn(async move {
+                    println!("Sending request to join room {room_id}...");
+                    if let Some(room) = client.get_room(&room_id) {
+                        room.join().await.expect("Failed to join room");
+                    }
+                    // let result_action = if let Some(room) = client.get_room(&room_id) {
+                    //     match room.join().await {
+                    //         Ok(()) => {
+                    //             println!("Successfully joined room {room_id}.");
+                    //             JoinRoomAction::Joined { room_id }
+                    //         }
+                    //         Err(e) => {
+                    //             eprintln!("Error joining room {room_id}: {e:?}");
+                    //             JoinRoomAction::Failed { room_id, error: e }
+                    //         }
+                    //     }
+                    // } else {
+                    //     eprintln!("BUG: client could not get room with ID {room_id}");
+                    //     JoinRoomAction::Failed {
+                    //         room_id,
+                    //         error: matrix_sdk::Error::UnknownError(
+                    //             String::from("Client couldn't locate room to join it.").into(),
+                    //         ),
+                    //     }
+                    // };
+                    // TODO: use LeaveRoomAction response and send a popup notification to frontend
+                });
+            }
+            MatrixRequest::LeaveRoom { room_id } => {
+                let Some(client) = CLIENT.get() else { continue };
+                let _leave_room_task = Handle::current().spawn(async move {
+                    println!("Sending request to leave room {room_id}...");
+                    if let Some(room) = client.get_room(&room_id) {
+                        room.leave().await.expect("Failed to leave room");
+                    }
+                    // let result_action = if let Some(room) = client.get_room(&room_id) {
+                    //     match room.leave().await {
+                    //         Ok(()) => {
+                    //             println!("Successfully left room {room_id}.");
+                    //             LeaveRoomAction::Left { room_id }
+                    //         }
+                    //         Err(e) => {
+                    //             eprintln!("Error leaving room {room_id}: {e:?}");
+                    //             LeaveRoomAction::Failed {
+                    //                 room_id,
+                    //                 error: e.to_string(),
+                    //             }
+                    //         }
+                    //     }
+                    // } else {
+                    //     eprintln!("BUG: client could not get room with ID {room_id}");
+                    //     LeaveRoomAction::Failed {
+                    //         room_id,
+                    //         error: String::from("Client couldn't locate room to leave it."),
+                    //     }
+                    // };
+                    // TODO: use LeaveRoomAction response and send a popup notification to frontend
+                });
+            }
             MatrixRequest::GetRoomMembers {
                 room_id,
                 memberships,
@@ -844,7 +849,6 @@ pub async fn async_worker(
                     }
                 });
             }
-            _ => bail!("Not implemented yet"),
         }
     }
 

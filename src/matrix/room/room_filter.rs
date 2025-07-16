@@ -11,9 +11,11 @@ use std::{
     ops::Deref,
 };
 
+use crate::matrix::invited_room::InvitedRoomInfo;
+
 use super::rooms_list::JoinedRoomInfo;
 
-static _EMPTY_TAGS: Tags = BTreeMap::new();
+static EMPTY_TAGS: Tags = BTreeMap::new();
 
 /// A trait that abstracts the common properties of a room used to filter/sort it.
 pub trait FilterableRoom {
@@ -59,38 +61,38 @@ impl FilterableRoom for JoinedRoomInfo {
     }
 }
 
-// impl FilterableRoom for InvitedRoomInfo {
-//     fn room_id(&self) -> &RoomId {
-//         &self.room_id
-//     }
+impl FilterableRoom for InvitedRoomInfo {
+    fn room_id(&self) -> &RoomId {
+        &self.room_id
+    }
 
-//     fn room_name(&self) -> Cow<'_, str> {
-//         self.room_name
-//             .as_deref()
-//             .map(Into::into)
-//             .unwrap_or_default()
-//     }
+    fn room_name(&self) -> Cow<'_, str> {
+        self.room_name
+            .as_deref()
+            .map(Into::into)
+            .unwrap_or_default()
+    }
 
-//     fn unread_mentions(&self) -> u64 {
-//         1
-//     }
+    fn unread_mentions(&self) -> u64 {
+        1
+    }
 
-//     fn unread_messages(&self) -> u64 {
-//         0
-//     }
+    fn unread_messages(&self) -> u64 {
+        0
+    }
 
-//     fn canonical_alias(&self) -> Option<Cow<'_, RoomAliasId>> {
-//         self.canonical_alias.as_deref().map(Cow::Borrowed)
-//     }
+    fn canonical_alias(&self) -> Option<Cow<'_, RoomAliasId>> {
+        self.canonical_alias.as_deref().map(Cow::Borrowed)
+    }
 
-//     fn alt_aliases(&self) -> Cow<'_, [OwnedRoomAliasId]> {
-//         Cow::Borrowed(&self.alt_aliases)
-//     }
+    fn alt_aliases(&self) -> Cow<'_, [OwnedRoomAliasId]> {
+        Cow::Borrowed(&self.alt_aliases)
+    }
 
-//     fn tags(&self) -> &Tags {
-//         &EMPTY_TAGS
-//     }
-// }
+    fn tags(&self) -> &Tags {
+        &EMPTY_TAGS
+    }
+}
 
 pub type RoomFilterFn = dyn Fn(&(dyn FilterableRoom + Send + Sync)) -> bool + Send + Sync;
 pub type SortFn = dyn Fn(&(dyn FilterableRoom + Send + Sync), &(dyn FilterableRoom + Send + Sync)) -> Ordering

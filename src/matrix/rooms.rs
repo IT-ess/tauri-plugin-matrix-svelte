@@ -2,13 +2,16 @@ use std::sync::Arc;
 
 use crate::matrix::{
     events::get_latest_event_details,
+    invited_room::{InvitedRoomInfo, InviterInfo},
     room::rooms_list::{enqueue_rooms_list_update, JoinedRoomInfo, RoomsListUpdate},
-    singletons::{ALL_JOINED_ROOMS, TOMBSTONED_ROOMS},
+    singletons::{get_client, ALL_JOINED_ROOMS, TOMBSTONED_ROOMS},
     timeline::timeline_subscriber_handler,
 };
-use anyhow::bail;
 use matrix_sdk::{event_handler::EventHandlerDropGuard, ruma::OwnedRoomId, RoomState};
-use matrix_sdk_ui::{timeline::RoomExt, RoomListService, Timeline};
+use matrix_sdk_ui::{
+    timeline::{EventTimelineItem, RoomExt},
+    RoomListService, Timeline,
+};
 use tokio::{runtime::Handle, sync::watch, task::JoinHandle};
 
 use super::{
@@ -105,6 +108,7 @@ pub async fn add_new_room(
     let room_id = room.room_id().to_owned();
     // We must call `display_name()` here to calculate and cache the room's name.
     let room_name = room.display_name().await.map(|n| n.to_string()).ok();
+    let is_direct = room.is_direct().await.unwrap_or(false);
 
     match room.state() {
         RoomState::Knocked => {
@@ -127,47 +131,46 @@ pub async fn add_new_room(
             //       So we might also need to make a new RoomsListUpdate::RoomLeft variant.
             return Ok(());
         }
-        // RoomState::Invited => {
-        //     let invite_details = room.invite_details().await.ok();
-        //     let latest = room
-        //         .latest_event()
-        //         .await
-        //         .as_ref()
-        //         .map(|ev| get_latest_event_details(ev, &room_id));
-        //     let room_avatar = room_avatar(room, room_name.as_deref()).await;
+        RoomState::Invited => {
+            println!("Got new invitation to room: {room_name:?} ({room_id})");
+            let invite_details = room.invite_details().await.ok();
+            let Some(client) = get_client() else {
+                return Ok(());
+            };
+            let latest_event = if let Some(latest_event) = room.latest_event() {
+                EventTimelineItem::from_latest_event(client, &room_id, latest_event).await
+            } else {
+                None
+            };
+            let latest = latest_event
+                .as_ref()
+                .map(|ev| get_latest_event_details(ev, &room_id));
 
-        //     let inviter_info = if let Some(inviter) = invite_details.and_then(|d| d.inviter) {
-        //         Some(InviterInfo {
-        //             user_id: inviter.user_id().to_owned(),
-        //             display_name: inviter.display_name().map(|n| n.to_string()),
-        //             avatar: inviter
-        //                 .avatar(AVATAR_THUMBNAIL_FORMAT.into())
-        //                 .await
-        //                 .ok()
-        //                 .flatten()
-        //                 .map(Into::into),
-        //         })
-        //     } else {
-        //         None
-        //     };
+            let inviter_info = if let Some(inviter) = invite_details.and_then(|d| d.inviter) {
+                Some(InviterInfo {
+                    user_id: inviter.user_id().to_owned(),
+                    display_name: inviter.display_name().map(|n| n.to_string()),
+                    avatar: inviter.avatar_url().map(|a| a.to_owned()),
+                })
+            } else {
+                None
+            };
 
-        //     rooms_list::enqueue_rooms_list_update(RoomsListUpdate::AddInvitedRoom(
-        //         InvitedRoomInfo {
-        //             room_id,
-        //             room_name,
-        //             inviter_info,
-        //             room_avatar,
-        //             canonical_alias: room.canonical_alias(),
-        //             alt_aliases: room.alt_aliases(),
-        //             latest,
-        //             invite_state: Default::default(),
-        //             is_selected: false,
-        //         },
-        //     ));
-        //     return Ok(());
-        // }
+            enqueue_rooms_list_update(RoomsListUpdate::AddInvitedRoom(InvitedRoomInfo {
+                room_id,
+                room_name,
+                inviter_info,
+                room_avatar: room.avatar_url(),
+                canonical_alias: room.canonical_alias(),
+                alt_aliases: room.alt_aliases(),
+                latest,
+                invite_state: Default::default(),
+                is_selected: false,
+                is_direct,
+            }));
+            return Ok(());
+        }
         RoomState::Joined => {} // Fall through to adding the joined room below.
-        _ => bail!("We do not handle invited rooms yet"),
     }
 
     // Subscribe to all updates for this room in order to properly receive all of its states.
@@ -258,6 +261,7 @@ pub async fn add_new_room(
         alt_aliases: room.alt_aliases(),
         has_been_paginated: false,
         is_selected: false,
+        is_direct,
     }));
 
     Ok(())

@@ -32,22 +32,9 @@ export class RoomsCollection extends RuneStore<RoomsCollectionType> {
 		super(
 			ROOMS_COLLECTION_STORE_ID,
 			{
-				allJoinedRooms: {
-					// should be replaced during first sync
-					default: {
-						roomId: 'default',
-						roomName: 'default',
-						numUnreadMentions: 0,
-						numUnreadMessages: 0,
-						tags: null,
-						latest: null,
-						avatar: null,
-						altAlias: null,
-						canonicalAlias: null,
-						hasBeenPaginated: false,
-						isSelected: false
-					}
-				},
+				invitedRooms: {},
+				allJoinedRooms: {},
+				displayedInvitedRooms: [],
 				displayedJoinedRooms: [],
 				status: { status: 'notLoaded', message: 'Initiating' },
 				currentActiveRoom: null,

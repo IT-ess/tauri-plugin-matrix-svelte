@@ -1,3 +1,5 @@
+use std::{thread, time::Duration};
+
 use matrix::{
     requests::MatrixRequest,
     room::rooms_list::{enqueue_rooms_list_update, RoomsListUpdate},
@@ -114,6 +116,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
                     }
                     None => {
                         println!("Waiting for login request...");
+                        thread::sleep(Duration::from_secs(3)); // Block the thread for 3 secs to let the frontend init itself.
                         update_login_state(&init_app_handle, LoginState::AwaitingForLogin, None)
                             .expect("Couldn't update login state");
                         // We await frontend to call the login command and set the client

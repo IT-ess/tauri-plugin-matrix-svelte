@@ -9,6 +9,7 @@ use crate::{matrix::requests::MatrixRequest, models::matrix::MediaStreamEvent};
 pub mod emoji_verification;
 pub mod event_preview;
 pub mod events;
+pub mod invited_room;
 pub mod login;
 pub mod notifications;
 pub mod requests;
