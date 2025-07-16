@@ -15,5 +15,6 @@
 	<RoomList
 		roomsCollection={data.roomsCollection}
 		onRoomClick={setCurrentActiveRoomAndGoToRoomRoute}
+		createDMRoomForm={data.createDMRoomForm}
 	/>
 </main>
