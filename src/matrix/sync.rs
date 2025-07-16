@@ -55,7 +55,6 @@ pub async fn sync<R: Runtime>(_app_handle: &AppHandle<R>, client: Client) -> any
                         println!("room_list: diff Append {_num_new_rooms}");
                     }
                     for new_room in new_rooms {
-                        println!("State of appended room: {:?}", new_room.state());
                         add_new_room(&new_room, &room_list_service).await?;
                         all_known_rooms.push_back(new_room.into());
                     }
@@ -72,7 +71,6 @@ pub async fn sync<R: Runtime>(_app_handle: &AppHandle<R>, client: Client) -> any
                     if LOG_ROOM_LIST_DIFFS {
                         println!("room_list: diff PushFront");
                     }
-                    println!("State of appended room: {:?}", new_room.state());
                     add_new_room(&new_room, &room_list_service).await?;
                     all_known_rooms.push_front(new_room.into());
                 }
@@ -80,7 +78,6 @@ pub async fn sync<R: Runtime>(_app_handle: &AppHandle<R>, client: Client) -> any
                     if LOG_ROOM_LIST_DIFFS {
                         println!("room_list: diff PushBack");
                     }
-                    println!("State of appended room: {:?}", new_room.state());
                     add_new_room(&new_room, &room_list_service).await?;
                     all_known_rooms.push_back(new_room.into());
                 }
@@ -121,7 +118,6 @@ pub async fn sync<R: Runtime>(_app_handle: &AppHandle<R>, client: Client) -> any
                     if LOG_ROOM_LIST_DIFFS {
                         println!("room_list: diff Insert at {index}");
                     }
-                    println!("State of appended room: {:?}", new_room.state());
                     add_new_room(&new_room, &room_list_service).await?;
                     all_known_rooms.insert(index, new_room.into());
                 }

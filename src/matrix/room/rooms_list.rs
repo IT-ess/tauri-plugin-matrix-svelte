@@ -309,9 +309,6 @@ impl RoomsList {
                     // If this room was added as a result of accepting an invite, we must:
                     // 1. Remove the room from the list of invited rooms.
                     // 2. Update the displayed invited rooms list to remove this room.
-                    // 3. Emit an action informing other widgets that the InviteScreen
-                    //    displaying the invite to this room should be converted to a
-                    //    RoomScreen displaying the now-joined room.
                     if let Some(_accepted_invite) = self.invited_rooms.borrow_mut().remove(&room_id)
                     {
                         println!("Removed room {room_id} from the list of invited rooms");
@@ -319,11 +316,6 @@ impl RoomsList {
                             .iter()
                             .position(|r| r == &room_id)
                             .map(|index| self.displayed_invited_rooms.remove(index));
-                        // cx.widget_action(
-                        //     self.widget_uid(),
-                        //     &scope.path,
-                        //     RoomsListAction::InviteAccepted { room_id, room_name },
-                        // );
                     }
                     self.update_status_rooms_count();
                 }
