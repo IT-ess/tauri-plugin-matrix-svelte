@@ -36,6 +36,7 @@ pub async fn sync<R: Runtime>(_app_handle: &AppHandle<R>, client: Client) -> any
     let all_rooms_list = room_list_service.all_rooms().await?;
     handle_room_list_service_loading_state(all_rooms_list.loading_state());
 
+    // TODO: paginate the rooms instead of getting them all
     let (room_diff_stream, room_list_dynamic_entries_controller) =
         all_rooms_list.entries_with_dynamic_adapters(usize::MAX);
 

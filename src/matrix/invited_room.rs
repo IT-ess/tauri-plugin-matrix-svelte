@@ -4,6 +4,7 @@ use matrix_sdk::ruma::{
 use serde::Serialize;
 
 #[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct InvitedRoomInfo {
     /// The matrix ID of this room.
     pub room_id: OwnedRoomId,

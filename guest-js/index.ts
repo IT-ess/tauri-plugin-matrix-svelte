@@ -1,5 +1,8 @@
 import { invoke } from '@tauri-apps/api/core';
 import {
+	InvitedRoomInfo,
+	InviterInfo,
+	InviteState,
 	JoinedRoomInfo,
 	MatrixClientConfig,
 	Room,
@@ -67,5 +70,8 @@ export {
 	TimelineState,
 	createMatrixRequest,
 	MatrixRequest,
-	mediaCache
+	mediaCache,
+	InvitedRoomInfo,
+	InviteState,
+	InviterInfo
 };
