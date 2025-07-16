@@ -5,19 +5,27 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import * as Form from '$lib/components/ui/form/index';
 
-	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import { buttonVariants } from '$lib/components/ui/button';
 
 	import { type SuperValidated, type Infer, superForm, setMessage } from 'sveltekit-superforms';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { createDMRoomFormSchema, type CreateDMRoomFormSchema } from '$lib/schemas/matrix-id';
 	import { onMount } from 'svelte';
+	import { createMatrixRequest, submitAsyncRequest } from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
 		actionCreateRoomOpen: boolean;
+		isActionButtonOpen: boolean;
+		// TODO: remove this param since we don't really need +page.ts
+		// https://superforms.rocks/concepts/spa#without-a-pagets-file
 		dataForm: SuperValidated<Infer<CreateDMRoomFormSchema>>;
 	};
 
-	let { actionCreateRoomOpen = $bindable(false), dataForm }: Props = $props();
+	let {
+		actionCreateRoomOpen = $bindable(false),
+		isActionButtonOpen = $bindable(),
+		dataForm
+	}: Props = $props();
 
 	const isDesktop = new MediaQuery('(min-width: 768px)');
 
@@ -28,7 +36,7 @@
 			// Form validation
 			if (form.valid) {
 				// Send request (handleCreateRoom)
-				console.log('Heyyyyyyyyyyy');
+				handleCreateRoom();
 				setMessage(form, 'Valid data!'); // is that still necessary ?
 				actionCreateRoomOpen = false;
 			}
@@ -42,10 +50,12 @@
 	});
 
 	/** Handle create room action */
-	// const handleCreateRoom = () => {
-	// 	console.log('Creating new room...');
-	// 	// isActionButtonOpen = false;
-	// };
+	const handleCreateRoom = async () => {
+		const request = createMatrixRequest.createDMRoom({
+			userId: $formData.username
+		});
+		await submitAsyncRequest(request);
+	};
 </script>
 
 {#if isDesktop.current}
@@ -57,6 +67,7 @@
 			</Dialog.Header>
 			{@render createRoomForm()}
 		</Dialog.Content>
+		<Dialog.Close class={buttonVariants({ variant: 'outline' })}>Cancel</Dialog.Close>
 	</Dialog.Root>
 {:else}
 	<Drawer.Root bind:open={actionCreateRoomOpen}>
@@ -65,7 +76,9 @@
 				<Drawer.Title>Create DM Room</Drawer.Title>
 				<Drawer.Description>Invite a friend to discuss.</Drawer.Description>
 			</Drawer.Header>
-			{@render createRoomForm()}
+			<div class="mx-4">
+				{@render createRoomForm()}
+			</div>
 			<Drawer.Footer class="pt-2">
 				<Drawer.Close class={buttonVariants({ variant: 'outline' })}>Cancel</Drawer.Close>
 			</Drawer.Footer>
@@ -84,7 +97,6 @@
 			</Form.Control>
 			<Form.FieldErrors />
 		</Form.Field>
-		<Button onclick={() => (actionCreateRoomOpen = false)} variant="destructive">Cancel</Button>
 		<Form.Button type="submit" class="flex-1">Send invite</Form.Button>
 	</form>
 {/snippet}

@@ -849,6 +849,24 @@ pub async fn async_worker(
                     }
                 });
             }
+            MatrixRequest::CreateDMRoom { user_id } => {
+                let Some(client) = CLIENT.get() else { continue };
+                let _create_dm_room_task = Handle::current().spawn(async move {
+                    // client.search_users(search_term, limit);
+                    // TODO: check existence of user.
+                    match client.create_dm(&user_id).await {
+                        Ok(_a) => {
+                            println!("Sucessfully created DM room for user {user_id}");
+                        }
+                        Err(e) => {
+                            eprintln!(
+                                "Failed to create DM room for user {user_id}, error: {:?}",
+                                e
+                            )
+                        }
+                    };
+                });
+            }
         }
     }
 

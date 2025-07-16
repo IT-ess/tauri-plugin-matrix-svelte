@@ -44,11 +44,17 @@ pub enum MatrixRequest {
     },
     /// Request to fetch profile information for all members of a room.
     /// This can be *very* slow depending on the number of members in the room.
-    SyncRoomMemberList { room_id: OwnedRoomId },
+    SyncRoomMemberList {
+        room_id: OwnedRoomId,
+    },
     /// Request to join the given room.
-    JoinRoom { room_id: OwnedRoomId },
+    JoinRoom {
+        room_id: OwnedRoomId,
+    },
     /// Request to leave the given room.
-    LeaveRoom { room_id: OwnedRoomId },
+    LeaveRoom {
+        room_id: OwnedRoomId,
+    },
     /// Request to get the actual list of members in a room.
     /// This returns the list of members that can be displayed in the UI.
     GetRoomMembers {
@@ -71,7 +77,9 @@ pub enum MatrixRequest {
         local_only: bool,
     },
     /// Request to fetch the number of unread messages in the given room.
-    GetNumberUnreadMessages { room_id: OwnedRoomId },
+    GetNumberUnreadMessages {
+        room_id: OwnedRoomId,
+    },
     /// Request to ignore/block or unignore/unblock a user.
     IgnoreUser {
         /// Whether to ignore (`true`) or unignore (`false`) the user.
@@ -110,7 +118,10 @@ pub enum MatrixRequest {
     /// This request does not return a response or notify the UI thread, and
     /// furthermore, there is no need to send a follow-up request to stop typing
     /// (though you certainly can do so).
-    SendTypingNotice { room_id: OwnedRoomId, typing: bool },
+    SendTypingNotice {
+        room_id: OwnedRoomId,
+        typing: bool,
+    },
     /// Subscribe to typing notices for the given room.
     ///
     /// This request does not return a response or notify the UI thread.
@@ -140,7 +151,9 @@ pub enum MatrixRequest {
     /// Sends a request to obtain the power levels for this room.
     ///
     /// The response is delivered back to the main UI thread via [`TimelineUpdate::UserPowerLevels`].
-    GetRoomPowerLevels { room_id: OwnedRoomId },
+    GetRoomPowerLevels {
+        room_id: OwnedRoomId,
+    },
     /// Toggles the given reaction to the given event in the given room.
     ToggleReaction {
         room_id: OwnedRoomId,
@@ -160,6 +173,9 @@ pub enum MatrixRequest {
     GetMatrixRoomLinkPillInfo {
         matrix_id: MatrixId,
         via: Vec<OwnedServerName>,
+    },
+    CreateDMRoom {
+        user_id: OwnedUserId,
     },
 }
 // Deserialize trait is implemented in models/matrix_requests.rs

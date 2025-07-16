@@ -198,6 +198,13 @@ impl<'de> Deserialize<'de> for MatrixRequest {
             //         via: data.via,
             //     })
             // }
+            "createDMRoom" => {
+                let data: CreateDMRoomPayload =
+                    serde_json::from_value(payload.clone()).map_err(serde::de::Error::custom)?;
+                Ok(MatrixRequest::CreateDMRoom {
+                    user_id: data.user_id,
+                })
+            }
             _ => Err(serde::de::Error::unknown_variant(
                 event,
                 &[
@@ -222,6 +229,7 @@ impl<'de> Deserialize<'de> for MatrixRequest {
                     "toggleReaction",
                     // "redactMessage",
                     // "getMatrixRoomLinkPillInfo",
+                    "createDMRoom",
                 ],
             )),
         }
@@ -370,3 +378,9 @@ struct ToggleReactionPayload {
 //     matrix_id: MatrixId,
 //     via: Vec<OwnedServerName>,
 // }
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CreateDMRoomPayload {
+    user_id: OwnedUserId,
+}

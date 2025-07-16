@@ -39,4 +39,4 @@
 	</DropdownMenu>
 </div>
 
-<CreateRoom {actionCreateRoomOpen} dataForm={createDMRoomForm} />
+<CreateRoom {actionCreateRoomOpen} dataForm={createDMRoomForm} {isActionButtonOpen} />
