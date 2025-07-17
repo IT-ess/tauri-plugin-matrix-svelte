@@ -38,7 +38,11 @@ use desktop::MatrixSvelte;
 use mobile::MatrixSvelte;
 
 use crate::{
-    matrix::{room::rooms_list::RoomsCollectionStatus, singletons::TEMP_DIR},
+    matrix::{
+        notifications::enqueue_toast_notification, room::rooms_list::RoomsCollectionStatus,
+        singletons::TEMP_DIR,
+    },
+    models::matrix::{ToastNotificationRequest, ToastNotificationVariant},
     utils::fs::get_temp_dir_or_create_it,
 };
 
@@ -159,7 +163,11 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
                                     enqueue_rooms_list_update(RoomsListUpdate::Status {
                                         status: RoomsCollectionStatus::Error(e.to_string()),
                                     });
-                                    // enqueue_popup_notification(format!("Rooms list update error: {e}"));
+                                    enqueue_toast_notification(ToastNotificationRequest::new(
+                                        format!("Rooms list update error: {e}"),
+                                        None,
+                                        ToastNotificationVariant::Error,
+                                    ));
                                 },
                                 Err(e) => {
                                     eprintln!("BUG: failed to join main async loop task: {e:?}");
@@ -177,7 +185,11 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
                                     enqueue_rooms_list_update(RoomsListUpdate::Status {
                                         status: RoomsCollectionStatus::Error(e.to_string()),
                                     });
-                                    // enqueue_popup_notification(format!("Rooms list update error: {e}"));
+                                    enqueue_toast_notification(ToastNotificationRequest::new(
+                                        format!("Rooms list update error: {e}"),
+                                        None,
+                                        ToastNotificationVariant::Error,
+                                    ));
                                 },
                                 Err(e) => {
                                     eprintln!("BUG: failed to join async worker task: {e:?}");

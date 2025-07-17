@@ -21,7 +21,7 @@ use tokio::{
 
 use crate::{
     matrix::{
-        notifications::enqueue_popup_notification,
+        notifications::{enqueue_toast_notification, process_toast_notifications},
         requests::submit_async_request,
         room::rooms_list::{enqueue_rooms_list_update, RoomsCollectionStatus, RoomsListUpdate},
         rooms::UnreadMessageCount,
@@ -35,7 +35,10 @@ use crate::{
         },
         utils::current_user_id,
     },
-    models::matrix::{MatrixSvelteListenEvent, MatrixUpdateCurrentActiveRoom},
+    models::matrix::{
+        MatrixSvelteListenEvent, MatrixUpdateCurrentActiveRoom, ToastNotificationRequest,
+        ToastNotificationVariant,
+    },
 };
 
 use super::{requests::MatrixRequest, room::rooms_list::RoomsList, utils::debounce_broadcast};
@@ -233,29 +236,32 @@ pub async fn async_worker(
                 let _join_room_task = Handle::current().spawn(async move {
                     println!("Sending request to join room {room_id}...");
                     if let Some(room) = client.get_room(&room_id) {
-                        room.join().await.expect("Failed to join room");
-                    }
-                    // let result_action = if let Some(room) = client.get_room(&room_id) {
-                    //     match room.join().await {
-                    //         Ok(()) => {
-                    //             println!("Successfully joined room {room_id}.");
-                    //             JoinRoomAction::Joined { room_id }
-                    //         }
-                    //         Err(e) => {
-                    //             eprintln!("Error joining room {room_id}: {e:?}");
-                    //             JoinRoomAction::Failed { room_id, error: e }
-                    //         }
-                    //     }
-                    // } else {
-                    //     eprintln!("BUG: client could not get room with ID {room_id}");
-                    //     JoinRoomAction::Failed {
-                    //         room_id,
-                    //         error: matrix_sdk::Error::UnknownError(
-                    //             String::from("Client couldn't locate room to join it.").into(),
-                    //         ),
-                    //     }
-                    // };
-                    // TODO: use LeaveRoomAction response and send a popup notification to frontend
+                        match room.join().await {
+                            Ok(()) => {
+                                println!("Successfully joined room {room_id}.");
+                                enqueue_toast_notification(ToastNotificationRequest::new(
+                                    format!("Successfully joined room {room_id}."),
+                                    None,
+                                    ToastNotificationVariant::Success,
+                                ));
+                            }
+                            Err(e) => {
+                                eprintln!("Error joining room {room_id}: {e:?}");
+                                enqueue_toast_notification(ToastNotificationRequest::new(
+                                    format!("Error joining room {room_id}: {e:?}"),
+                                    None,
+                                    ToastNotificationVariant::Error,
+                                ));
+                            }
+                        }
+                    } else {
+                        eprintln!("BUG: client could not get room with ID {room_id}");
+                        enqueue_toast_notification(ToastNotificationRequest::new(
+                            format!("BUG: client could not get room with ID {room_id}"),
+                            None,
+                            ToastNotificationVariant::Error,
+                        ));
+                    };
                 });
             }
             MatrixRequest::LeaveRoom { room_id } => {
@@ -263,30 +269,32 @@ pub async fn async_worker(
                 let _leave_room_task = Handle::current().spawn(async move {
                     println!("Sending request to leave room {room_id}...");
                     if let Some(room) = client.get_room(&room_id) {
-                        room.leave().await.expect("Failed to leave room");
-                    }
-                    // let result_action = if let Some(room) = client.get_room(&room_id) {
-                    //     match room.leave().await {
-                    //         Ok(()) => {
-                    //             println!("Successfully left room {room_id}.");
-                    //             LeaveRoomAction::Left { room_id }
-                    //         }
-                    //         Err(e) => {
-                    //             eprintln!("Error leaving room {room_id}: {e:?}");
-                    //             LeaveRoomAction::Failed {
-                    //                 room_id,
-                    //                 error: e.to_string(),
-                    //             }
-                    //         }
-                    //     }
-                    // } else {
-                    //     eprintln!("BUG: client could not get room with ID {room_id}");
-                    //     LeaveRoomAction::Failed {
-                    //         room_id,
-                    //         error: String::from("Client couldn't locate room to leave it."),
-                    //     }
-                    // };
-                    // TODO: use LeaveRoomAction response and send a popup notification to frontend
+                        match room.leave().await {
+                            Ok(()) => {
+                                println!("Successfully left room {room_id}.");
+                                enqueue_toast_notification(ToastNotificationRequest::new(
+                                    format!("Successfully left room {room_id}."),
+                                    None,
+                                    ToastNotificationVariant::Success,
+                                ));
+                            }
+                            Err(e) => {
+                                eprintln!("Error leaving room {room_id}: {e:?}");
+                                enqueue_toast_notification(ToastNotificationRequest::new(
+                                    format!("Error leaving room {room_id}: {e:?}"),
+                                    None,
+                                    ToastNotificationVariant::Error,
+                                ));
+                            }
+                        }
+                    } else {
+                        eprintln!("BUG: client could not get room with ID {room_id}");
+                        enqueue_toast_notification(ToastNotificationRequest::new(
+                            format!("Client couldn't locate room to leave it."),
+                            None,
+                            ToastNotificationVariant::Error,
+                        ));
+                    };
                 });
             }
             MatrixRequest::GetRoomMembers {
@@ -675,9 +683,13 @@ pub async fn async_worker(
                     // } else {
                     match timeline.send(message.into()).await {
                         Ok(_send_handle) => println!("Sent message to room {room_id}."),
-                        Err(_e) => {
-                            eprintln!("Failed to send message to room {room_id}: {_e:?}");
-                            enqueue_popup_notification(format!("Failed to send message: {_e}"));
+                        Err(e) => {
+                            eprintln!("Failed to send message to room {room_id}: {e:?}");
+                            enqueue_toast_notification(ToastNotificationRequest::new(
+                                format!("Failed to send message. Error: {e}"),
+                                None,
+                                ToastNotificationVariant::Error,
+                            ));
                         }
                     }
                     // }
@@ -818,8 +830,10 @@ pub async fn async_worker(
                         Ok(()) => println!("Successfully redacted message in room {room_id}."),
                         Err(e) => {
                             eprintln!("Failed to redact message in {room_id}; error: {e:?}");
-                            enqueue_popup_notification(format!(
-                                "Failed to redact message. Error: {e}"
+                            enqueue_toast_notification(ToastNotificationRequest::new(
+                                format!("Failed to redact message. Error: {e}"),
+                                None,
+                                ToastNotificationVariant::Error,
                             ));
                         }
                     }
@@ -868,16 +882,31 @@ pub async fn async_worker(
                                 match client.create_dm(&user_id).await {
                                     Ok(_a) => {
                                         println!("Sucessfully created DM room for user {user_id}");
+                                        enqueue_toast_notification(ToastNotificationRequest::new(
+                                            format!("Sucessfully created DM room for user {user_id}"),
+                                            None,
+                                            ToastNotificationVariant::Success,
+                                        ));
                                     }
                                     Err(e) => {
                                         eprintln!(
                                             "Failed to create DM room for user {user_id}, error: {:?}",
                                             e
-                                        )
+                                        );
+                                        enqueue_toast_notification(ToastNotificationRequest::new(
+                                            format!("Failed to create DM room for user {user_id}, error: {e:?}"),
+                                            None,
+                                            ToastNotificationVariant::Error,
+                                        ));
                                     }
                                 };
                             } else {
                                 eprintln!("No user matched the query");
+                                enqueue_toast_notification(ToastNotificationRequest::new(
+                                    format!("The user {user_id} doesn't exist."),
+                                    None,
+                                    ToastNotificationVariant::Warning,
+                                ));
                             }
                         }
                         Err(e) => {
@@ -952,6 +981,8 @@ pub async fn ui_worker<R: Runtime>(app_handle: AppHandle<R>) -> anyhow::Result<(
                 lock.handle_rooms_list_updates(&app_handle).await;
 
                 process_user_profile_updates(&app_handle).await; // Each time the UI is refreshed we check the profiles update queue.
+
+                process_toast_notifications(&app_handle)?;
             }
         }
     }

@@ -51,7 +51,7 @@ pub struct MatrixUpdateCurrentActiveRoom {
 pub enum MatrixSvelteEmitEvent {
     RoomCreate,
     VerificationStart,
-    MessageText,
+    ToastNotification,
 }
 
 impl MatrixSvelteEmitEvent {
@@ -59,21 +59,8 @@ impl MatrixSvelteEmitEvent {
         match self {
             MatrixSvelteEmitEvent::RoomCreate => "matrix-svelte://room-create",
             MatrixSvelteEmitEvent::VerificationStart => "matrix-svelte://verification-start",
-            MatrixSvelteEmitEvent::MessageText => "matrix-svelte://message-text",
+            MatrixSvelteEmitEvent::ToastNotification => "matrix-svelte://toast-notification",
         }
-    }
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct MatrixMessage {
-    sender: String,
-    body: String,
-}
-
-impl MatrixMessage {
-    pub fn new(sender: String, body: String) -> Self {
-        Self { sender, body }
     }
 }
 
@@ -98,6 +85,48 @@ pub struct MatrixRoomStoreCreateRequest {
 impl MatrixRoomStoreCreateRequest {
     pub fn new(id: String) -> Self {
         Self { id }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ToastNotificationRequest {
+    message: String,
+    description: Option<String>,
+    variant: ToastNotificationVariant,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum ToastNotificationVariant {
+    Default,
+    Description,
+    Success,
+    Info,
+    Warning,
+    Error,
+}
+
+impl ToastNotificationRequest {
+    pub fn new(
+        message: String,
+        description: Option<String>,
+        variant: ToastNotificationVariant,
+    ) -> Self {
+        if description.is_some() {
+            // If there is a description, force the description variant.
+            Self {
+                message,
+                description,
+                variant: ToastNotificationVariant::Description,
+            }
+        } else {
+            Self {
+                message,
+                description: None,
+                variant,
+            }
+        }
     }
 }
 

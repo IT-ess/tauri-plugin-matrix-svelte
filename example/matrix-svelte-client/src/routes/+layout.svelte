@@ -6,6 +6,8 @@
 	import { events } from 'tauri-plugin-matrix-svelte-api';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import { Toaster, toast } from 'svelte-sonner';
+	import { MediaQuery } from 'svelte/reactivity';
 
 	let { children, data } = $props();
 
@@ -19,8 +21,10 @@
 
 	let displayEmojiVerificationModal = $state(false);
 	let verificationEmojis = $state('');
+	const isDesktop = new MediaQuery('(min-width: 768px)');
 
 	let emojisUnlistener: UnlistenFn;
+	let toastUnlistener: UnlistenFn;
 
 	onMount(async () => {
 		// Do not register if already verified ?
@@ -35,14 +39,44 @@
 				verificationEmojis = event.payload.emojis;
 			}
 		);
+
+		toastUnlistener = await listen<events.ToastNotificationEventType>(
+			events.MatrixSvelteListenEvent.ToastNotification,
+			(event) => {
+				switch (event.payload.variant) {
+					case 'success':
+						return toast.success(event.payload.message);
+					case 'error':
+						return toast.error(event.payload.message);
+					case 'info':
+						return toast.info(event.payload.message);
+					case 'warning':
+						return toast.warning(event.payload.message);
+					case 'description':
+						return toast.message(event.payload.message, {
+							description: event.payload.description ?? 'Missing description'
+						});
+					default:
+						return toast(event.payload.message);
+				}
+			}
+		);
 	});
 
 	onDestroy(() => {
 		emojisUnlistener();
+		toastUnlistener();
 	});
 </script>
 
 {@render children()}
+
+<Toaster
+	richColors
+	expand={isDesktop.current}
+	position={isDesktop.current ? 'top-right' : 'top-center'}
+	closeButton
+/>
 
 <Dialog.Root bind:open={displayEmojiVerificationModal}>
 	<Dialog.Content class="max-w-[80%] rounded-md">
