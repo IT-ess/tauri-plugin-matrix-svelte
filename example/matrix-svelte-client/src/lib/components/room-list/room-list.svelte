@@ -5,6 +5,7 @@
 	import { getSortedRoomArray } from './utils.svelte';
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
 	import InviteListItem from './invite-list-item.svelte';
+	import ListActions from './actions/list-actions.svelte';
 
 	// Props type for conversations list
 	type Props = {
@@ -51,6 +52,7 @@
 	{:else}
 		{@render roomsCard()}
 	{/if}
+	<ListActions />
 </div>
 
 {#snippet roomsCard()}

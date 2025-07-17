@@ -4,8 +4,11 @@ use anyhow::bail;
 use futures::{pin_mut, StreamExt};
 use matrix_sdk::{
     ruma::{
-        api::client::receipt::create_receipt::v3::ReceiptType, matrix_uri::MatrixId, OwnedRoomId,
-        RoomOrAliasId,
+        api::client::{
+            receipt::create_receipt::v3::ReceiptType, user_directory::search_users::v3::User,
+        },
+        matrix_uri::MatrixId,
+        OwnedRoomId, RoomOrAliasId,
     },
     Client, RoomMemberships,
 };
@@ -846,6 +849,41 @@ pub async fn async_worker(
                                 println!("Failed to get room link pill info for {room_or_alias_id:?}: {_e:?}");
                             }
                         };
+                    }
+                });
+            }
+            MatrixRequest::CreateDMRoom { user_id } => {
+                let Some(client) = CLIENT.get() else { continue };
+                let _create_dm_room_task = Handle::current().spawn(async move {
+                    let query = client.search_users(user_id.as_str(), 5).await;
+                    match query {
+                        Ok(res) => {
+                            println!("Matched these results for user_id: {:?}", res.results);
+                            let a: Vec<&User> = res
+                                .results
+                                .iter()
+                                .filter(|user| user.user_id.eq(&user_id))
+                                .collect();
+                            if a.len() > 0 {
+                                match client.create_dm(&user_id).await {
+                                    Ok(_a) => {
+                                        println!("Sucessfully created DM room for user {user_id}");
+                                    }
+                                    Err(e) => {
+                                        eprintln!(
+                                            "Failed to create DM room for user {user_id}, error: {:?}",
+                                            e
+                                        )
+                                    }
+                                };
+                            } else {
+                                eprintln!("No user matched the query");
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("{:?}", e);
+                        }
+                        // TODO: send popup notifications
                     }
                 });
             }

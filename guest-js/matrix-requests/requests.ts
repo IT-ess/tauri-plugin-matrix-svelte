@@ -195,6 +195,13 @@ interface GetMatrixRoomLinkPillInfoRequest {
 	};
 }
 
+interface CreateDMRoomRequest {
+	event: 'createDMRoom';
+	payload: {
+		userId: UserId;
+	};
+}
+
 // Union type combining all request types
 export type MatrixRequest =
 	| PaginateRoomTimelineRequest
@@ -215,9 +222,10 @@ export type MatrixRequest =
 	| ReadReceiptRequest
 	| FullyReadReceiptRequest
 	| GetRoomPowerLevelsRequest
-	| ToggleReactionRequest;
-// | RedactMessageRequest
-// | GetMatrixRoomLinkPillInfoRequest;
+	| ToggleReactionRequest
+	// | RedactMessageRequest
+	// | GetMatrixRoomLinkPillInfoRequest;
+	| CreateDMRoomRequest;
 
 // Export individual types as well for convenience
 export type {
@@ -242,6 +250,7 @@ export type {
 	ToggleReactionRequest,
 	// RedactMessageRequest,
 	// GetMatrixRoomLinkPillInfoRequest,
+	CreateDMRoomRequest,
 	// Base types
 	PaginationDirection,
 	RoomMemberships,
@@ -372,6 +381,11 @@ export const createMatrixRequest = {
 		payload: GetMatrixRoomLinkPillInfoRequest['payload']
 	): GetMatrixRoomLinkPillInfoRequest => ({
 		event: 'getMatrixRoomLinkPillInfo',
+		payload
+	}),
+
+	createDMRoom: (payload: CreateDMRoomRequest['payload']): CreateDMRoomRequest => ({
+		event: 'createDMRoom',
 		payload
 	})
 };
