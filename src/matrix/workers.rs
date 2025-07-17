@@ -55,7 +55,11 @@ pub async fn async_main_loop<R: Runtime>(
         "Logged in as {}.\n → Loading rooms...",
         logged_in_user_id
     ));
-    // enqueue_popup_notification(status.clone());
+    enqueue_toast_notification(ToastNotificationRequest::new(
+        format!("Logged in as {logged_in_user_id}."),
+        None,
+        ToastNotificationVariant::Info,
+    ));
     enqueue_rooms_list_update(RoomsListUpdate::Status { status });
 
     // Listen for updates to the ignored user list.
@@ -912,7 +916,6 @@ pub async fn async_worker(
                         Err(e) => {
                             eprintln!("{:?}", e);
                         }
-                        // TODO: send popup notifications
                     }
                 });
             }
