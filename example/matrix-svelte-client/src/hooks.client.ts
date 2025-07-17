@@ -9,6 +9,15 @@ import {
 import { type UnlistenFn } from '@tauri-apps/api/event';
 import { roomStoresMap } from '$lib/stores/rooms.map.svelte';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { platform } from '@tauri-apps/plugin-os';
+import {
+	createChannel,
+	Importance,
+	isPermissionGranted,
+	requestPermission,
+	sendNotification,
+	Visibility
+} from '@tauri-apps/plugin-notification';
 
 // Create the store that will track the login state
 const loginStore = new LoginStore();
@@ -45,6 +54,36 @@ export const init: ClientInit = async () => {
 			roomsCollection.addDisplayedJoinedRoomId(id);
 		}
 	);
+
+	// Do you have permission to send a notification?
+	let permissionGranted = await isPermissionGranted();
+	console.log(`Is permission granted: ${permissionGranted}`);
+
+	// If not we need to request it
+	if (!permissionGranted) {
+		const permission = await requestPermission();
+		permissionGranted = permission === 'granted';
+	}
+
+	if (permissionGranted) {
+		const currentPlatform = platform();
+		if (currentPlatform === 'android' || currentPlatform === 'ios') {
+			await createChannel({
+				id: 'messages',
+				name: 'Messages',
+				description: 'Notifications for new messages',
+				importance: Importance.High,
+				visibility: Visibility.Public,
+				lights: true,
+				lightColor: '#ff0000',
+				vibration: true,
+				sound: 'notification_sound'
+			});
+			sendNotification({ title: 'Tauri', body: 'Tauri is awesome!', channelId: 'messages' });
+		} else {
+			sendNotification({ title: 'Tauri', body: 'Tauri is awesome!' });
+		}
+	}
 
 	while (loginStore.state.state === 'initiating') {
 		const sleep = () => {

@@ -10,6 +10,7 @@
 		"matrix-svelte:allow-ping",
 		"os:default",
 		"os:allow-hostname",
-		"fs:default"
+		"fs:default",
+		"notification:default"
 	]
 }

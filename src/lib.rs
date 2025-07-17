@@ -91,6 +91,30 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
 
             TEMP_DIR.set(temp_dir).expect("Couldn't set temporary dir");
 
+            // use tauri_plugin_notification::NotificationExt;
+            // //Check notifications permissions based on status.
+            // match app.notification().permission_state().unwrap() {
+            //     PermissionState::Prompt
+            //     | PermissionState::PromptWithRationale
+            //     | PermissionState::Denied => {
+            //         app.notification().request_permission().unwrap();
+            //         app.notification()
+            //             .builder()
+            //             .title("Tauri")
+            //             .body("Tauri is awesome")
+            //             .show()
+            //             .unwrap();
+            //     }
+            //     PermissionState::Granted => {
+            //         app.notification()
+            //             .builder()
+            //             .title("Tauri")
+            //             .body("Tauri is awesome")
+            //             .show()
+            //             .unwrap();
+            //     }
+            // }
+
             let stronghold_handle = tauri::async_runtime::spawn(async move {
                 init_stronghold_client(&stronghold_app_handle)
                     .expect("Couldn't init stronghold client")
