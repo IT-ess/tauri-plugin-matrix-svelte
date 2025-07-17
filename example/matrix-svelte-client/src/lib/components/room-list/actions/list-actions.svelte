@@ -8,11 +8,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import { PlusIcon, UserPen } from '@lucide/svelte';
 	import CreateRoom from './create-room.svelte';
-	import type { CreateDMRoomFormSchema } from '$lib/schemas/matrix-id';
-	import { type SuperValidated, type Infer } from 'sveltekit-superforms';
-
-	let { createDMRoomForm }: { createDMRoomForm: SuperValidated<Infer<CreateDMRoomFormSchema>> } =
-		$props();
 
 	// Track button rotation state
 	let isActionButtonOpen = $state(false);
@@ -39,4 +34,4 @@
 	</DropdownMenu>
 </div>
 
-<CreateRoom {actionCreateRoomOpen} dataForm={createDMRoomForm} {isActionButtonOpen} />
+<CreateRoom {actionCreateRoomOpen} {isActionButtonOpen} />

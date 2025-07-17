@@ -6,16 +6,13 @@
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
 	import InviteListItem from './invite-list-item.svelte';
 	import ListActions from './actions/list-actions.svelte';
-	import { type SuperValidated, type Infer } from 'sveltekit-superforms';
-	import type { CreateDMRoomFormSchema } from '$lib/schemas/matrix-id';
 
 	// Props type for conversations list
 	type Props = {
 		roomsCollection: RoomsCollection;
 		onRoomClick: (id: string) => undefined;
-		createDMRoomForm: SuperValidated<Infer<CreateDMRoomFormSchema>>;
 	};
-	let { roomsCollection, onRoomClick, createDMRoomForm }: Props = $props();
+	let { roomsCollection, onRoomClick }: Props = $props();
 
 	if (import.meta.env.DEV) {
 		$inspect(roomsCollection.state);
@@ -55,7 +52,7 @@
 	{:else}
 		{@render roomsCard()}
 	{/if}
-	<ListActions {createDMRoomForm} />
+	<ListActions />
 </div>
 
 {#snippet roomsCard()}

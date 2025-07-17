@@ -4,37 +4,38 @@
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import * as Form from '$lib/components/ui/form/index';
-
 	import { buttonVariants } from '$lib/components/ui/button';
-
-	import { type SuperValidated, type Infer, superForm, setMessage } from 'sveltekit-superforms';
-	import { zod4Client } from 'sveltekit-superforms/adapters';
-	import { createDMRoomFormSchema, type CreateDMRoomFormSchema } from '$lib/schemas/matrix-id';
+	import { superForm, setMessage, defaults } from 'sveltekit-superforms';
+	import { zod4 } from 'sveltekit-superforms/adapters';
 	import { onMount } from 'svelte';
 	import { createMatrixRequest, submitAsyncRequest } from 'tauri-plugin-matrix-svelte-api';
+	import { z } from 'zod/v4';
 
 	type Props = {
 		actionCreateRoomOpen: boolean;
 		isActionButtonOpen: boolean;
-		// TODO: remove this param since we don't really need +page.ts
-		// https://superforms.rocks/concepts/spa#without-a-pagets-file
-		dataForm: SuperValidated<Infer<CreateDMRoomFormSchema>>;
 	};
 
-	let {
-		actionCreateRoomOpen = $bindable(false),
-		isActionButtonOpen = $bindable(),
-		dataForm
-	}: Props = $props();
+	let { actionCreateRoomOpen = $bindable(false), isActionButtonOpen = $bindable() }: Props =
+		$props();
 
 	const isDesktop = new MediaQuery('(min-width: 768px)');
 
-	const form = superForm(dataForm, {
+	const matrixUserId = z.string().regex(/^@[a-z0-9._=\-/]+:[a-z0-9.-]+\.[a-z]{2,}$/i, {
+		message: 'Invalid Matrix user ID format. Must be: @username:server.name'
+	});
+
+	export const createDMRoomFormSchema = z.object({
+		username: matrixUserId
+	});
+
+	const form = superForm(defaults(zod4(createDMRoomFormSchema)), {
 		SPA: true,
-		validators: zod4Client(createDMRoomFormSchema),
+		validators: zod4(createDMRoomFormSchema),
 		onUpdate({ form }) {
 			// Form validation
 			if (form.valid) {
+				console.log('Valid form !');
 				// Send request (handleCreateRoom)
 				handleCreateRoom();
 				setMessage(form, 'Valid data!'); // is that still necessary ?
@@ -66,8 +67,8 @@
 				<Dialog.Description>Invite a friend to discuss.</Dialog.Description>
 			</Dialog.Header>
 			{@render createRoomForm()}
+			<Dialog.Close class={buttonVariants({ variant: 'outline' })}>Cancel</Dialog.Close>
 		</Dialog.Content>
-		<Dialog.Close class={buttonVariants({ variant: 'outline' })}>Cancel</Dialog.Close>
 	</Dialog.Root>
 {:else}
 	<Drawer.Root bind:open={actionCreateRoomOpen}>
