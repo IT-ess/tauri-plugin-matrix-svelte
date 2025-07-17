@@ -9,7 +9,7 @@
 	import { zod4 } from 'sveltekit-superforms/adapters';
 	import { onMount } from 'svelte';
 	import { createMatrixRequest, submitAsyncRequest } from 'tauri-plugin-matrix-svelte-api';
-	import { z } from 'zod/v4';
+	import { z } from 'zod';
 
 	type Props = {
 		actionCreateRoomOpen: boolean;
@@ -35,10 +35,8 @@
 		onUpdate({ form }) {
 			// Form validation
 			if (form.valid) {
-				console.log('Valid form !');
-				// Send request (handleCreateRoom)
 				handleCreateRoom();
-				setMessage(form, 'Valid data!'); // is that still necessary ?
+				setMessage(form, 'Valid data!');
 				actionCreateRoomOpen = false;
 			}
 		}
