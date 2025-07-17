@@ -50,6 +50,7 @@ linkify = "0.10.0"
 rangemap = "1.5.1"
 indexmap = { version = "2.9.0", features = ["serde"] }
 tauri-plugin-notification = "2.3.0"
+unicode-segmentation = "1.12.0"
 
 [build-dependencies]
 tauri-plugin = { version = "2.3.0", features = ["build"] }
