@@ -26,7 +26,7 @@ export type UpdateCurrentActiveRoom = {
 export enum MatrixSvelteListenEvent {
 	RoomCreate = 'matrix-svelte://room-create',
 	VerificationStart = 'matrix-svelte://verification-start',
-	MessageText = 'matrix-svelte://message-text'
+	ToastNotification = 'matrix-svelte://toast-notification'
 }
 
 export type RoomCreateEventType = {
@@ -37,10 +37,19 @@ export type VerificationEmojisEventType = {
 	emojis: string;
 };
 
-export type MessageTextEventType = {
-	sender: string;
-	body: string;
+export type ToastNotificationEventType = {
+	message: string;
+	description: string | null;
+	variant: ToastNotificationVariant;
 };
+
+type ToastNotificationVariant =
+	| 'default'
+	| 'description'
+	| 'success'
+	| 'info'
+	| 'warning'
+	| 'error';
 
 // Channel events
 
