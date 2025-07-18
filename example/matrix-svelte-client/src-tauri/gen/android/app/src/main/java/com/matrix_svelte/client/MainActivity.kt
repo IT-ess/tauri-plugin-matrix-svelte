@@ -1,3 +1,3 @@
-package com.matrix_svelte_client.app
+package com.matrix_svelte.client
 
 class MainActivity : TauriActivity()
