@@ -10,6 +10,16 @@
         android:label="@string/app_name"
         android:theme="@style/Theme.matrix_svelte_client"
         android:usesCleartextTraffic="${usesCleartextTraffic}">
+        <meta-data
+          android:name="com.google.firebase.messaging.default_notification_icon"
+          android:resource="@drawable/ic_launcher_foreground" />
+        <meta-data
+          android:name="com.google.firebase.messaging.default_notification_color"
+          android:resource="@color/white" />
+        <meta-data
+          android:name="com.google.firebase.messaging.default_notification_channel_id"
+          android:value="messages" />
+      
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
             android:launchMode="singleTask"
@@ -33,5 +43,13 @@
             android:name="android.support.FILE_PROVIDER_PATHS"
             android:resource="@xml/file_paths" />
         </provider>
+        
+        <service
+          android:name=".FCM"
+          android:exported="false">
+          <intent-filter>
+            <action android:name="com.google.firebase.MESSAGING_EVENT" />
+          </intent-filter>
+        </service>
     </application>
 </manifest>
