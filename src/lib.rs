@@ -8,10 +8,6 @@ use matrix::{
     try_restore_session_to_state,
     workers::{async_main_loop, async_worker},
 };
-use matrix_sdk::{
-    deserialized_responses::RawAnySyncOrStrippedTimelineEvent,
-    notification_settings::RoomNotificationMode, Client, Room,
-};
 use serde::Deserialize;
 use stronghold::init_stronghold_client;
 use tauri::{
@@ -40,12 +36,10 @@ pub use error::{Error, Result};
 use desktop::MatrixSvelte;
 #[cfg(mobile)]
 use mobile::MatrixSvelte;
-use tauri_plugin_notification::NotificationExt;
 
 use crate::{
     matrix::{
-        notifications::{enqueue_toast_notification, global_or_room_mode},
-        room::rooms_list::RoomsCollectionStatus,
+        notifications::enqueue_toast_notification, room::rooms_list::RoomsCollectionStatus,
         singletons::TEMP_DIR,
     },
     models::matrix::{ToastNotificationRequest, ToastNotificationVariant},
@@ -56,6 +50,7 @@ use crate::{
 #[derive(Deserialize)]
 pub struct PluginConfig {
     stronghold_password: String,
+    sygnal_gateway_url: String,
 }
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the Matrix Svelte APIs.

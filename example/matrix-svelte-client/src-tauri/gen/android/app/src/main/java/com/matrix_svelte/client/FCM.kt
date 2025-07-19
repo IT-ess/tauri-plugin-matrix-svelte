@@ -15,15 +15,7 @@ import com.google.firebase.messaging.RemoteMessage
 @SuppressLint("MissingFirebaseInstanceTokenRefresh")
 class FCM : FirebaseMessagingService() {
   override fun onMessageReceived(remoteMessage: RemoteMessage) {
-    if (remoteMessage.data.isNotEmpty()) {
-//      val startDate = remoteMessage.data["startDate"]
-//      val timezone = remoteMessage.data["timezone"]
-//      val endDate = remoteMessage.data["endDate"]
-//      val region = remoteMessage.data["region"]
-//      val id = remoteMessage.data["id"]
-
-      sendNotification("You received a message")
-    }
+    sendNotification("You received a message")
   }
 
   private fun sendNotification(messageBody: String) {

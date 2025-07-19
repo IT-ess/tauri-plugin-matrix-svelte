@@ -5,13 +5,16 @@ use matrix_sdk::{
     deserialized_responses::RawAnySyncOrStrippedTimelineEvent,
     notification_settings::{IsEncrypted, IsOneToOne, NotificationSettings, RoomNotificationMode},
     ruma::{
+        api::client::push::{Pusher, PusherIds, PusherInit, PusherKind},
         events::{room::message::MessageType, AnyMessageLikeEventContent, AnySyncTimelineEvent},
+        push::{HttpPusherData, PushFormat},
         serde::Raw,
         MilliSecondsSinceUnixEpoch,
     },
     sync::Notification,
     Client, Room,
 };
+use serde_json::{Map, Value};
 use tauri::{AppHandle, Emitter, Runtime};
 use tauri_plugin_notification::NotificationExt;
 use unicode_segmentation::UnicodeSegmentation;
@@ -19,6 +22,7 @@ use unicode_segmentation::UnicodeSegmentation;
 use crate::{
     matrix::singletons::{broadcast_event, UIUpdateMessage},
     models::matrix::{MatrixSvelteEmitEvent, ToastNotificationRequest},
+    utils::config::get_plugin_config,
 };
 
 static TOAST_NOTIFICATION: SegQueue<ToastNotificationRequest> = SegQueue::new();
@@ -77,52 +81,86 @@ pub async fn register_notifications<R: Runtime>(app_handle: &AppHandle<R>, clien
 
     let notif_handler_app_handle = app_handle.clone();
 
+    let plugin_config = get_plugin_config(&app_handle).expect("The plugin config is not defined !");
+
+    let mut http_pusher = HttpPusherData::new(plugin_config.sygnal_gateway_url);
+
+    http_pusher.data.insert(
+        "test".to_string(),
+        serde_json::Value::String("hey".to_string()),
+    );
+
+    let pusher_ids = PusherIds::new("fiiFG1YkQPqHonQ4yivK6A:APA91bH5OSPFe1ZN0GJDXtx3ymbMkq7bPX-R1bQ6Q6rnRLksY1511s3QbeVOIJcu5-Q3pU0zeRepnc9OFc4sOPvv0OTBmimQeOfeY1PLc8on_n5ztclCRJ0".to_string(), "com.matrix_svelte.client".to_string());
+
+    let test = client
+        .pusher()
+        .delete(pusher_ids.clone())
+        .await
+        .expect("Couldn't delete pusher by id");
+
+    let pusher = PusherInit {
+        ids: pusher_ids,
+        app_display_name: "Matrix Svelte Client".to_string(),
+        device_display_name: "Tauri app".to_string(),
+        profile_tag: None,
+        kind: PusherKind::Http(http_pusher),
+        lang: "en".to_string(),
+    };
+
+    let pusher: Pusher = pusher.into();
+
+    let test = client
+        .pusher()
+        .set(pusher)
+        .await
+        .expect("Couldn't set the pusher correcly");
+
     // let store = store.clone();
-    client
-        .register_notification_handler(
-            move |notification: Notification, room: Room, client: Client| {
-                // let store = store.clone();
-                let server_settings = server_settings.clone();
-                let inner_app_handle = notif_handler_app_handle.clone();
-                async move {
-                    let mode = global_or_room_mode(&server_settings, &room).await;
-                    if mode == RoomNotificationMode::Mute {
-                        return;
-                    }
+    // client
+    //     .register_notification_handler(
+    //         move |notification: Notification, room: Room, client: Client| {
+    //             // let store = store.clone();
+    //             let server_settings = server_settings.clone();
+    //             let inner_app_handle = notif_handler_app_handle.clone();
+    //             async move {
+    //                 let mode = global_or_room_mode(&server_settings, &room).await;
+    //                 if mode == RoomNotificationMode::Mute {
+    //                     return;
+    //                 }
 
-                    // if is_visible_room(&store, room.room_id()).await {
-                    //     return;
-                    // }
+    //                 // if is_visible_room(&store, room.room_id()).await {
+    //                 //     return;
+    //                 // }
 
-                    match notification.event {
-                        RawAnySyncOrStrippedTimelineEvent::Sync(e) => {
-                            match parse_full_notification(e, room, true).await {
-                                Ok((summary, body, server_ts)) => {
-                                    if server_ts < startup_ts {
-                                        return;
-                                    }
+    //                 match notification.event {
+    //                     RawAnySyncOrStrippedTimelineEvent::Sync(e) => {
+    //                         match parse_full_notification(e, room, true).await {
+    //                             Ok((summary, body, server_ts)) => {
+    //                                 if server_ts < startup_ts {
+    //                                     return;
+    //                                 }
 
-                                    if is_missing_mention(&body, mode, &client) {
-                                        return;
-                                    }
+    //                                 if is_missing_mention(&body, mode, &client) {
+    //                                     return;
+    //                                 }
 
-                                    send_notification(&inner_app_handle, &summary, body.as_deref())
-                                        .await;
-                                }
-                                Err(err) => {
-                                    eprintln!("Failed to extract notification data: {err}")
-                                }
-                            }
-                        }
-                        // Stripped events may be dropped silently because they're
-                        // only relevant if we're not in a room, and we presumably
-                        // don't want notifications for rooms we're not in.
-                        RawAnySyncOrStrippedTimelineEvent::Stripped(_) => (),
-                    }
-                }
-            },
-        )
-        .await;
+    //                                 send_notification(&inner_app_handle, &summary, body.as_deref())
+    //                                     .await;
+    //                             }
+    //                             Err(err) => {
+    //                                 eprintln!("Failed to extract notification data: {err}")
+    //                             }
+    //                         }
+    //                     }
+    //                     // Stripped events may be dropped silently because they're
+    //                     // only relevant if we're not in a room, and we presumably
+    //                     // don't want notifications for rooms we're not in.
+    //                     RawAnySyncOrStrippedTimelineEvent::Stripped(_) => (),
+    //                 }
+    //             }
+    //         },
+    //     )
+    //     .await;
 }
 
 async fn send_notification<R: Runtime>(

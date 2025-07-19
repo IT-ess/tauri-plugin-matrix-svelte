@@ -59,31 +59,31 @@ export const init: ClientInit = async () => {
 	let permissionGranted = await isPermissionGranted();
 	console.log(`Is permission granted: ${permissionGranted}`);
 
-	// If not we need to request it
+	// // If not we need to request it
 	if (!permissionGranted) {
 		const permission = await requestPermission();
 		permissionGranted = permission === 'granted';
 	}
 
-	if (permissionGranted) {
-		const currentPlatform = platform();
-		if (currentPlatform === 'android' || currentPlatform === 'ios') {
-			await createChannel({
-				id: 'messages',
-				name: 'Messages',
-				description: 'Notifications for new messages',
-				importance: Importance.High,
-				visibility: Visibility.Public,
-				lights: true,
-				lightColor: '#ff0000',
-				vibration: true,
-				sound: 'notification_sound'
-			});
-			sendNotification({ title: 'Tauri', body: 'Tauri is awesome!', channelId: 'messages' });
-		} else {
-			sendNotification({ title: 'Tauri', body: 'Tauri is awesome!' });
-		}
-	}
+	// if (permissionGranted) {
+	// 	const currentPlatform = platform();
+	// 	if (currentPlatform === 'android' || currentPlatform === 'ios') {
+	// 		await createChannel({
+	// 			id: 'messages',
+	// 			name: 'Messages',
+	// 			description: 'Notifications for new messages',
+	// 			importance: Importance.High,
+	// 			visibility: Visibility.Public,
+	// 			lights: true,
+	// 			lightColor: '#ff0000',
+	// 			vibration: true,
+	// 			sound: 'notification_sound'
+	// 		});
+	// 		sendNotification({ title: 'Tauri', body: 'Tauri is awesome!', channelId: 'messages' });
+	// 	} else {
+	// 		sendNotification({ title: 'Tauri', body: 'Tauri is awesome!' });
+	// 	}
+	// }
 
 	while (loginStore.state.state === 'initiating') {
 		const sleep = () => {
