@@ -11,6 +11,7 @@ import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import app.tauri.plugin.Invoke
 
+
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.messaging.FirebaseMessaging
@@ -37,7 +38,13 @@ class PushNotificationPlugin(private val activity: Activity) : Plugin(activity) 
     }
 
     override fun onNewIntent(newIntent: Intent) {
+        // Decode event id here
+        Log.d("INTENT-PLUGIN", "onNewIntent triggered")
         handleIntent(newIntent)
+
+
+        // send notification with new data
+
     }
 
     private fun handleIntent(newIntent: Intent) {

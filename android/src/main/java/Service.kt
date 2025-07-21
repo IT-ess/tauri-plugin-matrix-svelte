@@ -21,6 +21,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class FCMService : FirebaseMessagingService() {
     @SuppressLint("LaunchActivityFromNotification")
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
+
         val gson = Gson() // should we keep a reference ?
         val dataPayload = gson.toJson(remoteMessage.data)
         Log.d("NOTIFDATA", dataPayload)
@@ -50,13 +51,11 @@ class FCMService : FirebaseMessagingService() {
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Since Android Oreo, notification channels are required
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId, "Messages", NotificationManager.IMPORTANCE_DEFAULT
-            )
-            notificationManager.createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(
+            channelId, "Messages", NotificationManager.IMPORTANCE_DEFAULT
+        )
+        notificationManager.createNotificationChannel(channel)
+
 
         notificationManager.notify(Random.nextInt(), notificationBuilder.build()
         )
