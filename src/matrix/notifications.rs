@@ -69,19 +69,10 @@ pub async fn global_or_room_mode(
         .await
 }
 
-pub async fn register_notifications<R: Runtime>(app_handle: &AppHandle<R>, client: &Client) {
-    // if !settings.tunables.notifications.enabled {
-    //     return;
-    // }
-    // let notify_via = settings.tunables.notifications.via;
-    // let show_message = settings.tunables.notifications.show_message;
-    let server_settings = client.notification_settings().await;
-    let Some(startup_ts) = MilliSecondsSinceUnixEpoch::from_system_time(SystemTime::now()) else {
-        return;
-    };
-
-    let notif_handler_app_handle = app_handle.clone();
-
+pub async fn register_mobile_push_notifications<R: Runtime>(
+    app_handle: &AppHandle<R>,
+    client: &Client,
+) {
     let plugin_config = get_plugin_config(&app_handle).expect("The plugin config is not defined !");
 
     let http_pusher = HttpPusherData::new(plugin_config.sygnal_gateway_url);
@@ -115,53 +106,70 @@ pub async fn register_notifications<R: Runtime>(app_handle: &AppHandle<R>, clien
         .set(pusher)
         .await
         .expect("Couldn't set the notification pusher correcly");
+}
+
+pub async fn register_desktop_notifications<R: Runtime>(
+    app_handle: &AppHandle<R>,
+    client: &Client,
+) {
+    // if !settings.tunables.notifications.enabled {
+    //     return;
+    // }
+    // let notify_via = settings.tunables.notifications.via;
+    // let show_message = settings.tunables.notifications.show_message;
+    let server_settings = client.notification_settings().await;
+    let Some(startup_ts) = MilliSecondsSinceUnixEpoch::from_system_time(SystemTime::now()) else {
+        return;
+    };
+
+    let notif_handler_app_handle = app_handle.clone();
 
     // let store = store.clone();
-    // client
-    //     .register_notification_handler(
-    //         move |notification: Notification, room: Room, client: Client| {
-    //             // let store = store.clone();
-    //             let server_settings = server_settings.clone();
-    //             let inner_app_handle = notif_handler_app_handle.clone();
-    //             async move {
-    //                 let mode = global_or_room_mode(&server_settings, &room).await;
-    //                 if mode == RoomNotificationMode::Mute {
-    //                     return;
-    //                 }
+    client
+        .register_notification_handler(
+            move |notification: Notification, room: Room, client: Client| {
+                // let store = store.clone();
+                let server_settings = server_settings.clone();
+                let inner_app_handle = notif_handler_app_handle.clone();
+                async move {
+                    let mode = global_or_room_mode(&server_settings, &room).await;
+                    if mode == RoomNotificationMode::Mute {
+                        return;
+                    }
 
-    //                 // if is_visible_room(&store, room.room_id()).await {
-    //                 //     return;
-    //                 // }
+                    // if is_visible_room(&store, room.room_id()).await {
+                    //     return;
+                    // }
 
-    //                 match notification.event {
-    //                     RawAnySyncOrStrippedTimelineEvent::Sync(e) => {
-    //                         match parse_full_notification(e, room, true).await {
-    //                             Ok((summary, body, server_ts)) => {
-    //                                 if server_ts < startup_ts {
-    //                                     return;
-    //                                 }
+                    match notification.event {
+                        RawAnySyncOrStrippedTimelineEvent::Sync(e) => {
+                            match parse_full_notification(e, room, true).await {
+                                Ok((summary, body, server_ts)) => {
+                                    if server_ts < startup_ts {
+                                        return;
+                                    }
 
-    //                                 if is_missing_mention(&body, mode, &client) {
-    //                                     return;
-    //                                 }
+                                    if is_missing_mention(&body, mode, &client) {
+                                        return;
+                                    }
 
-    //                                 send_notification(&inner_app_handle, &summary, body.as_deref())
-    //                                     .await;
-    //                             }
-    //                             Err(err) => {
-    //                                 eprintln!("Failed to extract notification data: {err}")
-    //                             }
-    //                         }
-    //                     }
-    //                     // Stripped events may be dropped silently because they're
-    //                     // only relevant if we're not in a room, and we presumably
-    //                     // don't want notifications for rooms we're not in.
-    //                     RawAnySyncOrStrippedTimelineEvent::Stripped(_) => (),
-    //                 }
-    //             }
-    //         },
-    //     )
-    //     .await;
+                                    send_notification(&inner_app_handle, &summary, body.as_deref())
+                                        .await;
+                                }
+                                Err(err) => {
+                                    eprintln!("Failed to extract notification data: {err}")
+                                }
+                            }
+                        }
+                        // Stripped events may be dropped silently because they're
+                        // only relevant if we're not in a room, and we presumably
+                        // don't want notifications for rooms we're not in.
+                        RawAnySyncOrStrippedTimelineEvent::Stripped(_) => (),
+                    }
+                }
+            },
+        )
+        .await;
 }
 
 async fn send_notification<R: Runtime>(

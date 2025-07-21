@@ -4,8 +4,10 @@ use session::{restore_client_from_session, try_get_session};
 use tauri::{ipc::Channel, AppHandle, Manager, Runtime};
 use tokio::sync::oneshot;
 
+#[cfg(mobile)]
+use crate::matrix::notifications::register_mobile_push_notifications;
 use crate::{
-    matrix::{notifications::register_notifications, requests::MatrixRequest},
+    matrix::{notifications::register_desktop_notifications, requests::MatrixRequest},
     models::matrix::MediaStreamEvent,
 };
 
@@ -41,7 +43,9 @@ pub async fn create_session_to_state<R: Runtime>(
         login::get_client_from_new_session(&app_handle, request, &snapshot_path).await?;
     let client_with_handlers = events::add_event_handlers(initial_client, &app_handle)?;
     #[cfg(mobile)]
-    register_notifications(&app_handle, &client_with_handlers).await;
+    register_mobile_push_notifications(&app_handle, &client_with_handlers).await;
+    #[cfg(desktop)]
+    register_desktop_notifications(&app_handle, &client_with_handlers).await;
     Ok(client_with_handlers)
 }
 
@@ -60,7 +64,9 @@ pub async fn try_restore_session_to_state<R: Runtime>(
             let initial_client = restore_client_from_session(session).await?;
             let client_with_handlers = events::add_event_handlers(initial_client, &app_handle)?;
             #[cfg(mobile)]
-            register_notifications(&app_handle, &client_with_handlers).await;
+            register_mobile_push_notifications(&app_handle, &client_with_handlers).await;
+            #[cfg(desktop)]
+            register_desktop_notifications(&app_handle, &client_with_handlers).await;
             Ok(Some(client_with_handlers))
         } // TODO : handle restore errors
         None => Ok(None),
