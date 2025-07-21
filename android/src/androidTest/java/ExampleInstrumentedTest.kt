@@ -1,4 +1,4 @@
-package com.plugin.matrix-svelte
+package com.plugin.matrix.svelte
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

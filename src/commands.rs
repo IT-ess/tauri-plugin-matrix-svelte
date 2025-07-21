@@ -6,18 +6,8 @@ use tauri::{command, AppHandle, Runtime};
 use crate::matrix::login::MatrixClientConfig;
 use crate::matrix::requests::MatrixRequest;
 use crate::models::matrix::MediaStreamEvent;
-use crate::ping::PingRequest;
-use crate::ping::PingResponse;
 use crate::Result;
 use crate::{Error, MatrixSvelteExt};
-
-#[command]
-pub(crate) async fn ping<R: Runtime>(
-    app: AppHandle<R>,
-    payload: PingRequest,
-) -> Result<PingResponse> {
-    app.matrix_svelte().ping(payload)
-}
 
 #[command]
 pub(crate) async fn login_and_create_new_session<R: Runtime>(

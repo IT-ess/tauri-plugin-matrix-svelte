@@ -21,7 +21,8 @@ use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
     matrix::singletons::{broadcast_event, UIUpdateMessage},
-    models::matrix::{MatrixSvelteEmitEvent, ToastNotificationRequest},
+    models::matrix::{MatrixSvelteEmitEvent, MatrixSvelteListenEvent, ToastNotificationRequest},
+    notifications::GetTokenRequest,
     utils::config::get_plugin_config,
 };
 
@@ -83,20 +84,20 @@ pub async fn register_notifications<R: Runtime>(app_handle: &AppHandle<R>, clien
 
     let plugin_config = get_plugin_config(&app_handle).expect("The plugin config is not defined !");
 
-    let mut http_pusher = HttpPusherData::new(plugin_config.sygnal_gateway_url);
+    let http_pusher = HttpPusherData::new(plugin_config.sygnal_gateway_url);
 
-    http_pusher.data.insert(
-        "test".to_string(),
-        serde_json::Value::String("hey".to_string()),
-    );
+    // TODO: add mobile only flag for the push notifications part ?
+    use crate::MatrixSvelteExt;
+    let push_token = app_handle
+        .matrix_svelte()
+        .get_token(GetTokenRequest {})
+        .unwrap();
 
-    let pusher_ids = PusherIds::new("fiiFG1YkQPqHonQ4yivK6A:APA91bH5OSPFe1ZN0GJDXtx3ymbMkq7bPX-R1bQ6Q6rnRLksY1511s3QbeVOIJcu5-Q3pU0zeRepnc9OFc4sOPvv0OTBmimQeOfeY1PLc8on_n5ztclCRJ0".to_string(), "com.matrix_svelte.client".to_string());
+    println!("Push token: {:?}", push_token);
 
-    let test = client
-        .pusher()
-        .delete(pusher_ids.clone())
-        .await
-        .expect("Couldn't delete pusher by id");
+    // TODO: get app name dynamically
+    //app_handle.config().identifier.clone().replace("-", "_"), valid on android, check on apple
+    let pusher_ids = PusherIds::new(push_token.token, "com.matrix_svelte.client".to_string());
 
     let pusher = PusherInit {
         ids: pusher_ids,
@@ -109,11 +110,11 @@ pub async fn register_notifications<R: Runtime>(app_handle: &AppHandle<R>, clien
 
     let pusher: Pusher = pusher.into();
 
-    let test = client
+    let _ = client
         .pusher()
         .set(pusher)
         .await
-        .expect("Couldn't set the pusher correcly");
+        .expect("Couldn't set the notification pusher correcly");
 
     // let store = store.clone();
     // client
