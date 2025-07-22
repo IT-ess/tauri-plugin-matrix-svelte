@@ -6,4 +6,5 @@ permissions = [
     "allow-submit-async-request",
     "allow-fetch-media",
     "allow-fetch-user-profile",
+    "allow-watch-notifications",
 ]

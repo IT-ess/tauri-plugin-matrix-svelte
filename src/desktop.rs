@@ -14,7 +14,7 @@ use crate::{
         user_profile::fetch_user_profile,
     },
     models::matrix::MediaStreamEvent,
-    notifications::{GetTokenRequest, GetTokenResponse},
+    notifications::{GetTokenRequest, GetTokenResponse, WatchNotificationResult},
 };
 
 pub fn init<R: Runtime, C: DeserializeOwned>(
@@ -60,6 +60,10 @@ impl<R: Runtime> MatrixSvelte<R> {
     // Not implemented on desktop
 
     pub fn get_token(&self, _payload: GetTokenRequest) -> crate::Result<GetTokenResponse> {
+        Err(crate::Error::Anyhow(anyhow!("Not implemented on desktop")))
+    }
+
+    pub fn watch_notifications(&self, _channel: Channel) -> crate::Result<WatchNotificationResult> {
         Err(crate::Error::Anyhow(anyhow!("Not implemented on desktop")))
     }
 }

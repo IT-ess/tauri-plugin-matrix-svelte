@@ -19,7 +19,9 @@ use crate::{
     models::matrix::MediaStreamEvent,
 };
 
-use crate::models::notifications::{GetTokenRequest, GetTokenResponse};
+use crate::models::notifications::{
+    GetTokenRequest, GetTokenResponse, WatchNotificationResult, WatchNotificationsArgs,
+};
 
 #[cfg(target_os = "ios")]
 tauri::ios_plugin_binding!(init_plugin_matrix_svelte);
@@ -73,6 +75,17 @@ impl<R: Runtime> MatrixSvelte<R> {
     pub fn get_token(&self, payload: GetTokenRequest) -> crate::Result<GetTokenResponse> {
         self.0
             .run_mobile_plugin("getToken", payload)
+            .map_err(Into::into)
+    }
+
+    pub fn watch_notifications(&self, channel: Channel) -> crate::Result<WatchNotificationResult> {
+        #[cfg(target_os = "android")]
+        return Err(crate::Error::Anyhow(anyhow!(
+            "Not implemented on Android yet"
+        )));
+        #[cfg(target_os = "ios")]
+        self.0
+            .run_mobile_plugin("watchNotifications", WatchNotificationsArgs { channel })
             .map_err(Into::into)
     }
 }

@@ -4,7 +4,8 @@ import {
 	RoomsCollection,
 	LoginStore,
 	ProfileStore,
-	events
+	events,
+	watchNotifications
 } from 'tauri-plugin-matrix-svelte-api';
 import { type UnlistenFn } from '@tauri-apps/api/event';
 import { roomStoresMap } from '$lib/stores/rooms.map.svelte';
@@ -67,7 +68,7 @@ export const init: ClientInit = async () => {
 
 	if (permissionGranted) {
 		const currentPlatform = platform();
-		if (currentPlatform === 'android' || currentPlatform === 'ios') {
+		if (currentPlatform === 'android') {
 			await createChannel({
 				id: 'messages',
 				name: 'Messages',
@@ -76,10 +77,33 @@ export const init: ClientInit = async () => {
 				visibility: Visibility.Public,
 				lights: true,
 				lightColor: '#ff0000',
-				vibration: true,
-				sound: 'notification_sound'
+				vibration: true
+				//sound: 'notification_sound'
 			});
 			sendNotification({ title: 'Tauri', body: 'Tauri is awesome!', channelId: 'messages' });
+		} else if (currentPlatform === 'ios') {
+			const watchResult = await watchNotifications((event) => {
+				switch (event.type) {
+					case 'BACKGROUND_TAP':
+						console.log('User tapped notification in background');
+						break;
+					case 'FOREGROUND_TAP':
+						console.log('User tapped notification in foreground');
+						break;
+					case 'FOREGROUND_DELIVERY':
+						console.log('Notification received in foreground');
+						break;
+					case 'BACKGROUND_DELIVERY':
+						console.log('Notification received in background');
+						break;
+				}
+				console.log('Notification payload:', event.payload);
+			});
+
+			if (watchResult.success) {
+				console.log('Successfully set up notification listener');
+				sendNotification({ title: 'Tauri', body: 'Listener is set up!' });
+			}
 		} else {
 			sendNotification({ title: 'Tauri', body: 'Tauri is awesome!' });
 		}

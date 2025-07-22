@@ -9,6 +9,7 @@ Default permissions for the plugin
 - `allow-submit-async-request`
 - `allow-fetch-media`
 - `allow-fetch-user-profile`
+- `allow-watch-notifications`
 
 ## Permission Table
 
@@ -145,6 +146,32 @@ Enables the submit_async_request command without any pre-configured scope.
 <td>
 
 Denies the submit_async_request command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-watch-notifications`
+
+</td>
+<td>
+
+Enables the watch_notifications command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-watch-notifications`
+
+</td>
+<td>
+
+Denies the watch_notifications command without any pre-configured scope.
 
 </td>
 </tr>
