@@ -50,6 +50,7 @@ use crate::{
 #[derive(Deserialize)]
 pub struct PluginConfig {
     stronghold_password: String,
+    sygnal_gateway_url: String,
 }
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the Matrix Svelte APIs.
@@ -67,11 +68,11 @@ impl<R: Runtime, T: Manager<R>> crate::MatrixSvelteExt<R> for T {
 pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
     Builder::<R, PluginConfig>::new("matrix-svelte")
         .invoke_handler(tauri::generate_handler![
-            commands::ping,
             commands::login_and_create_new_session,
             commands::submit_async_request,
             commands::fetch_media,
-            commands::fetch_user_profile
+            commands::fetch_user_profile,
+            commands::watch_notifications
         ])
         .setup(|app, api| {
             // Create a channel to be used between UI thread(s) and the async worker thread.

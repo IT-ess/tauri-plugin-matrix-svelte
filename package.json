@@ -31,8 +31,8 @@
     "pretest": "pnpm build"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.5.0",
-    "@tauri-store/svelte": "^2.6.0",
+    "@tauri-apps/api": "^2.7.0",
+    "@tauri-store/svelte": "^2.6.1",
     "file-type": "^21.0.0"
   },
   "devDependencies": {

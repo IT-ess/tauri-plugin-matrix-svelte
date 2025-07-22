@@ -17,7 +17,10 @@ use crate::{
         user_profile::fetch_user_profile,
     },
     models::matrix::MediaStreamEvent,
-    ping::{PingRequest, PingResponse},
+};
+
+use crate::models::notifications::{
+    GetTokenRequest, GetTokenResponse, WatchNotificationResult, WatchNotificationsArgs,
 };
 
 #[cfg(target_os = "ios")]
@@ -29,7 +32,8 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
     api: PluginApi<R, C>,
 ) -> crate::Result<MatrixSvelte<R>> {
     #[cfg(target_os = "android")]
-    let handle = api.register_android_plugin("com.plugin.matrix.svelte", "ExamplePlugin")?;
+    let handle =
+        api.register_android_plugin("com.plugin.matrix.svelte", "PushNotificationPlugin")?;
     #[cfg(target_os = "ios")]
     let handle = api.register_ios_plugin(init_plugin_matrix_svelte)?;
     Ok(MatrixSvelte(handle))
@@ -39,12 +43,6 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 pub struct MatrixSvelte<R: Runtime>(PluginHandle<R>);
 
 impl<R: Runtime> MatrixSvelte<R> {
-    pub fn ping(&self, payload: PingRequest) -> crate::Result<PingResponse> {
-        self.0
-            .run_mobile_plugin("ping", payload)
-            .map_err(Into::into)
-    }
-
     pub async fn login_and_create_new_session(
         &self,
         config: MatrixClientConfig,
@@ -72,5 +70,22 @@ impl<R: Runtime> MatrixSvelte<R> {
         room_id: Option<OwnedRoomId>,
     ) -> crate::Result<bool> {
         Ok(fetch_user_profile(user_id, room_id).await)
+    }
+
+    pub fn get_token(&self, payload: GetTokenRequest) -> crate::Result<GetTokenResponse> {
+        self.0
+            .run_mobile_plugin("getToken", payload)
+            .map_err(Into::into)
+    }
+
+    pub fn watch_notifications(&self, channel: Channel) -> crate::Result<WatchNotificationResult> {
+        #[cfg(target_os = "android")]
+        return Err(crate::Error::Anyhow(anyhow!(
+            "Not implemented on Android yet"
+        )));
+        #[cfg(target_os = "ios")]
+        self.0
+            .run_mobile_plugin("watchNotifications", WatchNotificationsArgs { channel })
+            .map_err(Into::into)
     }
 }

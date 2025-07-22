@@ -4,7 +4,10 @@ use session::{restore_client_from_session, try_get_session};
 use tauri::{ipc::Channel, AppHandle, Manager, Runtime};
 use tokio::sync::oneshot;
 
-use crate::{matrix::requests::MatrixRequest, models::matrix::MediaStreamEvent};
+use crate::{
+    matrix::{notifications::register_notifications, requests::MatrixRequest},
+    models::matrix::MediaStreamEvent,
+};
 
 pub mod emoji_verification;
 pub mod event_preview;
@@ -37,6 +40,7 @@ pub async fn create_session_to_state<R: Runtime>(
     let initial_client =
         login::get_client_from_new_session(&app_handle, request, &snapshot_path).await?;
     let client_with_handlers = events::add_event_handlers(initial_client, &app_handle)?;
+    register_notifications(&app_handle, &client_with_handlers).await;
     Ok(client_with_handlers)
 }
 
@@ -54,6 +58,7 @@ pub async fn try_restore_session_to_state<R: Runtime>(
         Some(session) => {
             let initial_client = restore_client_from_session(session).await?;
             let client_with_handlers = events::add_event_handlers(initial_client, &app_handle)?;
+            register_notifications(&app_handle, &client_with_handlers).await;
             Ok(Some(client_with_handlers))
         } // TODO : handle restore errors
         None => Ok(None),

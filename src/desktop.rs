@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use matrix_sdk::{
     media::MediaRequestParameters,
     ruma::{OwnedRoomId, OwnedUserId},
@@ -13,7 +14,7 @@ use crate::{
         user_profile::fetch_user_profile,
     },
     models::matrix::MediaStreamEvent,
-    ping::{PingRequest, PingResponse},
+    notifications::{GetTokenRequest, GetTokenResponse, WatchNotificationResult},
 };
 
 pub fn init<R: Runtime, C: DeserializeOwned>(
@@ -27,12 +28,6 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 pub struct MatrixSvelte<R: Runtime>(AppHandle<R>);
 
 impl<R: Runtime> MatrixSvelte<R> {
-    pub fn ping(&self, payload: PingRequest) -> crate::Result<PingResponse> {
-        Ok(PingResponse {
-            value: payload.value,
-        })
-    }
-
     pub async fn login_and_create_new_session(
         &self,
         config: MatrixClientConfig,
@@ -60,5 +55,15 @@ impl<R: Runtime> MatrixSvelte<R> {
         room_id: Option<OwnedRoomId>,
     ) -> crate::Result<bool> {
         Ok(fetch_user_profile(user_id, room_id).await)
+    }
+
+    // Not implemented on desktop
+
+    pub fn get_token(&self, _payload: GetTokenRequest) -> crate::Result<GetTokenResponse> {
+        Err(crate::Error::Anyhow(anyhow!("Not implemented on desktop")))
+    }
+
+    pub fn watch_notifications(&self, _channel: Channel) -> crate::Result<WatchNotificationResult> {
+        Err(crate::Error::Anyhow(anyhow!("Not implemented on desktop")))
     }
 }

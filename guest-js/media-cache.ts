@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { Channel } from '@tauri-apps/api/core';
 import { fileTypeFromBuffer } from 'file-type';
-import type { events } from 'tauri-plugin-matrix-svelte-api';
+import type { MediaStreamEvent } from './tauri-events';
 
 const CACHE_NAME = 'matrix-media-cache';
 const CACHE_VERSION = 'v1';
@@ -107,7 +107,7 @@ export class MediaCache {
 		const chunks: Uint8Array[] = [];
 
 		return new Promise((resolve, reject) => {
-			const onEvent = new Channel<events.MediaStreamEvent>();
+			const onEvent = new Channel<MediaStreamEvent>();
 
 			onEvent.onmessage = async (message) => {
 				try {

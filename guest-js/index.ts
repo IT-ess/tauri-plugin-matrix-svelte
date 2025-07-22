@@ -28,6 +28,7 @@ import {
 } from './timeline-items/message-like';
 import { MediaRequestParameters } from './matrix-requests/media';
 import { mediaCache } from './media-cache';
+import { watchNotifications } from './notifications/ios-notifications';
 
 export async function ping(value: string): Promise<string | null> {
 	return await invoke<{ value?: string }>('plugin:matrix-svelte|ping', {
@@ -73,5 +74,6 @@ export {
 	mediaCache,
 	InvitedRoomInfo,
 	InviteState,
-	InviterInfo
+	InviterInfo,
+	watchNotifications
 };
