@@ -23,5 +23,6 @@ This project is still under heavy development. The first goal is to port almost 
 
 Huge thanks to [Kevin Boos](https://github.com/kevinaboos) and the [Robius](https://github.com/project-robius) team for the awesome Robrix project that inspired me for this different implementation of their Matrix client architecture.
 Thanks to [Andrew Ferreira](https://github.com/ferreira-tb) for its handy tauri-plugin-svelte plugin.
+Also thanks to [inKibra](https://github.com/inKibra/tauri-plugins/tree/main/packages/tauri-plugin-notifications) and[ flapili](https://github.com/flapili/tauri-plugin-fcm) for their examples on how so setup push notifications with Tauri.
 Cudos to the whole Tauri team for their awesome platform to build on.
 And of course thanks to the whole Matrix.org team and ecosystem !

@@ -1,8 +1,8 @@
 import XCTest
-@testable import ExamplePlugin
+@testable import NotificationsPlugin
 
-final class ExamplePluginTests: XCTestCase {
+final class NotificationsPluginTests: XCTestCase {
     func testExample() throws {
-        let plugin = ExamplePlugin()
+        let plugin = NotificationsPlugin()
     }
 }

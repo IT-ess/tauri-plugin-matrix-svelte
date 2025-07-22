@@ -56,11 +56,11 @@ export const init: ClientInit = async () => {
 		}
 	);
 
-	// Do you have permission to send a notification?
+	// Do we have permission to send a notification?
 	let permissionGranted = await isPermissionGranted();
-	console.log(`Is permission granted: ${permissionGranted}`);
+	console.log(`Is notification permission granted: ${permissionGranted}`);
 
-	// // If not we need to request it
+	// If not we need to request it
 	if (!permissionGranted) {
 		const permission = await requestPermission();
 		permissionGranted = permission === 'granted';
@@ -80,7 +80,11 @@ export const init: ClientInit = async () => {
 				vibration: true
 				//sound: 'notification_sound'
 			});
-			sendNotification({ title: 'Tauri', body: 'Tauri is awesome!', channelId: 'messages' });
+			sendNotification({
+				title: 'Matrix-Svelte',
+				body: 'App is launched !',
+				channelId: 'messages'
+			});
 		} else if (currentPlatform === 'ios') {
 			const watchResult = await watchNotifications((event) => {
 				switch (event.type) {
@@ -102,10 +106,10 @@ export const init: ClientInit = async () => {
 
 			if (watchResult.success) {
 				console.log('Successfully set up notification listener');
-				sendNotification({ title: 'Tauri', body: 'Listener is set up!' });
+				sendNotification({ title: 'Matrix-Svelte', body: 'App is launched !' });
 			}
 		} else {
-			sendNotification({ title: 'Tauri', body: 'Tauri is awesome!' });
+			sendNotification({ title: 'Matrix-Svelte', body: 'App is launched !' });
 		}
 	}
 
