@@ -32,38 +32,38 @@ class PushNotificationPlugin(private val activity: Activity) : Plugin(activity) 
 
         FirebaseApp.initializeApp(activity, options)
 
-        activity.intent?.let {
-            handleIntent(it)
-        }
+//        activity.intent?.let {
+//            handleIntent(it)
+//        }
     }
 
-    override fun onNewIntent(newIntent: Intent) {
-        // Decode event id here
-        Log.d("INTENT-PLUGIN", "onNewIntent triggered")
-        handleIntent(newIntent)
+//    override fun onNewIntent(newIntent: Intent) {
+//        // Decode event id here
+//        Log.d("INTENT-PLUGIN", "onNewIntent triggered")
+//        handleIntent(newIntent)
+//
+//
+//        // send notification with new data
+//
+//    }
 
-
-        // send notification with new data
-
-    }
-
-    private fun handleIntent(newIntent: Intent) {
-        newIntent.extras?.let {
-            val data = it.getString("data")
-            val sentAt = it.getLong("sent_at")
-            val openedAt = it.getLong("opened_at")
-            if (data != null) {
-                val result = JSObject().apply {
-                    put("data", JSObject(data))
-                    put("sentAt", sentAt)
-                    put("openedAt", openedAt)
-                }
-
-                this.latestData = result
-                trigger("pushNotificationOpened", result)
-            }
-        }
-    }
+//    private fun handleIntent(newIntent: Intent) {
+//        newIntent.extras?.let {
+//            val data = it.getString("data")
+//            val sentAt = it.getLong("sent_at")
+//            val openedAt = it.getLong("opened_at")
+//            if (data != null) {
+//                val result = JSObject().apply {
+//                    put("data", JSObject(data))
+//                    put("sentAt", sentAt)
+//                    put("openedAt", openedAt)
+//                }
+//
+//                this.latestData = result
+//                trigger("pushNotificationOpened", result)
+//            }
+//        }
+//    }
 
     @Command
     fun getLatestNotificationData(invoke: Invoke) {

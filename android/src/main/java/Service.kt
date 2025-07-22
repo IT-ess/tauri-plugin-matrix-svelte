@@ -25,41 +25,58 @@ class FCMService : FirebaseMessagingService() {
         val gson = Gson() // should we keep a reference ?
         val dataPayload = gson.toJson(remoteMessage.data)
         Log.d("NOTIFDATA", dataPayload)
-        val intent = Intent(this, NotificationHandler::class.java).apply {
-            putExtra("data", dataPayload)
-            putExtra("sent_at", remoteMessage.sentTime)
-        }
 
-        val requestCode = Random.nextInt()
-        val pendingIntent = PendingIntent.getBroadcast(
-            this,
-            requestCode,
-            intent,
-            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+        // We no longer use Notification Handler for the moment. We'll try again later to process notifications body.
+        //val intent = Intent(this, NotificationHandler::class.java).apply {
+        //    putExtra("data", dataPayload)
+        //    putExtra("sent_at", remoteMessage.sentTime)
+        //}
 
-        val channelId = "messages"
+        //val requestCode = Random.nextInt()
+        //val pendingIntent = PendingIntent.getBroadcast(
+        //    this,
+        //    requestCode,
+        //    intent,
+        //    PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        //)
 
-        val notificationBuilder = NotificationCompat.Builder(this, channelId).apply {
-            setSmallIcon(getAppIconResourceId())  // TODO handle other icons ?
-            setContentTitle(remoteMessage.data["sender_display_name"] ?: "@Unknown")
-            setContentText("Click to view message")
-            setAutoCancel(true)
-            setContentIntent(pendingIntent)
-        }
-
-        val notificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        val channel = NotificationChannel(
-            channelId, "Messages", NotificationManager.IMPORTANCE_DEFAULT
-        )
-        notificationManager.createNotificationChannel(channel)
+        this.sendNotification(remoteMessage.data["sender_display_name"] ?: "Unknown Sender")
 
 
-        notificationManager.notify(Random.nextInt(), notificationBuilder.build()
-        )
     }
+
+        private fun sendNotification(sender: String) {
+            val mainActivityClass = Class.forName("${applicationContext.packageName}.MainActivity")
+            val intent = Intent(this, mainActivityClass)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+
+            val requestCode = Random.nextInt()
+            val pendingIntent = PendingIntent.getActivity(this, requestCode, intent,  PendingIntent.FLAG_IMMUTABLE)
+
+            val channelId = "messages"
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            val channel = NotificationChannel(
+                channelId,
+                "Messages",
+                NotificationManager.IMPORTANCE_HIGH,).apply { description = "Notifications for Matrix Svelte client !" }
+
+            notificationManager.createNotificationChannel(channel)
+
+
+            val notificationBuilder = NotificationCompat.Builder(this, channelId)
+                .setSmallIcon(getAppIconResourceId())
+                .setContentTitle(sender)
+                .setContentText("Click to view message")
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_EVENT)
+                .setFullScreenIntent(pendingIntent, true)
+
+            notificationManager.notify(Random.nextInt(), notificationBuilder.build())
+        }
+
 
     private fun getAppIconResourceId(): Int {
         val packageManager = packageManager

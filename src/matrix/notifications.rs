@@ -87,8 +87,11 @@ pub async fn register_mobile_push_notifications<R: Runtime>(
     println!("Push token: {:?}", push_token);
 
     // TODO: get app name dynamically
-    //app_handle.config().identifier.clone().replace("-", "_"), valid on android, check on apple
-    let pusher_ids = PusherIds::new(push_token.token, "com.matrix-svelte.client".to_string());
+
+    let identifier = app_handle.config().identifier.clone();
+    #[cfg(target_os = "android")]
+    let identifier = identifier.replace("-", "_"); // On android, - are replaced by _ in bundle names
+    let pusher_ids = PusherIds::new(push_token.token, identifier);
 
     let pusher = PusherInit {
         ids: pusher_ids,
