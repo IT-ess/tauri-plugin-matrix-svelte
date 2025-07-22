@@ -15,6 +15,7 @@
 	let { roomsCollection, onRoomClick }: Props = $props();
 
 	if (import.meta.env.DEV) {
+		// eslint-disable-next-line svelte/no-inspect
 		$inspect(roomsCollection.state);
 	}
 	let rooms = $derived.by(getSortedRoomArray(roomsCollection));

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Badge } from '$lib/components/ui/badge';
+	import { getInitials } from '$lib/utils';
 	import { mediaCache, type JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
@@ -10,15 +11,6 @@
 	};
 
 	let { room, onRoomClick, disabled }: Props = $props();
-
-	// Get initials from name for avatar fallback
-	const getInitials = (name: string) => {
-		return name
-			.split(' ')
-			.map((n) => n[0])
-			.join('')
-			.toUpperCase();
-	};
 
 	const getLocalTimeAsFormattedString = (timestamp: number) => {
 		const date = new Date(timestamp);

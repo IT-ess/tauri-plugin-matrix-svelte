@@ -14,6 +14,7 @@
 	import ImageMessage from './image-message.svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { onMount } from 'svelte';
+	import { getInitials } from '$lib/utils';
 
 	type Props = {
 		data: MsgLikeContent;
@@ -30,15 +31,6 @@
 	const { senderId, sender } = data;
 
 	let reactionsArray = $derived(Object.keys(data.reactions));
-
-	// Get initials for avatar fallback
-	const getInitials = (name: string) => {
-		return name
-			.split(' ')
-			.map((n) => n[0])
-			.join('')
-			.toUpperCase();
-	};
 
 	// Format timestamp
 	const formatTime = (timestamp: number) => {
