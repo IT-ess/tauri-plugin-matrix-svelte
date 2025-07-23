@@ -1,6 +1,7 @@
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
+    Manager,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -49,6 +50,22 @@ pub fn run() {
                 }
               })
               .build(app)?;
+
+            // Create download dir for files
+            let path = app.path().app_local_data_dir().expect("Couldn't get app local data dir");
+            let path = path.join("download");
+            match std::fs::create_dir(&path) {
+                Ok(_) => println!("Directory created"),
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+                    // Do nothing if the directory already exists
+                    println!("App data directory already exists.")
+                }
+                Err(e) => {
+                    // Handle other errors
+                    eprintln!("Error creating directory: {}", e);
+                }
+            }
+
             Ok(())
         })
         .run(tauri::generate_context!())
