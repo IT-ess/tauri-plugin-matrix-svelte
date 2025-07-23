@@ -1,4 +1,5 @@
-import { isMsgLikeContent, isTextMessage, MsgLikeContent } from './message-like';
+import { isTextMessage } from './message-kinds';
+import { isMsgLikeContent, MsgLikeContent } from './message-like';
 
 // Base timeline item structure
 export type TimelineItem = {

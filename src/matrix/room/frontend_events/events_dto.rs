@@ -63,7 +63,11 @@ pub fn to_frontend_timeline_item<'a>(
                     // TODO: create a MsgLike mapper to refacto
                     match msg_like.kind.clone() {
                         MsgLikeKind::Message(message) => match message.msgtype().clone() {
-                            MessageType::Text(text_msg) => {
+                            MessageType::Text(_)
+                            | MessageType::Image(_)
+                            | MessageType::Audio(_)
+                            | MessageType::File(_)
+                            | MessageType::Video(_) => {
                                 return FrontendTimelineItem {
                                     event_id,
                                     is_local,
@@ -78,27 +82,7 @@ pub fn to_frontend_timeline_item<'a>(
                                             sender_id,
                                             sender,
                                             thread_root: None,
-                                            kind: FrontendMsgLikeKind::Text(text_msg),
-                                        },
-                                    ),
-                                }
-                            }
-                            MessageType::Image(img_msg) => {
-                                return FrontendTimelineItem {
-                                    event_id,
-                                    is_own,
-                                    is_local,
-                                    timestamp,
-                                    data: FrontendTimelineItemData::MsgLike(
-                                        FrontendMsgLikeContent {
-                                            kind: FrontendMsgLikeKind::Image(img_msg),
-                                            edited: message.is_edited(),
-                                            reactions: FrontendReactionsByKeyBySender(
-                                                &msg_like.reactions,
-                                            ),
-                                            sender_id,
-                                            sender,
-                                            thread_root: None,
+                                            kind: map_msg_event_content(message.msgtype().clone()),
                                         },
                                     ),
                                 }
@@ -107,22 +91,6 @@ pub fn to_frontend_timeline_item<'a>(
                         },
                         _ => {}
                     }
-
-                    // let prev_event = tl_idx.checked_sub(1).and_then(|i| tl_items.get(i));
-
-                    // populate_message_view(
-                    //     cx,
-                    //     list,
-                    //     item_id,
-                    //     room_id,
-                    //     event_tl_item,
-                    //     MessageOrSticker::Message(message),
-                    //     prev_event,
-                    //     &mut tl_state.media_cache,
-                    //     &tl_state.user_power,
-                    //     item_drawn_status,
-                    //     room_screen_widget_uid,
-                    // )
                 }
                 // TimelineItemContent::Sticker(sticker) => {
                 //     let prev_event = tl_idx.checked_sub(1).and_then(|i| tl_items.get(i));
@@ -222,4 +190,21 @@ pub fn to_frontend_timeline_item<'a>(
         is_own: true,
         timestamp: None,
     };
+}
+
+fn map_msg_event_content(content: MessageType) -> FrontendMsgLikeKind {
+    match content {
+        MessageType::Audio(c) => FrontendMsgLikeKind::Audio(c),
+        MessageType::File(c) => FrontendMsgLikeKind::File(c),
+        MessageType::Image(c) => FrontendMsgLikeKind::Image(c),
+        MessageType::Text(c) => FrontendMsgLikeKind::Text(c),
+        MessageType::Video(c) => FrontendMsgLikeKind::Video(c),
+        // Not supported for now
+        MessageType::Emote(c) => FrontendMsgLikeKind::Emote(c),
+        MessageType::Location(c) => FrontendMsgLikeKind::Location(c),
+        MessageType::Notice(c) => FrontendMsgLikeKind::Notice(c),
+        MessageType::ServerNotice(c) => FrontendMsgLikeKind::ServerNotice(c),
+        MessageType::VerificationRequest(c) => FrontendMsgLikeKind::VerificationRequest(c),
+        _ => FrontendMsgLikeKind::Unknown,
+    }
 }

@@ -60,8 +60,12 @@ pub enum FrontendMsgLikeKind {
 
     /// A redacted message.
     Redacted,
-    // An `m.room.encrypted` event that could not be decrypted.
-    // UnableToDecrypt(EncryptedMessage),
+
+    /// An `m.room.encrypted` event that could not be decrypted.
+    //UnableToDecrypt(EncryptedMessage),
+
+    /// An unknown type of message
+    Unknown,
 }
 
 /// A special kind of [`super::TimelineItemContent`] that groups together

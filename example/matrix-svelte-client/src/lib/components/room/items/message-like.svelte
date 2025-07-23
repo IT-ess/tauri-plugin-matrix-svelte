@@ -15,6 +15,9 @@
 	import { invoke } from '@tauri-apps/api/core';
 	import { onMount } from 'svelte';
 	import { getInitials } from '$lib/utils';
+	import AudioMessage from './audio-message.svelte';
+	import VideoMessage from './video-message.svelte';
+	import FileMessage from './file-message.svelte';
 
 	type Props = {
 		data: MsgLikeContent;
@@ -89,6 +92,12 @@
 			</p>
 		{:else if data.kind === 'image'}
 			<ImageMessage itemContent={data.body} />
+		{:else if data.kind === 'audio'}
+			<AudioMessage itemContent={data.body} />
+		{:else if data.kind === 'video'}
+			<VideoMessage itemContent={data.body} />
+		{:else if data.kind === 'file'}
+			<FileMessage itemContent={data.body} />
 		{/if}
 	</div>
 

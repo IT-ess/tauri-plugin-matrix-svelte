@@ -1,40 +1,29 @@
 <script lang="ts">
 	import { decode } from 'blurhash';
-	import { scale } from 'svelte/transition';
 	import { Button } from '$lib/components/ui/button';
-	import { XIcon } from '@lucide/svelte';
-	import type { events, ImageMessageEventContent } from 'tauri-plugin-matrix-svelte-api';
+	import type { events, VideoMessageEventContent } from 'tauri-plugin-matrix-svelte-api';
 	import { Channel, invoke } from '@tauri-apps/api/core';
-	import { onClickOutside } from 'runed';
 
 	type Props = {
-		itemContent: ImageMessageEventContent;
+		itemContent: VideoMessageEventContent;
 	};
 
 	let { itemContent }: Props = $props();
 
 	let blurhash = itemContent.info?.['xyz.amorgan.blurhash'] ?? 'LQHx$:t8*JEj*0WqtlNd9@WUIVsT'; // Placeholder blurhash
-	let alt = itemContent.body;
+	// let alt = itemContent.filename ?? itemContent.body;
 
 	// State variables
 	let isLoaded = $state(false);
-	let isFullscreen = $state(false);
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
-	let imageSrc = $state<string>('');
+	let videoSrc = $state<string>('');
 	let totalSize = $derived(itemContent.info?.size ?? 1);
 	let bytesReceived = $state(0);
 	let progress = $derived(bytesReceived / totalSize);
 
-	let fullscreenContainer = $state<HTMLDivElement>()!;
-
-	onClickOutside(
-		() => fullscreenContainer,
-		() => (isFullscreen = false)
-	);
-
 	// Load image function
-	const loadImage = async () => {
+	const loadVideo = async () => {
 		if (isLoaded || isLoading) return;
 
 		isLoading = true;
@@ -73,7 +62,7 @@
 
 					// Create blob URL for display
 					const blob = new Blob([combined], { type: itemContent.info?.mimetype ?? 'image/jpeg' });
-					imageSrc = URL.createObjectURL(blob);
+					videoSrc = URL.createObjectURL(blob);
 					isLoaded = true;
 					isLoading = false;
 					console.log(`Image fetch completed: ${message.data.totalBytes} bytes`);
@@ -104,14 +93,8 @@
 
 	// Auto-start loading when component mounts
 	$effect(() => {
-		loadImage();
+		loadVideo();
 	});
-
-	const toggleFullscreen = () => {
-		if (isLoaded) {
-			isFullscreen = !isFullscreen;
-		}
-	};
 </script>
 
 <div class="bg-card relative mt-1 overflow-hidden rounded-lg border">
@@ -146,47 +129,20 @@
 				<div class="bg-destructive/80 absolute inset-0 flex items-center justify-center">
 					<div class="text-center text-white">
 						<p class="mb-2 text-sm">Failed to load</p>
-						<Button variant="secondary" size="sm" onclick={loadImage}>Retry</Button>
+						<Button variant="secondary" size="sm" onclick={loadVideo}>Retry</Button>
 					</div>
 				</div>
 			{/if}
 		</div>
 	{:else}
-		<!-- Loaded Image -->
-		<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
-		<img
-			src={imageSrc}
-			{alt}
+		<!-- Loaded Video -->
+		<!-- svelte-ignore a11y_media_has_caption -->
+		<video
+			src={videoSrc}
 			class="aspect-video w-full cursor-pointer object-cover"
 			role="button"
 			tabindex="0"
-			onclick={toggleFullscreen}
-			onkeydown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					toggleFullscreen();
-				}
-			}}
-		/>
+			controls
+		></video>
 	{/if}
 </div>
-
-<!-- Fullscreen Modal -->
-{#if isFullscreen && imageSrc}
-	<div
-		class="bg-background/80 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
-		transition:scale
-	>
-		<div bind:this={fullscreenContainer} class="relative max-h-[90vh] max-w-[90vw]">
-			<Button
-				variant="ghost"
-				size="icon"
-				class="absolute -top-4 -right-4 rounded-full"
-				onclick={() => (isFullscreen = false)}
-			>
-				<XIcon class="h-4 w-4" />
-			</Button>
-			<img src={imageSrc} {alt} class="max-h-[90vh] max-w-[90vw] rounded-lg object-contain" />
-		</div>
-	</div>
-{/if}
