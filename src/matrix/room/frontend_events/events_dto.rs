@@ -89,34 +89,58 @@ pub fn to_frontend_timeline_item<'a>(
                             }
                             _ => {} // TODO handle other types
                         },
+                        MsgLikeKind::Sticker(sticker) => {
+                            return FrontendTimelineItem {
+                                event_id,
+                                is_local,
+                                is_own,
+                                timestamp,
+                                data: FrontendTimelineItemData::MsgLike(FrontendMsgLikeContent {
+                                    edited: false,
+                                    reactions: FrontendReactionsByKeyBySender(&msg_like.reactions),
+                                    sender_id,
+                                    sender,
+                                    thread_root: None,
+                                    kind: FrontendMsgLikeKind::Sticker(sticker.content().clone()),
+                                }),
+                            }
+                        }
+                        MsgLikeKind::Redacted => {
+                            return FrontendTimelineItem {
+                                event_id,
+                                is_local,
+                                is_own,
+                                timestamp,
+                                data: FrontendTimelineItemData::MsgLike(FrontendMsgLikeContent {
+                                    edited: true,
+                                    reactions: FrontendReactionsByKeyBySender(&msg_like.reactions),
+                                    sender_id,
+                                    sender,
+                                    thread_root: None,
+                                    kind: FrontendMsgLikeKind::Redacted,
+                                }),
+                            }
+                        }
+                        MsgLikeKind::UnableToDecrypt(_) => {
+                            return FrontendTimelineItem {
+                                event_id,
+                                is_local,
+                                is_own,
+                                timestamp,
+                                data: FrontendTimelineItemData::MsgLike(FrontendMsgLikeContent {
+                                    edited: false,
+                                    reactions: FrontendReactionsByKeyBySender(&msg_like.reactions),
+                                    sender_id,
+                                    sender,
+                                    thread_root: None,
+                                    kind: FrontendMsgLikeKind::UnableToDecrypt,
+                                }),
+                            }
+                        }
                         _ => {}
                     }
                 }
-                // TimelineItemContent::Sticker(sticker) => {
-                //     let prev_event = tl_idx.checked_sub(1).and_then(|i| tl_items.get(i));
-                //     populate_message_view(
-                //         cx,
-                //         list,
-                //         item_id,
-                //         room_id,
-                //         event_tl_item,
-                //         MessageOrSticker::Sticker(sticker.content()),
-                //         prev_event,
-                //         &mut tl_state.media_cache,
-                //         &tl_state.user_power,
-                //         item_drawn_status,
-                //         room_screen_widget_uid,
-                //     )
-                // }
-                // TimelineItemContent::RedactedMessage => populate_small_state_event(
-                //     cx,
-                //     list,
-                //     item_id,
-                //     room_id,
-                //     event_tl_item,
-                //     &RedactedMessageEventMarker,
-                //     item_drawn_status,
-                // ),
+
                 // TimelineItemContent::MembershipChange(membership_change) => populate_small_state_event(
                 //     cx,
                 //     list,

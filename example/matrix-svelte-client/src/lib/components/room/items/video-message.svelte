@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { decode } from 'blurhash';
 	import { Button } from '$lib/components/ui/button';
-	import type { events, VideoMessageEventContent } from 'tauri-plugin-matrix-svelte-api';
-	import { Channel, invoke } from '@tauri-apps/api/core';
+	import {
+		fetchMedia,
+		type events,
+		type VideoMessageEventContent
+	} from 'tauri-plugin-matrix-svelte-api';
+	import { Channel } from '@tauri-apps/api/core';
 
 	type Props = {
 		itemContent: VideoMessageEventContent;
@@ -77,13 +81,13 @@
 				}
 			};
 
-			await invoke('plugin:matrix-svelte|fetch_media', {
-				mediaRequest: {
+			await fetchMedia(
+				{
 					format: 'File',
 					source: { file: itemContent.file }
 				},
 				onEvent
-			});
+			);
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Unknown error occurred';
 			isLoading = false;
@@ -139,7 +143,7 @@
 		<!-- svelte-ignore a11y_media_has_caption -->
 		<video
 			src={videoSrc}
-			class="aspect-video w-full cursor-pointer object-cover"
+			class="w-full cursor-pointer object-cover"
 			role="button"
 			tabindex="0"
 			controls

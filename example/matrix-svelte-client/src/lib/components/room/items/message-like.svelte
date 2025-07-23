@@ -18,6 +18,7 @@
 	import AudioMessage from './audio-message.svelte';
 	import VideoMessage from './video-message.svelte';
 	import FileMessage from './file-message.svelte';
+	import { Badge } from '$lib/components/ui/badge';
 
 	type Props = {
 		data: MsgLikeContent;
@@ -76,30 +77,39 @@
 		{/if}
 	</Avatar>
 
-	<div
-		class={[
-			'max-w-[80%] rounded-lg p-3',
-			isOwn ? 'bg-primary text-primary-foreground' : 'bg-muted'
-		]}
-	>
-		<div class="flex items-center gap-2">
-			<p class="text-sm font-medium">{data.sender}</p>
-			<span class="text-xs opacity-70">{formatTime(timestamp ?? 0)}</span>
+	{#if data.kind === 'sticker'}
+		<!-- Render sticker outside the block -->
+		<ImageMessage itemContent={data.body} isSticker />
+	{:else}
+		<div
+			class={[
+				'max-w-[60%] rounded-lg p-3',
+				isOwn ? 'bg-primary text-primary-foreground' : 'bg-muted'
+			]}
+		>
+			<div class="flex items-center gap-2">
+				<p class="text-sm font-medium">{data.sender}</p>
+				<span class="text-xs opacity-70">{formatTime(timestamp ?? 0)}</span>
+			</div>
+			{#if data.kind === 'text'}
+				<p class="mt-1 text-sm">
+					{data.body.body}
+				</p>
+			{:else if data.kind === 'image'}
+				<ImageMessage itemContent={data.body} />
+			{:else if data.kind === 'audio'}
+				<AudioMessage itemContent={data.body} />
+			{:else if data.kind === 'video'}
+				<VideoMessage itemContent={data.body} />
+			{:else if data.kind === 'file'}
+				<FileMessage itemContent={data.body} />
+			{:else if data.kind === 'redacted'}
+				<Badge variant="destructive">This message has been deleted</Badge>
+			{:else if data.kind === 'unableToDecrypt'}
+				<Badge variant={isOwn ? 'secondary' : 'default'}>Encrypted message</Badge>
+			{/if}
 		</div>
-		{#if data.kind === 'text'}
-			<p class="mt-1 text-sm">
-				{data.body.body}
-			</p>
-		{:else if data.kind === 'image'}
-			<ImageMessage itemContent={data.body} />
-		{:else if data.kind === 'audio'}
-			<AudioMessage itemContent={data.body} />
-		{:else if data.kind === 'video'}
-			<VideoMessage itemContent={data.body} />
-		{:else if data.kind === 'file'}
-			<FileMessage itemContent={data.body} />
-		{/if}
-	</div>
+	{/if}
 
 	<!-- Reaction button -->
 	<TooltipProvider>

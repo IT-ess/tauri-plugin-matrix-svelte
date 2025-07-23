@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import type { events, AudioMessageEventContent } from 'tauri-plugin-matrix-svelte-api';
-	import { Channel, invoke } from '@tauri-apps/api/core';
+	import {
+		type events,
+		type AudioMessageEventContent,
+		fetchMedia
+	} from 'tauri-plugin-matrix-svelte-api';
+	import { Channel } from '@tauri-apps/api/core';
 
 	type Props = {
 		itemContent: AudioMessageEventContent;
@@ -75,13 +79,13 @@
 				}
 			};
 
-			await invoke('plugin:matrix-svelte|fetch_media', {
-				mediaRequest: {
+			await fetchMedia(
+				{
 					format: 'File',
 					source: { file: itemContent.file }
 				},
 				onEvent
-			});
+			);
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Unknown error occurred';
 			isLoading = false;

@@ -62,7 +62,7 @@ pub enum FrontendMsgLikeKind {
     Redacted,
 
     /// An `m.room.encrypted` event that could not be decrypted.
-    //UnableToDecrypt(EncryptedMessage),
+    UnableToDecrypt,
 
     /// An unknown type of message
     Unknown,

@@ -3,15 +3,23 @@
 	import { scale } from 'svelte/transition';
 	import { Button } from '$lib/components/ui/button';
 	import { XIcon } from '@lucide/svelte';
-	import type { events, ImageMessageEventContent } from 'tauri-plugin-matrix-svelte-api';
-	import { Channel, invoke } from '@tauri-apps/api/core';
+	import {
+		fetchMedia,
+		type events,
+		type ImageMessageEventContent,
+		type MediaRequestParameters,
+		type StickerEventContent
+	} from 'tauri-plugin-matrix-svelte-api';
+	import { Channel } from '@tauri-apps/api/core';
 	import { onClickOutside } from 'runed';
+	import { cn } from '$lib/utils';
 
 	type Props = {
-		itemContent: ImageMessageEventContent;
+		itemContent: ImageMessageEventContent | StickerEventContent;
+		isSticker?: boolean;
 	};
 
-	let { itemContent }: Props = $props();
+	let { itemContent, isSticker = false }: Props = $props();
 
 	let blurhash = itemContent.info?.['xyz.amorgan.blurhash'] ?? 'LQHx$:t8*JEj*0WqtlNd9@WUIVsT'; // Placeholder blurhash
 	let alt = itemContent.body;
@@ -88,13 +96,18 @@
 				}
 			};
 
-			await invoke('plugin:matrix-svelte|fetch_media', {
-				mediaRequest: {
-					format: 'File',
-					source: { file: itemContent.file }
-				},
-				onEvent
-			});
+			let mediaRequest: MediaRequestParameters =
+				itemContent.msgtype === 'm.image' // Images are encrypted while stickers aren't
+					? {
+							format: 'File',
+							source: { file: itemContent.file }
+						}
+					: {
+							format: 'File',
+							source: { url: itemContent.url }
+						};
+
+			await fetchMedia(mediaRequest, onEvent);
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Unknown error occurred';
 			isLoading = false;
@@ -114,7 +127,7 @@
 	};
 </script>
 
-<div class="bg-card relative mt-1 overflow-hidden rounded-lg border">
+<div class={cn('bg-card relative mt-1 overflow-hidden', isSticker ? '' : 'rounded-lg border')}>
 	{#if !isLoaded}
 		<!-- Blurhash Canvas as optimistic UI -->
 		<div class="relative">
@@ -146,7 +159,7 @@
 				<div class="bg-destructive/80 absolute inset-0 flex items-center justify-center">
 					<div class="text-center text-white">
 						<p class="mb-2 text-sm">Failed to load</p>
-						<Button variant="secondary" size="sm" onclick={loadImage}>Retry</Button>
+						<Button variant="secondary" size="sm" onclick={() => loadImage()}>Retry</Button>
 					</div>
 				</div>
 			{/if}
@@ -157,7 +170,7 @@
 		<img
 			src={imageSrc}
 			{alt}
-			class="aspect-video w-full cursor-pointer object-cover"
+			class={cn('cursor-pointer object-cover', isSticker ? 'w-[40%]' : 'w-full')}
 			role="button"
 			tabindex="0"
 			onclick={toggleFullscreen}

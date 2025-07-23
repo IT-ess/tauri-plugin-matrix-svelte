@@ -1,4 +1,4 @@
-import { EncryptedMediaSource, MediaSource } from '../matrix-requests/media';
+import { EncryptedMediaSource, MediaSource, PlainMediaSource } from '../matrix-requests/media';
 import { MsgLikeContent } from './message-like';
 
 export type MsgLikeKind =
@@ -6,7 +6,10 @@ export type MsgLikeKind =
 	| { kind: 'image'; body: ImageMessageEventContent }
 	| { kind: 'audio'; body: AudioMessageEventContent }
 	| { kind: 'file'; body: FileMessageEventContent }
-	| { kind: 'video'; body: VideoMessageEventContent };
+	| { kind: 'video'; body: VideoMessageEventContent }
+	| { kind: 'sticker'; body: StickerEventContent }
+	| { kind: 'redacted' }
+	| { kind: 'unableToDecrypt' };
 
 //
 // Kinds
@@ -96,6 +99,13 @@ export type VideoInfo = {
 	thumbnail_info: ThumbnailInfo;
 	'xyz.amorgan.blurhash'?: string;
 } & MediaSource; // The thumbnail source
+
+// Sticker
+
+export type StickerEventContent = {
+	body: string;
+	info: ImageInfo;
+} & PlainMediaSource; // Stickers aren't encrypted
 
 //
 // Common

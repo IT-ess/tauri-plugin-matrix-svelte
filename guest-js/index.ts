@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { Channel, invoke } from '@tauri-apps/api/core';
 import {
 	InvitedRoomInfo,
 	InviterInfo,
@@ -29,16 +29,9 @@ import {
 	AudioMessageEventContent,
 	FileMessageEventContent,
 	ImageMessageEventContent,
+	StickerEventContent,
 	VideoMessageEventContent
 } from './timeline-items/message-kinds';
-
-export async function ping(value: string): Promise<string | null> {
-	return await invoke<{ value?: string }>('plugin:matrix-svelte|ping', {
-		payload: {
-			value
-		}
-	}).then((r) => (r.value ? r.value : null));
-}
 
 export async function loginAndCreateNewSession(config: MatrixClientConfig): Promise<null> {
 	return await invoke('plugin:matrix-svelte|login_and_create_new_session', {
@@ -49,6 +42,16 @@ export async function loginAndCreateNewSession(config: MatrixClientConfig): Prom
 export async function submitAsyncRequest(request: MatrixRequest): Promise<null> {
 	return await invoke('plugin:matrix-svelte|submit_async_request', {
 		request
+	});
+}
+
+export async function fetchMedia(
+	mediaRequest: MediaRequestParameters,
+	onEvent: Channel<events.MediaStreamEvent>
+) {
+	return await invoke('plugin:matrix-svelte|fetch_media', {
+		mediaRequest,
+		onEvent
 	});
 }
 
@@ -70,6 +73,7 @@ export {
 	AudioMessageEventContent,
 	FileMessageEventContent,
 	VideoMessageEventContent,
+	StickerEventContent,
 	MediaRequestParameters,
 	ReactionsByKeyBySender,
 	VirtualTimelineItem,
