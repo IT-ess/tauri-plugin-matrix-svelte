@@ -1,8 +1,4 @@
-use tauri::{
-    menu::{Menu, MenuItem},
-    tray::TrayIconBuilder,
-    Manager,
-};
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -34,6 +30,13 @@ pub fn run() {
         )
         .plugin(tauri_plugin_matrix_svelte::init())
         .setup(|app| {
+            #[cfg(desktop)]
+            {
+            use tauri::{
+                menu::{Menu, MenuItem},
+                tray::TrayIconBuilder
+            };
+
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&quit_i])?;
             let _tray = TrayIconBuilder::new()
@@ -50,6 +53,7 @@ pub fn run() {
                 }
               })
               .build(app)?;
+            }
 
             // Create download dir for files
             let path = app.path().app_local_data_dir().expect("Couldn't get app local data dir");
