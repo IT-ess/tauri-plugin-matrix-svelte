@@ -1,3 +1,5 @@
+use std::ops::{Deref, DerefMut};
+
 use indexmap::IndexMap;
 use matrix_sdk::ruma::{
     events::{
@@ -7,7 +9,7 @@ use matrix_sdk::ruma::{
             LocationMessageEventContent, NoticeMessageEventContent,
             ServerNoticeMessageEventContent, TextMessageEventContent, VideoMessageEventContent,
         },
-        sticker::StickerEventContent,
+        sticker::{StickerEventContent, StickerMediaSource},
     },
     OwnedEventId, OwnedUserId,
 };
@@ -53,10 +55,10 @@ pub enum FrontendMsgLikeKind {
     VerificationRequest(KeyVerificationRequestEventContent),
 
     /// An `m.sticker` event.
-    Sticker(StickerEventContent),
+    Sticker(FrontendStickerEventContent),
 
     /// An `m.poll.start` event.
-    // Poll(PollState),
+    Poll, //(PollState), // Todo: implement poll state display
 
     /// A redacted message.
     Redacted,
@@ -144,5 +146,49 @@ impl<'a> Serialize for SerializableReactionInfo<'a> {
         s.serialize_field("timestamp", &self.0.timestamp)?;
         s.serialize_field("status", &reaction_status_key(&self.0.status))?;
         s.end()
+    }
+}
+
+// New type pattern to add the msgtype field to serialization
+#[derive(Debug, Clone)]
+pub struct FrontendStickerEventContent(StickerEventContent);
+
+impl Deref for FrontendStickerEventContent {
+    type Target = StickerEventContent;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for FrontendStickerEventContent {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl From<StickerEventContent> for FrontendStickerEventContent {
+    fn from(content: StickerEventContent) -> Self {
+        FrontendStickerEventContent(content)
+    }
+}
+
+impl Serialize for FrontendStickerEventContent {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        use serde::ser::SerializeStruct;
+
+        let mut state = serializer.serialize_struct("StickerEventContent", 4)?;
+        state.serialize_field("body", &self.0.body)?;
+        state.serialize_field("info", &self.0.info)?;
+        match &self.0.source {
+            StickerMediaSource::Plain(u) => state.serialize_field("url", u)?,
+            StickerMediaSource::Encrypted(e) => state.serialize_field("file", e)?,
+            &_ => todo!(),
+        };
+        state.serialize_field("msgtype", "m.sticker")?;
+        state.end()
     }
 }

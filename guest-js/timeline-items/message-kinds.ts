@@ -8,17 +8,29 @@ export type MsgLikeKind =
 	| { kind: 'file'; body: FileMessageEventContent }
 	| { kind: 'video'; body: VideoMessageEventContent }
 	| { kind: 'sticker'; body: StickerEventContent }
+	| { kind: 'emote'; body: EmoteMessageEventContent }
+	| { kind: 'location'; body: any }
+	| { kind: 'notice'; body: any }
+	| { kind: 'serverNotice'; body: any }
+	| { kind: 'verificationRequest'; body: any }
 	| { kind: 'redacted' }
-	| { kind: 'unableToDecrypt' };
+	| { kind: 'unableToDecrypt' }
+	| { kind: 'unknown' };
 
 //
 // Kinds
 //
 
-// Text
+// Text & Emote
 
 export type TextMessageEventContent = {
 	msgtype: 'm.text';
+	body: string;
+} & FormattedBody;
+
+export type EmoteMessageEventContent = {
+	// Exactly the same as text message except msgtype
+	msgtype: 'm.emote';
 	body: string;
 } & FormattedBody;
 
@@ -104,6 +116,7 @@ export type VideoInfo = {
 
 export type StickerEventContent = {
 	body: string;
+	msgtype: 'm.sticker';
 	info: ImageInfo;
 } & PlainMediaSource; // Stickers aren't encrypted
 

@@ -27,11 +27,14 @@ import { mediaCache } from './media-cache';
 import { watchNotifications } from './notifications/ios-notifications';
 import {
 	AudioMessageEventContent,
+	EmoteMessageEventContent,
 	FileMessageEventContent,
 	ImageMessageEventContent,
 	StickerEventContent,
+	TextMessageEventContent,
 	VideoMessageEventContent
 } from './timeline-items/message-kinds';
+import { StateEvent } from './timeline-items/state-event';
 
 export async function loginAndCreateNewSession(config: MatrixClientConfig): Promise<null> {
 	return await invoke('plugin:matrix-svelte|login_and_create_new_session', {
@@ -69,6 +72,9 @@ export {
 	TimelineItemData,
 	timelineDataGuards,
 	MsgLikeContent,
+	StateEvent,
+	TextMessageEventContent,
+	EmoteMessageEventContent,
 	ImageMessageEventContent,
 	AudioMessageEventContent,
 	FileMessageEventContent,

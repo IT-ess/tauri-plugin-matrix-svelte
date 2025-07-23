@@ -95,6 +95,11 @@
 				<p class="mt-1 text-sm">
 					{data.body.body}
 				</p>
+			{:else if data.kind === 'emote'}
+				<p class="mt-1 text-sm">
+					<b>{data.sender}:</b>{data.body.body}
+					<!-- same as a text message, but with sender name in front -->
+				</p>
 			{:else if data.kind === 'image'}
 				<ImageMessage itemContent={data.body} />
 			{:else if data.kind === 'audio'}
@@ -107,6 +112,8 @@
 				<Badge variant="destructive">This message has been deleted</Badge>
 			{:else if data.kind === 'unableToDecrypt'}
 				<Badge variant={isOwn ? 'secondary' : 'default'}>Encrypted message</Badge>
+			{:else}
+				<p class="text-muted text-sm">The message type: {data.kind} is not supported yet</p>
 			{/if}
 		</div>
 	{/if}

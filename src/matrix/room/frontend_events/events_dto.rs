@@ -8,8 +8,11 @@ use serde::Serialize;
 
 use crate::matrix::{
     room::frontend_events::{
-        msg_like::FrontendReactionsByKeyBySender,
-        state_event::{FrontendAnyOtherFullStateEventContent, FrontendStateEvent},
+        msg_like::{FrontendReactionsByKeyBySender, FrontendStickerEventContent},
+        state_event::{
+            FrontendAnyOtherFullStateEventContent, FrontendMemberProfileChange,
+            FrontendRoomMembershipChange, FrontendStateEvent,
+        },
     },
     utils::get_or_fetch_event_sender,
 };
@@ -41,8 +44,14 @@ pub enum FrontendTimelineItemData<'a> {
     MsgLike(FrontendMsgLikeContent<'a>),
     Virtual(FrontendVirtualTimelineItem),
     StateChange(FrontendStateEvent),
-    Error, // TODO add methods
-    Call,  // TODO add methods
+    Error(FrontendTimelineErrorItem),
+    Call,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FrontendTimelineErrorItem {
+    error: String,
 }
 
 pub fn to_frontend_timeline_item<'a>(
@@ -66,11 +75,7 @@ pub fn to_frontend_timeline_item<'a>(
                     // TODO: create a MsgLike mapper to refacto
                     match msg_like.kind.clone() {
                         MsgLikeKind::Message(message) => match message.msgtype().clone() {
-                            MessageType::Text(_)
-                            | MessageType::Image(_)
-                            | MessageType::Audio(_)
-                            | MessageType::File(_)
-                            | MessageType::Video(_) => {
+                            _ => {
                                 return FrontendTimelineItem {
                                     event_id,
                                     is_local,
@@ -90,7 +95,6 @@ pub fn to_frontend_timeline_item<'a>(
                                     ),
                                 }
                             }
-                            _ => {} // TODO handle other types
                         },
                         MsgLikeKind::Sticker(sticker) => {
                             return FrontendTimelineItem {
@@ -104,7 +108,11 @@ pub fn to_frontend_timeline_item<'a>(
                                     sender_id,
                                     sender,
                                     thread_root: None,
-                                    kind: FrontendMsgLikeKind::Sticker(sticker.content().clone()),
+                                    kind: FrontendMsgLikeKind::Sticker(
+                                        FrontendStickerEventContent::from(
+                                            sticker.content().clone(),
+                                        ),
+                                    ),
                                 }),
                             }
                         }
@@ -140,10 +148,26 @@ pub fn to_frontend_timeline_item<'a>(
                                 }),
                             }
                         }
-                        _ => {}
+
+                        MsgLikeKind::Poll(_) => {
+                            return FrontendTimelineItem {
+                                event_id,
+                                is_local,
+                                is_own,
+                                timestamp,
+                                data: FrontendTimelineItemData::MsgLike(FrontendMsgLikeContent {
+                                    edited: false,
+                                    reactions: FrontendReactionsByKeyBySender(&msg_like.reactions),
+                                    sender_id,
+                                    sender,
+                                    thread_root: None,
+                                    kind: FrontendMsgLikeKind::Poll,
+                                }),
+                            }
+                        }
                     }
                 }
-                TimelineItemContent::OtherState(test) => {
+                TimelineItemContent::OtherState(state) => {
                     return FrontendTimelineItem {
                         event_id,
                         is_local,
@@ -151,40 +175,81 @@ pub fn to_frontend_timeline_item<'a>(
                         timestamp,
                         data: FrontendTimelineItemData::StateChange(
                             FrontendStateEvent::OtherState(
-                                FrontendAnyOtherFullStateEventContent::from(test.content().clone()),
+                                FrontendAnyOtherFullStateEventContent::from(
+                                    state.content().clone(),
+                                ),
+                            ),
+                        ),
+                    }
+                }
+                TimelineItemContent::MembershipChange(change) => {
+                    return FrontendTimelineItem {
+                        event_id,
+                        is_local,
+                        is_own,
+                        timestamp,
+                        data: FrontendTimelineItemData::StateChange(
+                            FrontendStateEvent::MembershipChange(
+                                FrontendRoomMembershipChange::from(change.clone()),
                             ),
                         ),
                     }
                 }
 
-                // TimelineItemContent::MembershipChange(membership_change) => populate_small_state_event(
-                //     cx,
-                //     list,
-                //     item_id,
-                //     room_id,
-                //     event_tl_item,
-                //     membership_change,
-                //     item_drawn_status,
-                // ),
-                // TimelineItemContent::ProfileChange(profile_change) => populate_small_state_event(
-                //     cx,
-                //     list,
-                //     item_id,
-                //     room_id,
-                //     event_tl_item,
-                //     profile_change,
-                //     item_drawn_status,
-                // ),
-                // TimelineItemContent::OtherState(other) => populate_small_state_event(
-                //     cx,
-                //     list,
-                //     item_id,
-                //     room_id,
-                //     event_tl_item,
-                //     other,
-                //     item_drawn_status,
-                // ),
-                _ => {}
+                TimelineItemContent::ProfileChange(change) => {
+                    return FrontendTimelineItem {
+                        event_id,
+                        is_local,
+                        is_own,
+                        timestamp,
+                        data: FrontendTimelineItemData::StateChange(
+                            FrontendStateEvent::ProfileChange(FrontendMemberProfileChange::from(
+                                change.clone(),
+                            )),
+                        ),
+                    }
+                }
+
+                TimelineItemContent::CallNotify | TimelineItemContent::CallInvite => {
+                    return FrontendTimelineItem {
+                        event_id,
+                        is_local,
+                        is_own,
+                        timestamp,
+                        data: FrontendTimelineItemData::Call,
+                    }
+                }
+
+                TimelineItemContent::FailedToParseMessageLike {
+                    event_type: _,
+                    error,
+                } => {
+                    return FrontendTimelineItem {
+                        event_id: None,
+                        data: FrontendTimelineItemData::Error(FrontendTimelineErrorItem {
+                            error: error.to_string(),
+                        }),
+                        is_local: true,
+                        is_own: true,
+                        timestamp: None,
+                    };
+                }
+
+                TimelineItemContent::FailedToParseState {
+                    state_key: _,
+                    event_type: _,
+                    error,
+                } => {
+                    return FrontendTimelineItem {
+                        event_id: None,
+                        data: FrontendTimelineItemData::Error(FrontendTimelineErrorItem {
+                            error: error.to_string(),
+                        }),
+                        is_local: true,
+                        is_own: true,
+                        timestamp: None,
+                    };
+                }
             }
         }
         TimelineItemKind::Virtual(event) => match event {
@@ -223,13 +288,6 @@ pub fn to_frontend_timeline_item<'a>(
             }
         },
     };
-    return FrontendTimelineItem {
-        event_id: None,
-        data: FrontendTimelineItemData::Error,
-        is_local: true,
-        is_own: true,
-        timestamp: None,
-    };
 }
 
 fn map_msg_event_content(content: MessageType) -> FrontendMsgLikeKind {
@@ -239,8 +297,8 @@ fn map_msg_event_content(content: MessageType) -> FrontendMsgLikeKind {
         MessageType::Image(c) => FrontendMsgLikeKind::Image(c),
         MessageType::Text(c) => FrontendMsgLikeKind::Text(c),
         MessageType::Video(c) => FrontendMsgLikeKind::Video(c),
-        // Not supported for now
         MessageType::Emote(c) => FrontendMsgLikeKind::Emote(c),
+        // Not supported by frontend
         MessageType::Location(c) => FrontendMsgLikeKind::Location(c),
         MessageType::Notice(c) => FrontendMsgLikeKind::Notice(c),
         MessageType::ServerNotice(c) => FrontendMsgLikeKind::ServerNotice(c),

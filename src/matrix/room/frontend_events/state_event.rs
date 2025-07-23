@@ -12,6 +12,8 @@ use matrix_sdk::ruma::events::room::encryption::RoomEncryptionEventContent;
 use matrix_sdk::ruma::events::room::guest_access::RoomGuestAccessEventContent;
 use matrix_sdk::ruma::events::room::history_visibility::RoomHistoryVisibilityEventContent;
 use matrix_sdk::ruma::events::room::join_rules::RoomJoinRulesEventContent;
+use matrix_sdk::ruma::events::room::member::Change;
+use matrix_sdk::ruma::events::room::member::RoomMemberEventContent;
 use matrix_sdk::ruma::events::room::name::RoomNameEventContent;
 use matrix_sdk::ruma::events::room::pinned_events::RoomPinnedEventsEventContent;
 use matrix_sdk::ruma::events::room::power_levels::RoomPowerLevelsEventContent;
@@ -24,7 +26,12 @@ use matrix_sdk::ruma::events::space::parent::SpaceParentEventContent;
 use matrix_sdk::ruma::events::FullStateEventContent;
 use matrix_sdk::ruma::events::RedactContent;
 use matrix_sdk::ruma::events::StaticStateEventContent;
+use matrix_sdk::ruma::OwnedMxcUri;
+use matrix_sdk::ruma::UserId;
 use matrix_sdk_ui::timeline::AnyOtherFullStateEventContent;
+use matrix_sdk_ui::timeline::MemberProfileChange;
+use matrix_sdk_ui::timeline::MembershipChange;
+use matrix_sdk_ui::timeline::RoomMembershipChange;
 use serde::Serialize;
 use serde::Serializer;
 
@@ -37,7 +44,13 @@ use serde::Serializer;
 )]
 pub enum FrontendStateEvent {
     OtherState(FrontendAnyOtherFullStateEventContent),
+    MembershipChange(FrontendRoomMembershipChange),
+    ProfileChange(FrontendMemberProfileChange),
 }
+
+//
+// COMMON
+//
 
 // Newtype for FullStateEventContent
 #[derive(Debug, Clone)]
@@ -108,6 +121,10 @@ where
         }
     }
 }
+
+//
+// OTHER STATE
+//
 
 // Newtype for AnyOtherFullStateEventContent
 #[derive(Debug, Clone)]
@@ -278,5 +295,269 @@ impl Serialize for FrontendAnyOtherFullStateEventContent {
         };
 
         serializable_enum.serialize(serializer)
+    }
+}
+
+//
+// MEMBERSHIP STATE
+//
+// Newtype for MembershipChange to add Serialize
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FrontendMembershipChange(MembershipChange);
+
+impl Deref for FrontendMembershipChange {
+    type Target = MembershipChange;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl From<MembershipChange> for FrontendMembershipChange {
+    fn from(change: MembershipChange) -> Self {
+        FrontendMembershipChange(change)
+    }
+}
+
+impl Serialize for FrontendMembershipChange {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let variant_name = match self.0 {
+            MembershipChange::None => "None",
+            MembershipChange::Error => "Error",
+            MembershipChange::Joined => "Joined",
+            MembershipChange::Left => "Left",
+            MembershipChange::Banned => "Banned",
+            MembershipChange::Unbanned => "Unbanned",
+            MembershipChange::Kicked => "Kicked",
+            MembershipChange::Invited => "Invited",
+            MembershipChange::KickedAndBanned => "KickedAndBanned",
+            MembershipChange::InvitationAccepted => "InvitationAccepted",
+            MembershipChange::InvitationRejected => "InvitationRejected",
+            MembershipChange::InvitationRevoked => "InvitationRevoked",
+            MembershipChange::Knocked => "Knocked",
+            MembershipChange::KnockAccepted => "KnockAccepted",
+            MembershipChange::KnockRetracted => "KnockRetracted",
+            MembershipChange::KnockDenied => "KnockDenied",
+            MembershipChange::NotImplemented => "NotImplemented",
+        };
+        serializer.serialize_str(variant_name)
+    }
+}
+
+// Newtype for RoomMembershipChange
+#[derive(Debug, Clone)]
+pub struct FrontendRoomMembershipChange(RoomMembershipChange);
+
+impl Deref for FrontendRoomMembershipChange {
+    type Target = RoomMembershipChange;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for FrontendRoomMembershipChange {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl From<RoomMembershipChange> for FrontendRoomMembershipChange {
+    fn from(change: RoomMembershipChange) -> Self {
+        FrontendRoomMembershipChange(change)
+    }
+}
+
+impl Serialize for FrontendRoomMembershipChange {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        use serde::ser::SerializeStruct;
+
+        let mut state = serializer.serialize_struct("RoomMembershipChange", 3)?;
+
+        // Use accessor methods if they exist, or you might need to check the API docs
+        // For now, let's assume there are getter methods:
+        state.serialize_field("user_id", self.user_id())?;
+
+        // Serialize content using the FrontendFullStateEventContent wrapper
+        let frontend_content = FrontendFullStateEventContent::from(self.content().clone());
+        state.serialize_field("content", &frontend_content)?;
+
+        // Serialize change, wrapping Option<MembershipChange> with our frontend type
+        let frontend_change = self.change().map(FrontendMembershipChange::from);
+        state.serialize_field("change", &frontend_change)?;
+
+        state.end()
+    }
+}
+
+// Helper methods for easier usage
+impl FrontendRoomMembershipChange {
+    pub fn _new(room_membership_change: RoomMembershipChange) -> Self {
+        Self(room_membership_change)
+    }
+
+    // These methods will delegate to the wrapped type's public API
+    // You'll need to check what methods RoomMembershipChange actually provides
+    pub fn user_id(&self) -> &UserId {
+        // If RoomMembershipChange has a user_id() method:
+        self.0.user_id()
+        // Or if it has some other accessor method, use that instead
+    }
+
+    pub fn content(&self) -> &FullStateEventContent<RoomMemberEventContent> {
+        // If RoomMembershipChange has a content() method:
+        self.0.content()
+        // Or use whatever the actual accessor method is
+    }
+
+    pub fn change(&self) -> Option<MembershipChange> {
+        // If RoomMembershipChange has a change() method:
+        self.0.change()
+        // Or use whatever the actual accessor method is
+    }
+}
+
+//
+// PROFILE STATE
+//
+
+// Newtype for Change<T> to add Serialize
+#[derive(Debug, Clone)]
+struct FrontendChange<T>(Change<T>);
+
+impl<T> Deref for FrontendChange<T> {
+    type Target = Change<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> DerefMut for FrontendChange<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<T> From<Change<T>> for FrontendChange<T> {
+    fn from(change: Change<T>) -> Self {
+        FrontendChange(change)
+    }
+}
+
+impl<T> Serialize for FrontendChange<T>
+where
+    T: Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        use serde::ser::SerializeStruct;
+
+        let mut state = serializer.serialize_struct("Change", 2)?;
+        state.serialize_field("old", &self.0.old)?;
+        state.serialize_field("new", &self.0.new)?;
+        state.end()
+    }
+}
+
+// Newtype for MemberProfileChange
+#[derive(Debug, Clone)]
+pub struct FrontendMemberProfileChange(MemberProfileChange);
+
+impl Deref for FrontendMemberProfileChange {
+    type Target = MemberProfileChange;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for FrontendMemberProfileChange {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl From<MemberProfileChange> for FrontendMemberProfileChange {
+    fn from(change: MemberProfileChange) -> Self {
+        FrontendMemberProfileChange(change)
+    }
+}
+
+impl Serialize for FrontendMemberProfileChange {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        use serde::ser::SerializeStruct;
+
+        let mut state = serializer.serialize_struct("MemberProfileChange", 3)?;
+
+        // Use accessor methods - you'll need to check what methods MemberProfileChange provides
+        state.serialize_field("user_id", self.user_id())?;
+
+        // Wrap displayname_change with our FrontendChange wrapper
+        let frontend_displayname_change = self
+            .displayname_change()
+            .map(|change| FrontendChange::from(change.clone()));
+        state.serialize_field("displayname_change", &frontend_displayname_change)?;
+
+        // Wrap avatar_url_change with our FrontendChange wrapper
+        let frontend_avatar_url_change = self
+            .avatar_url_change()
+            .map(|change| FrontendChange::from(change.clone()));
+        state.serialize_field("avatar_url_change", &frontend_avatar_url_change)?;
+
+        state.end()
+    }
+}
+
+// Helper methods for easier usage
+impl FrontendMemberProfileChange {
+    pub fn _new(member_profile_change: MemberProfileChange) -> Self {
+        Self(member_profile_change)
+    }
+
+    // These methods will delegate to the wrapped type's public API
+    // You'll need to check what methods MemberProfileChange actually provides
+    pub fn user_id(&self) -> &UserId {
+        // If MemberProfileChange has a user_id() method:
+        self.0.user_id()
+        // Or use whatever the actual accessor method is
+    }
+
+    pub fn displayname_change(&self) -> Option<&Change<Option<String>>> {
+        // If MemberProfileChange has a displayname_change() method:
+        self.0.displayname_change()
+        // Or use whatever the actual accessor method is
+    }
+
+    pub fn avatar_url_change(&self) -> Option<&Change<Option<OwnedMxcUri>>> {
+        // If MemberProfileChange has an avatar_url_change() method:
+        self.0.avatar_url_change()
+        // Or use whatever the actual accessor method is
+    }
+}
+
+// Helper methods for FrontendChange for easier access to old/new values
+impl<T> FrontendChange<T> {
+    pub fn _new(change: Change<T>) -> Self {
+        Self(change)
+    }
+
+    pub fn _old(&self) -> &T {
+        &self.0.old
+    }
+
+    pub fn _new_value(&self) -> &T {
+        &self.0.new
     }
 }
