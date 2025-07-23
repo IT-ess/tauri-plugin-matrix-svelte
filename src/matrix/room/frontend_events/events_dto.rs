@@ -7,7 +7,10 @@ use matrix_sdk_ui::timeline::{
 use serde::Serialize;
 
 use crate::matrix::{
-    room::frontend_events::msg_like::FrontendReactionsByKeyBySender,
+    room::frontend_events::{
+        msg_like::FrontendReactionsByKeyBySender,
+        state_event::{FrontendAnyOtherFullStateEventContent, FrontendStateEvent},
+    },
     utils::get_or_fetch_event_sender,
 };
 
@@ -37,9 +40,9 @@ pub struct FrontendTimelineItem<'a> {
 pub enum FrontendTimelineItemData<'a> {
     MsgLike(FrontendMsgLikeContent<'a>),
     Virtual(FrontendVirtualTimelineItem),
-    StateChange, // TODO add methods
-    Error,       // TODO add methods
-    Call,        // TODO add methods
+    StateChange(FrontendStateEvent),
+    Error, // TODO add methods
+    Call,  // TODO add methods
 }
 
 pub fn to_frontend_timeline_item<'a>(
@@ -138,6 +141,19 @@ pub fn to_frontend_timeline_item<'a>(
                             }
                         }
                         _ => {}
+                    }
+                }
+                TimelineItemContent::OtherState(test) => {
+                    return FrontendTimelineItem {
+                        event_id,
+                        is_local,
+                        is_own,
+                        timestamp,
+                        data: FrontendTimelineItemData::StateChange(
+                            FrontendStateEvent::OtherState(
+                                FrontendAnyOtherFullStateEventContent::from(test.content().clone()),
+                            ),
+                        ),
                     }
                 }
 
