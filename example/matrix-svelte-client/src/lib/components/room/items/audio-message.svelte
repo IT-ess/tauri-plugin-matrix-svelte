@@ -113,7 +113,7 @@
 			<div class="bg-destructive/80 absolute inset-0 flex items-center justify-center">
 				<div class="text-center text-white">
 					<p class="mb-2 text-sm">Failed to load</p>
-					<Button variant="secondary" size="sm" onclick={loadAudio}>Retry</Button>
+					<Button variant="secondary" size="sm" onclick={() => loadAudio()}>Retry</Button>
 				</div>
 			</div>
 		{/if}
