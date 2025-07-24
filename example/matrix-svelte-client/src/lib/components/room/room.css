@@ -1,0 +1,28 @@
+/* Add these CSS styles to provide visual feedback when scrolling to a message */
+.highlight-message {
+	background-color: rgba(59, 130, 246, 0.1) !important;
+	border-left: 4px solid rgb(59, 130, 246);
+	animation: highlight-fade 3s ease-out;
+	transition: all 0.3s ease;
+}
+
+@keyframes highlight-fade {
+	0% {
+		background-color: rgba(59, 130, 246, 0.3);
+		transform: scale(1.02);
+	}
+	100% {
+		background-color: rgba(59, 130, 246, 0.1);
+		transform: scale(1);
+	}
+}
+
+/* Style for the reply preview to indicate it's clickable */
+.reply-preview {
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.reply-preview:hover {
+	background-color: rgba(0, 0, 0, 0.05);
+}

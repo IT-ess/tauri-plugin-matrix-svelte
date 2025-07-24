@@ -4,6 +4,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { SendIcon, LoaderIcon, ArrowDownIcon, XIcon, ReplyIcon } from '@lucide/svelte';
 	import { fade } from 'svelte/transition';
+	import './room.css';
 	import {
 		createMatrixRequest,
 		ProfileStore,
@@ -137,6 +138,33 @@
 		}
 	};
 
+	const scrollToMessage = (eventId: string) => {
+		if (!viewportElement) return;
+
+		// Find the element with the matching event ID
+		const messageElement = viewportElement.querySelector(`[data-event-id="${eventId}"]`);
+
+		if (messageElement) {
+			const messageRect = messageElement.getBoundingClientRect();
+			const containerRect = viewportElement.getBoundingClientRect();
+
+			// Calculate the element's position relative to the scroll container
+			const elementTopInContainer = messageRect.top - containerRect.top + viewportElement.scrollTop;
+			const containerHeight = viewportElement.clientHeight;
+
+			// Scroll to center the message in the viewport
+			const targetScrollTop =
+				elementTopInContainer - containerHeight / 2 + messageElement.clientHeight / 2;
+
+			scroll.scrollTo(0, Math.max(0, targetScrollTop));
+
+			messageElement.classList.add('highlight-message');
+			setTimeout(() => {
+				messageElement.classList.remove('highlight-message');
+			}, 3000);
+		}
+	};
+
 	$effect.pre(() => {
 		if (!viewportElement) return; // not yet mounted
 
@@ -179,6 +207,7 @@
 									roomId={roomStore.id}
 									{currentUserId}
 									onReply={handleReplyTo}
+									onScrollToMessage={scrollToMessage}
 									repliedToMessage={item.kind === 'msgLike' && item.data.threadRoot !== null
 										? roomStore.state.tlState?.items.find((i) => i.eventId === item.data.threadRoot)
 										: undefined}

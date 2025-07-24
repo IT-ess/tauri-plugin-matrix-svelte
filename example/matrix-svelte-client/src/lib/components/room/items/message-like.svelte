@@ -30,6 +30,7 @@
 		profileStore: ProfileStore;
 		repliedToMessage?: MsgLikeContent;
 		onReply?: (eventId: string, senderName: string, content: string) => void;
+		onScrollToMessage?: (eventId: string) => void;
 	};
 
 	let {
@@ -41,7 +42,8 @@
 		currentUserId,
 		profileStore,
 		onReply,
-		repliedToMessage
+		repliedToMessage,
+		onScrollToMessage
 	}: Props = $props();
 
 	const { senderId, sender } = data;
@@ -104,6 +106,12 @@
 		}
 	};
 
+	const handleReplyClick = () => {
+		if (onScrollToMessage && data.threadRoot) {
+			onScrollToMessage(data.threadRoot);
+		}
+	};
+
 	onMount(async () => {
 		if (profileStore.state[senderId] === undefined) {
 			await invoke('plugin:matrix-svelte|fetch_user_profile', {
@@ -147,10 +155,15 @@
 					<span class="text-xs opacity-70">{formatTime(timestamp ?? 0)}</span>
 				</div>
 				{#if repliedToMessage}
-					<!-- <p class="mt-1 text-sm">💬 Thread</p> -->
-					<div class="relative mt-1 rounded-lg bg-white p-2 text-sm text-black">
+					<div
+						class="relative mt-1 cursor-pointer rounded-lg bg-white p-2 text-sm text-black transition-colors hover:bg-gray-100"
+						onclick={handleReplyClick}
+						role="button"
+						tabindex="0"
+						onkeydown={(e) => e.key === 'Enter' && handleReplyClick()}
+					>
 						<MessagesSquare class="absolute top-1 right-1" />
-						<p class="text-sm font-medium">{repliedToMessage.sender}</p>
+						<p class="mr-8 text-sm font-medium">{repliedToMessage.sender}</p>
 						<p class="text-sm">{extractContentFromMsg(repliedToMessage)}</p>
 					</div>
 				{/if}
