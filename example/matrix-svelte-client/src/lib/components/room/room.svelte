@@ -39,9 +39,9 @@
 		element: () => viewportElement,
 		idle: 100, // Shorter idle time for messaging
 		offset: { top: 100 }, // Consider "on top" when within 100px
-		onScroll: () => {
+		onScroll: async () => {
 			if (scroll.arrived.top && !isLoadingMore) {
-				loadMoreMessages();
+				await loadMoreMessages();
 			}
 		},
 		onStop: () => {
@@ -138,10 +138,13 @@
 		}
 	};
 
-	const scrollToMessage = (eventId: string) => {
+	const scrollToMessage = async (eventId: string) => {
 		if (!viewportElement) return;
 
 		// Find the element with the matching event ID
+		while (!viewportElement.querySelector(`[data-event-id="${eventId}"]`)) {
+			await loadMoreMessages();
+		}
 		const messageElement = viewportElement.querySelector(`[data-event-id="${eventId}"]`);
 
 		if (messageElement) {
