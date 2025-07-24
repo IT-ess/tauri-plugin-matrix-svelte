@@ -33,7 +33,6 @@ use super::{
     requests::{submit_async_request, MatrixRequest},
     room::{
         frontend_events::events_dto::{to_frontend_timeline_item, FrontendTimelineItem},
-        room_screen::SavedState,
         rooms_list::{enqueue_rooms_list_update, RoomsListUpdate},
     },
     rooms::UnreadMessageCount,
@@ -223,25 +222,6 @@ pub struct TimelineUiState {
     /// to the background async task that handles this room's timeline updates.
     /// Not included in frontend serialization
     pub(crate) request_sender: TimelineRequestSender,
-
-    /// Info about the event currently being replied to, if any.
-    // TODO: replace repliedtoinfo struct with the latest one from the SDK (this one is broken)
-    // replying_to: Option<(EventTimelineItem, RepliedToInfo)>,
-
-    /// The states relevant to the UI display of this timeline that are saved upon
-    /// a `Hide` action and restored upon a `Show` action.
-    /// Not included in frontend serialization
-    pub(crate) saved_state: SavedState,
-
-    /// The state of the message highlight animation.
-    ///
-    /// We need to run the animation once the scrolling, triggered by the click of of a
-    /// a reply preview, ends. so we keep a small state for it.
-    /// By default, it starts in Off.
-    /// Once the scrolling is started, the state becomes Pending.
-    /// If the animation was triggered, the state goes back to Off.
-    // TODO: remove this if I'm sure I don't need it
-    // message_highlight_animation_state: MessageHighlightAnimationState,
 
     /// The index of the timeline item that was most recently scrolled up past it.
     /// This is used to detect when the user has scrolled up past the second visible item (index 1)

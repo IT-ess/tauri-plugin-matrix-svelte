@@ -170,7 +170,7 @@
 		<img
 			src={imageSrc}
 			{alt}
-			class={cn('cursor-pointer object-cover', isSticker ? 'w-[40%]' : 'w-full')}
+			class="w-full cursor-pointer object-cover"
 			role="button"
 			tabindex="0"
 			onclick={toggleFullscreen}

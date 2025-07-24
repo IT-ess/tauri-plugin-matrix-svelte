@@ -79,7 +79,9 @@
 
 	{#if data.kind === 'sticker'}
 		<!-- Render sticker outside the block -->
-		<ImageMessage itemContent={data.body} isSticker />
+		<div class="max-w-[30%] p-3">
+			<ImageMessage itemContent={data.body} isSticker />
+		</div>
 	{:else}
 		<div
 			class={[

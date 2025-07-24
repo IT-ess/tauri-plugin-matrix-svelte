@@ -28,17 +28,17 @@
 	<Virtual timestamp={item.timestamp} data={item.data} />
 {:else if item.kind === 'call'}
 	<!-- TODO: add styling  -->
-	<p class="text-muted text-center">Someone started a call</p>
+	<p class="text-muted text-center text-sm">Someone started a call</p>
 {:else if item.kind === 'stateChange'}
 	{#if item.data.kind === 'profileChange'}
-		<p class="text-center text-slate-400">{item.data.body.user_id} profile update</p>
+		<p class="text-center text-sm text-slate-400">{item.data.body.user_id} profile update</p>
 	{:else if item.data.kind === 'membershipChange'}
-		<p class="text-center text-slate-400">
+		<p class="text-center text-sm text-slate-400">
 			{item.data.body.content.content.displayname} membership update: {item.data.body.content
 				.content.membership}
 		</p>
 	{:else if item.data.kind === 'otherState'}
-		<p class="text-center text-slate-400">State change: {Object.keys(item.data.body)[0]}</p>
+		<p class="text-center text-sm text-slate-400">State change: {Object.keys(item.data.body)[0]}</p>
 		<!-- TODO: implement full mapping -->
 	{/if}
 {:else if item.kind === 'error'}

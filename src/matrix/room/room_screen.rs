@@ -1,10 +1,7 @@
 use std::{collections::BTreeMap, sync::Arc};
 
 use matrix_sdk::ruma::{OwnedEventId, OwnedRoomId, OwnedUserId};
-use matrix_sdk_ui::{
-    eyeball_im::Vector,
-    timeline::{EventTimelineItem, TimelineItem},
-};
+use matrix_sdk_ui::{eyeball_im::Vector, timeline::TimelineItem};
 use rangemap::RangeSet;
 use serde::Serialize;
 use tauri::{AppHandle, Runtime};
@@ -513,7 +510,7 @@ impl RoomScreen {
         });
 
         let state_opt = TIMELINE_STATES.lock().unwrap().remove(&room_id);
-        let (mut tl_state, first_time_showing_room) = if let Some(existing) = state_opt {
+        let (tl_state, first_time_showing_room) = if let Some(existing) = state_opt {
             (existing, false)
         } else {
             let (_update_sender, update_receiver, request_sender) =
@@ -532,8 +529,6 @@ impl RoomScreen {
                 profile_drawn_since_last_update: RangeSet::new(),
                 update_receiver,
                 request_sender,
-                // replying_to: None,
-                saved_state: SavedState::default(),
                 last_scrolled_index: usize::MAX,
                 prev_first_index: None,
                 scrolled_past_read_marker: false,
@@ -572,9 +567,6 @@ impl RoomScreen {
         submit_async_request(MatrixRequest::SyncRoomMemberList {
             room_id: room_id.clone(),
         });
-
-        // Now, restore the visual state of this timeline from its previously-saved state.
-        self.restore_state(&mut tl_state);
 
         // As the final step, store the tl_state for this room into this RoomScreen widget,
         // such that it can be accessed in future event/draw handlers.
@@ -616,79 +608,18 @@ impl RoomScreen {
     ///
     /// Note: after calling this function, the widget's `tl_state` will be `None`.
     fn save_state(&mut self) {
-        let Some(mut tl) = self.tl_state.take() else {
+        let Some(tl) = self.tl_state.take() else {
             eprintln!(
                 "Timeline::save_state(): skipping due to missing state, room {:?}",
                 self.room_id
             );
             return;
         };
-
-        // let portal_list = self.portal_list(id!(list));
-        // let message_input_box = self.text_input(id!(input_bar.message_input.text_input));
-        // let editing_event = self
-        //     .editing_pane(id!(editing_pane))
-        //     .get_event_being_edited();
-        let state = SavedState {
-            first_index_and_scroll: None,
-            editing_event: None,
-            // first_index_and_scroll: Some((portal_list.first_id(), portal_list.scroll_position())),
-            // message_input_state: message_input_box.save_state(),
-            // replying_to: tl.replying_to.clone(),
-            // editing_event,
-        };
-        println!(
-            "Saving TimelineUiState for room {}: {:?}",
-            tl.room_id, state
-        );
-        tl.saved_state = state;
         // Store this Timeline's `TimelineUiState` in the global map of states.
         TIMELINE_STATES
             .lock()
             .unwrap()
             .insert(tl.room_id.clone(), tl);
-    }
-
-    /// Restores the previously-saved visual UI state of this room.
-    ///
-    /// Note: this accepts a direct reference to the timeline's UI state,
-    /// so this function must not try to re-obtain it by accessing `self.tl_state`.
-    fn restore_state(&mut self, tl_state: &mut TimelineUiState) {
-        let SavedState {
-            first_index_and_scroll: _,
-            // message_input_state,
-            // replying_to,
-            editing_event: _,
-        } = &mut tl_state.saved_state;
-        // 1. Restore the position of the timeline.
-        // if let Some((first_index, scroll_from_first_id)) = first_index_and_scroll {
-        //     self.portal_list(id!(timeline.list))
-        //         .set_first_id_and_scroll(*first_index, *scroll_from_first_id);
-        // } else {
-        //     // If the first index is not set, then the timeline has not yet been scrolled by the user,
-        //     // so we set the portal list to "tail" (track) the bottom of the list.
-        //     self.portal_list(id!(timeline.list)).set_tail_range(true);
-        // }
-
-        // 2. Restore the state of the message input box.
-        // let saved_message_input_state = std::mem::take(message_input_state);
-        // self.text_input(id!(input_bar.message_input.text_input))
-        //     .restore_state(cx, saved_message_input_state);
-
-        // 3. Restore the state of the replying-to preview.
-        // if let Some(replying_to_event) = replying_to.take() {
-        //     self.show_replying_to(cx, replying_to_event);
-        // } else {
-        //     self.clear_replying_to(cx);
-        // }
-
-        // 4. Restore the state of the editing pane.
-        // if let Some(editing_event) = editing_event.take() {
-        //     self.show_editing_pane(cx, editing_event, tl_state.room_id.clone());
-        // } else {
-        //     self.editing_pane(id!(editing_pane)).force_hide(cx);
-        //     self.on_hide_editing_pane(cx);
-        // }
     }
 
     /// Sets this `RoomScreen` widget to display the timeline for the given room.
@@ -732,25 +663,6 @@ impl RoomScreen {
     fn _send_pagination_request_based_on_scroll_pos(&mut self, _scrolled: bool, _first_id: usize) {
         // TODO: leave this to frontend
     }
-}
-
-/// States that are necessary to save in order to maintain a consistent UI display for a timeline.
-///
-/// These are saved when navigating away from a timeline (upon `Hide`)
-/// and restored when navigating back to a timeline (upon `Show`).
-#[derive(Default, Debug)]
-pub struct SavedState {
-    /// The index of the first item in the timeline's PortalList that is currently visible,
-    /// and the scroll offset from the top of the list's viewport to the beginning of that item.
-    /// If this is `None`, then the timeline has not yet been scrolled by the user
-    /// and the portal list will be set to "tail" (track) the bottom of the list.
-    first_index_and_scroll: Option<(usize, f64)>,
-    /// The content of the message input box.
-    // message_input_state: TextInputState, // TODO: replace this by a string ?
-    /// The event that the user is currently replying to, if any.
-    // replying_to: Option<(EventTimelineItem, RepliedToInfo)>, // TODO: adapt with new type from sdk
-    /// The event that the user is currently editing, if any.
-    editing_event: Option<EventTimelineItem>,
 }
 
 /// Returns info about the item in the list of `new_items` that matches the event ID
