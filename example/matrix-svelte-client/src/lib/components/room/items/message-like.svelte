@@ -38,6 +38,7 @@
 
 	let reactionsArray = $derived(Object.keys(data.reactions));
 	let showActions = $state(false);
+	let isReactionPopoverOpen = $state(false);
 
 	// Format timestamp
 	const formatTime = (timestamp: number) => {
@@ -98,7 +99,6 @@
 		}
 
 		onReply(eventId, sender ?? 'Unknown', content);
-		showActions = false;
 	};
 
 	onMount(async () => {
@@ -130,30 +130,6 @@
 		<!-- Render sticker outside the block -->
 		<div class="relative max-w-[30%] p-3">
 			<ImageMessage itemContent={data.body} isSticker />
-
-			<!-- Action buttons for stickers -->
-			{#if showActions && onReply}
-				<div
-					class={[
-						'absolute top-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100',
-						isOwn ? 'left-1' : 'right-1'
-					]}
-				>
-					<TooltipProvider>
-						<Tooltip>
-							<Button
-								variant="secondary"
-								size="icon"
-								class="h-6 w-6 shadow-sm"
-								onclick={handleReply}
-							>
-								<ReplyIcon class="h-3 w-3" />
-							</Button>
-							<TooltipContent>Reply</TooltipContent>
-						</Tooltip>
-					</TooltipProvider>
-				</div>
-			{/if}
 		</div>
 	{:else}
 		<div class="relative max-w-[60%]">
@@ -192,68 +168,55 @@
 					<p class="text-muted text-sm">The message type: {data.kind} is not supported yet</p>
 				{/if}
 			</div>
-
-			<!-- Action buttons for regular messages -->
-			{#if showActions && onReply}
-				<div
-					class={[
-						'absolute top-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100',
-						isOwn ? 'left-1' : 'right-1'
-					]}
-				>
-					<TooltipProvider>
-						<Tooltip>
-							<Button
-								variant="secondary"
-								size="icon"
-								class="h-6 w-6 shadow-sm"
-								onclick={handleReply}
-							>
-								<ReplyIcon class="h-3 w-3" />
-							</Button>
-							<TooltipContent>Reply</TooltipContent>
-						</Tooltip>
-					</TooltipProvider>
-				</div>
-			{/if}
 		</div>
 	{/if}
 
 	<!-- Reaction button and existing actions -->
 	<div class={['flex items-center gap-1', isOwn && 'flex-row-reverse']}>
-		<!-- Reaction button -->
-		<TooltipProvider>
-			<Popover>
-				<PopoverTrigger>
-					{#snippet child({ props: triggerProps })}
-						<Tooltip>
-							<Button variant="ghost" size="icon" class="h-6 w-6" {...triggerProps}>
-								<SmileIcon class="h-4 w-4" />
-							</Button>
-						</Tooltip>
-					{/snippet}
-					<TooltipContent>Add reaction</TooltipContent>
-				</PopoverTrigger>
-				<PopoverContent class="w-fit p-2">
-					<div class="flex gap-1">
-						{#each commonEmojis as emoji (emoji)}
-							<Button
-								variant={reactionsArray.includes(emoji)
-									? Object.keys(data.reactions[emoji]).includes(currentUserId)
-										? 'secondary'
-										: 'ghost'
-									: 'ghost'}
-								size="icon"
-								class="h-8 w-8"
-								onclick={() => handleAddReaction(emoji)}
-							>
-								{emoji}
-							</Button>
-						{/each}
-					</div>
-				</PopoverContent>
-			</Popover>
-		</TooltipProvider>
+		{#if (showActions && onReply) || isReactionPopoverOpen}
+			<!-- Reply button -->
+			<TooltipProvider>
+				<Tooltip>
+					<Button variant="ghost" size="icon" class="h-6 w-6" onclick={handleReply}>
+						<ReplyIcon class="h-4 w-4" />
+					</Button>
+					<TooltipContent>Reply</TooltipContent>
+				</Tooltip>
+			</TooltipProvider>
+			<!-- Reaction button -->
+			<TooltipProvider>
+				<Popover bind:open={isReactionPopoverOpen}>
+					<PopoverTrigger>
+						{#snippet child({ props: triggerProps })}
+							<Tooltip>
+								<Button variant="ghost" size="icon" class="h-6 w-6" {...triggerProps}>
+									<SmileIcon class="h-4 w-4" />
+								</Button>
+							</Tooltip>
+						{/snippet}
+						<TooltipContent>Add reaction</TooltipContent>
+					</PopoverTrigger>
+					<PopoverContent class="w-fit p-2">
+						<div class="flex gap-1">
+							{#each commonEmojis as emoji (emoji)}
+								<Button
+									variant={reactionsArray.includes(emoji)
+										? Object.keys(data.reactions[emoji]).includes(currentUserId)
+											? 'secondary'
+											: 'ghost'
+										: 'ghost'}
+									size="icon"
+									class="h-8 w-8"
+									onclick={() => handleAddReaction(emoji)}
+								>
+									{emoji}
+								</Button>
+							{/each}
+						</div>
+					</PopoverContent>
+				</Popover>
+			</TooltipProvider>
+		{/if}
 
 		{#if reactionsArray.length > 0}
 			<Reactions reactions={data.reactions} />

@@ -201,7 +201,7 @@
 		</ScrollArea.Root>
 	</div>
 
-	{#if showScrollButton}
+	{#if showScrollButton && !replyingTo}
 		<div transition:fade class="absolute right-4 bottom-20 z-10">
 			<Button
 				size="icon"
