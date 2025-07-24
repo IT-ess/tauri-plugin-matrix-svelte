@@ -1,11 +1,14 @@
 use anyhow::anyhow;
 use matrix_sdk::{media::MediaRequestParameters, Client};
-use session::{restore_client_from_session, try_get_session};
-use tauri::{ipc::Channel, AppHandle, Manager, Runtime};
+use session::restore_client_from_session;
+use tauri::{ipc::Channel, AppHandle, Runtime};
 use tokio::sync::oneshot;
 
 use crate::{
-    matrix::{notifications::register_notifications, requests::MatrixRequest},
+    matrix::{
+        notifications::register_notifications, requests::MatrixRequest,
+        session::get_matrix_session_option,
+    },
     models::matrix::MediaStreamEvent,
 };
 
@@ -32,13 +35,12 @@ pub async fn create_session_to_state<R: Runtime>(
     app_handle: &AppHandle<R>,
     request: login::LoginRequest,
 ) -> crate::Result<Client> {
-    let snapshot_path = app_handle
-        .state::<crate::stronghold::SnapshotPath>()
-        .0
-        .clone();
+    // let snapshot_path = app_handle
+    //     .state::<crate::stronghold::SnapshotPath>()
+    //     .0
+    //     .clone();
 
-    let initial_client =
-        login::get_client_from_new_session(&app_handle, request, &snapshot_path).await?;
+    let initial_client = login::get_client_from_new_session(&app_handle, request).await?;
     let client_with_handlers = events::add_event_handlers(initial_client, &app_handle)?;
     register_notifications(&app_handle, &client_with_handlers).await;
     Ok(client_with_handlers)
@@ -47,12 +49,12 @@ pub async fn create_session_to_state<R: Runtime>(
 pub async fn try_restore_session_to_state<R: Runtime>(
     app_handle: &AppHandle<R>,
 ) -> crate::Result<Option<Client>> {
-    let snapshot_path = app_handle
-        .state::<crate::stronghold::SnapshotPath>()
-        .0
-        .clone();
+    // let snapshot_path = app_handle
+    //     .state::<crate::stronghold::SnapshotPath>()
+    //     .0
+    //     .clone();
 
-    let session_option = try_get_session(&app_handle, snapshot_path).await?;
+    let session_option = get_matrix_session_option(&app_handle).await?;
 
     match session_option {
         Some(session) => {

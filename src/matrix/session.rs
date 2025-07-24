@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager, Runtime, State};
+use tauri::{AppHandle, Runtime};
 
-use crate::stronghold::{utils::BytesDto, StrongholdCollection};
+use crate::keychain::retrieve_session;
 
 use matrix_sdk::Client;
 
@@ -9,9 +9,7 @@ use std::path::PathBuf;
 
 use matrix_sdk::authentication::matrix::MatrixSession;
 
-use crate::stronghold::{self};
-
-use super::{login::get_stronghold_client_key, singletons::CLIENT};
+use super::singletons::CLIENT;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ClientSession {
@@ -45,24 +43,21 @@ impl FullMatrixSession {
     }
 }
 
-pub async fn get_matrix_session_option(
-    collection_state: State<'_, StrongholdCollection>,
-    snapshot_path: PathBuf,
-    client_key: BytesDto,
+pub async fn get_matrix_session_option<R: Runtime>(
+    app_handle: &AppHandle<R>,
 ) -> anyhow::Result<Option<FullMatrixSession>> {
-    let read_session = stronghold::store::get_store_record(
-        collection_state,
-        snapshot_path,
-        client_key,
-        "current".to_string(),
-    )
-    .await?;
+    // let read_session = stronghold::store::get_store_record(
+    //     collection_state,
+    //     snapshot_path,
+    //     client_key,
+    //     "current".to_string(),
+    // )
+    // .await?;
+    let session_option = retrieve_session(app_handle)?;
 
-    match read_session {
+    match session_option {
         None => Ok(None),
-        Some(raw_session) => {
-            let session_string = String::from_utf8_lossy(&raw_session).into_owned();
-
+        Some(session_string) => {
             let session: FullMatrixSession = serde_json::from_str(&session_string)?;
             Ok(Some(session))
         }
@@ -88,28 +83,4 @@ pub async fn restore_client_from_session(session: FullMatrixSession) -> anyhow::
         .expect("BUG: CLIENT already set!");
 
     Ok(client)
-}
-
-pub async fn try_get_session<R: Runtime>(
-    app_handle: &AppHandle<R>,
-    snapshot_path: PathBuf,
-) -> anyhow::Result<Option<FullMatrixSession>> {
-    let collection_state = app_handle.state::<StrongholdCollection>();
-    let client_key = get_stronghold_client_key();
-
-    stronghold::client::load_stronghold_client_or_create_it(
-        collection_state.clone(),
-        snapshot_path.clone(),
-        client_key.clone(),
-    )
-    .await?;
-
-    let session_option = get_matrix_session_option(
-        collection_state.clone(),
-        snapshot_path.clone(),
-        client_key.clone(),
-    )
-    .await?;
-
-    Ok(session_option)
 }

@@ -25,6 +25,7 @@ mod mobile;
 mod commands;
 mod error;
 
+pub mod keychain;
 pub mod matrix;
 pub mod models;
 pub mod stronghold;
