@@ -8,22 +8,37 @@
 		roomId: string;
 		currentUserId: string;
 		profileStore: ProfileStore;
+		repliedToMessage?: TimelineItem;
+		onReply?: (eventId: string, senderName: string, content: string) => void;
+		onScrollToMessage?: (eventId: string) => void;
 	};
 
-	let { item, roomId, currentUserId, profileStore }: Props = $props();
+	let {
+		item,
+		roomId,
+		currentUserId,
+		profileStore,
+		onReply,
+		repliedToMessage,
+		onScrollToMessage
+	}: Props = $props();
 </script>
 
 {#if item.kind === 'msgLike'}
-	<MessageLike
-		data={item.data}
-		timestamp={item.timestamp ?? 0}
-		isOwn={item.isOwn}
-		{roomId}
-		eventId={item.eventId ?? ''}
-		{currentUserId}
-		{profileStore}
-	/>
-	<!-- eventId should always be defined in msgLike -->
+	<div data-event-id={item.eventId}>
+		<MessageLike
+			data={item.data}
+			timestamp={item.timestamp ?? 0}
+			isOwn={item.isOwn}
+			{roomId}
+			eventId={item.eventId ?? ''}
+			{currentUserId}
+			{profileStore}
+			{onReply}
+			{onScrollToMessage}
+			repliedToMessage={repliedToMessage?.kind === 'msgLike' ? repliedToMessage.data : undefined}
+		/>
+	</div>
 {:else if item.kind === 'virtual'}
 	<Virtual timestamp={item.timestamp} data={item.data} />
 {:else if item.kind === 'call'}

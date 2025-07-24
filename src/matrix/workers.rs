@@ -659,7 +659,7 @@ pub async fn async_worker(
             MatrixRequest::SendMessage {
                 room_id,
                 message,
-                // replied_to,
+                replied_to,
             } => {
                 let timeline = {
                     let all_joined_rooms = ALL_JOINED_ROOMS.lock().unwrap();
@@ -673,30 +673,31 @@ pub async fn async_worker(
                 // Spawn a new async task that will send the actual message.
                 let _send_message_task = Handle::current().spawn(async move {
                     println!("Sending message to room {room_id}: {message:?}...");
-                    // if let Some(replied_to_info) = replied_to {
-                    //     match timeline
-                    //         .send_reply(message.into(), replied_to_info, ForwardThread::Yes)
-                    //         .await
-                    //     {
-                    //         Ok(_send_handle) => println!("Sent reply message to room {room_id}."),
-                    //         Err(_e) => {
-                    //             eprintln!("Failed to send reply message to room {room_id}: {_e:?}");
-                    //             enqueue_popup_notification(format!("Failed to send reply: {_e}"));
-                    //         }
-                    //     }
-                    // } else {
-                    match timeline.send(message.into()).await {
-                        Ok(_send_handle) => println!("Sent message to room {room_id}."),
-                        Err(e) => {
-                            eprintln!("Failed to send message to room {room_id}: {e:?}");
-                            enqueue_toast_notification(ToastNotificationRequest::new(
-                                format!("Failed to send message. Error: {e}"),
-                                None,
-                                ToastNotificationVariant::Error,
-                            ));
+                    if let Some(replied_to_info) = replied_to {
+                        match timeline.send_reply(message.into(), replied_to_info).await {
+                            Ok(_send_handle) => println!("Sent reply message to room {room_id}."),
+                            Err(_e) => {
+                                eprintln!("Failed to send reply message to room {room_id}: {_e:?}");
+                                enqueue_toast_notification(ToastNotificationRequest::new(
+                                    format!("Failed to send reply: {_e}"),
+                                    None,
+                                    ToastNotificationVariant::Error,
+                                ));
+                            }
+                        }
+                    } else {
+                        match timeline.send(message.into()).await {
+                            Ok(_send_handle) => println!("Sent message to room {room_id}."),
+                            Err(e) => {
+                                eprintln!("Failed to send message to room {room_id}: {e:?}");
+                                enqueue_toast_notification(ToastNotificationRequest::new(
+                                    format!("Failed to send message. Error: {e}"),
+                                    None,
+                                    ToastNotificationVariant::Error,
+                                ));
+                            }
                         }
                     }
-                    // }
                     broadcast_event(UIUpdateMessage::RefreshUI)
                         .expect("Couldn't broadcast event to UI");
                 });

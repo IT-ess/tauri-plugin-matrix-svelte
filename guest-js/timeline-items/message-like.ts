@@ -1,14 +1,14 @@
-import { UserId } from '../matrix-requests/common';
+import { EventId, UserId } from '../matrix-requests/common';
 import { TimelineItem } from './timeline-item';
 import { MsgLikeKind } from './message-kinds';
 
 // Discriminated union for message-like content
 export type MsgLikeContent = {
-	threadRoot?: string; // OwnedEventId maps to string
+	threadRoot: EventId | null;
 	edited: boolean;
 	reactions: ReactionsByKeyBySender;
 	sender?: string;
-	senderId: string;
+	senderId: UserId;
 } & MsgLikeKind;
 
 // Type guards are now optional - TypeScript can infer types automatically
