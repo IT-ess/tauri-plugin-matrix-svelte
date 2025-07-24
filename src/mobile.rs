@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use matrix_sdk::{
     media::MediaRequestParameters,
     ruma::{OwnedRoomId, OwnedUserId},

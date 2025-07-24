@@ -7,7 +7,13 @@ use matrix_sdk_ui::timeline::{
 use serde::Serialize;
 
 use crate::matrix::{
-    room::frontend_events::msg_like::FrontendReactionsByKeyBySender,
+    room::frontend_events::{
+        msg_like::{FrontendReactionsByKeyBySender, FrontendStickerEventContent},
+        state_event::{
+            FrontendAnyOtherFullStateEventContent, FrontendMemberProfileChange,
+            FrontendRoomMembershipChange, FrontendStateEvent,
+        },
+    },
     utils::get_or_fetch_event_sender,
 };
 
@@ -37,9 +43,15 @@ pub struct FrontendTimelineItem<'a> {
 pub enum FrontendTimelineItemData<'a> {
     MsgLike(FrontendMsgLikeContent<'a>),
     Virtual(FrontendVirtualTimelineItem),
-    StateChange, // TODO add methods
-    Error,       // TODO add methods
-    Call,        // TODO add methods
+    StateChange(FrontendStateEvent),
+    Error(FrontendTimelineErrorItem),
+    Call,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FrontendTimelineErrorItem {
+    error: String,
 }
 
 pub fn to_frontend_timeline_item<'a>(
@@ -63,7 +75,7 @@ pub fn to_frontend_timeline_item<'a>(
                     // TODO: create a MsgLike mapper to refacto
                     match msg_like.kind.clone() {
                         MsgLikeKind::Message(message) => match message.msgtype().clone() {
-                            MessageType::Text(text_msg) => {
+                            _ => {
                                 return FrontendTimelineItem {
                                     event_id,
                                     is_local,
@@ -78,105 +90,166 @@ pub fn to_frontend_timeline_item<'a>(
                                             sender_id,
                                             sender,
                                             thread_root: None,
-                                            kind: FrontendMsgLikeKind::Text(text_msg),
+                                            kind: map_msg_event_content(message.msgtype().clone()),
                                         },
                                     ),
                                 }
                             }
-                            MessageType::Image(img_msg) => {
-                                return FrontendTimelineItem {
-                                    event_id,
-                                    is_own,
-                                    is_local,
-                                    timestamp,
-                                    data: FrontendTimelineItemData::MsgLike(
-                                        FrontendMsgLikeContent {
-                                            kind: FrontendMsgLikeKind::Image(img_msg),
-                                            edited: message.is_edited(),
-                                            reactions: FrontendReactionsByKeyBySender(
-                                                &msg_like.reactions,
-                                            ),
-                                            sender_id,
-                                            sender,
-                                            thread_root: None,
-                                        },
-                                    ),
-                                }
-                            }
-                            _ => {} // TODO handle other types
                         },
-                        _ => {}
+                        MsgLikeKind::Sticker(sticker) => {
+                            return FrontendTimelineItem {
+                                event_id,
+                                is_local,
+                                is_own,
+                                timestamp,
+                                data: FrontendTimelineItemData::MsgLike(FrontendMsgLikeContent {
+                                    edited: false,
+                                    reactions: FrontendReactionsByKeyBySender(&msg_like.reactions),
+                                    sender_id,
+                                    sender,
+                                    thread_root: None,
+                                    kind: FrontendMsgLikeKind::Sticker(
+                                        FrontendStickerEventContent::from(
+                                            sticker.content().clone(),
+                                        ),
+                                    ),
+                                }),
+                            }
+                        }
+                        MsgLikeKind::Redacted => {
+                            return FrontendTimelineItem {
+                                event_id,
+                                is_local,
+                                is_own,
+                                timestamp,
+                                data: FrontendTimelineItemData::MsgLike(FrontendMsgLikeContent {
+                                    edited: true,
+                                    reactions: FrontendReactionsByKeyBySender(&msg_like.reactions),
+                                    sender_id,
+                                    sender,
+                                    thread_root: None,
+                                    kind: FrontendMsgLikeKind::Redacted,
+                                }),
+                            }
+                        }
+                        MsgLikeKind::UnableToDecrypt(_) => {
+                            return FrontendTimelineItem {
+                                event_id,
+                                is_local,
+                                is_own,
+                                timestamp,
+                                data: FrontendTimelineItemData::MsgLike(FrontendMsgLikeContent {
+                                    edited: false,
+                                    reactions: FrontendReactionsByKeyBySender(&msg_like.reactions),
+                                    sender_id,
+                                    sender,
+                                    thread_root: None,
+                                    kind: FrontendMsgLikeKind::UnableToDecrypt,
+                                }),
+                            }
+                        }
+
+                        MsgLikeKind::Poll(_) => {
+                            return FrontendTimelineItem {
+                                event_id,
+                                is_local,
+                                is_own,
+                                timestamp,
+                                data: FrontendTimelineItemData::MsgLike(FrontendMsgLikeContent {
+                                    edited: false,
+                                    reactions: FrontendReactionsByKeyBySender(&msg_like.reactions),
+                                    sender_id,
+                                    sender,
+                                    thread_root: None,
+                                    kind: FrontendMsgLikeKind::Poll,
+                                }),
+                            }
+                        }
                     }
-
-                    // let prev_event = tl_idx.checked_sub(1).and_then(|i| tl_items.get(i));
-
-                    // populate_message_view(
-                    //     cx,
-                    //     list,
-                    //     item_id,
-                    //     room_id,
-                    //     event_tl_item,
-                    //     MessageOrSticker::Message(message),
-                    //     prev_event,
-                    //     &mut tl_state.media_cache,
-                    //     &tl_state.user_power,
-                    //     item_drawn_status,
-                    //     room_screen_widget_uid,
-                    // )
                 }
-                // TimelineItemContent::Sticker(sticker) => {
-                //     let prev_event = tl_idx.checked_sub(1).and_then(|i| tl_items.get(i));
-                //     populate_message_view(
-                //         cx,
-                //         list,
-                //         item_id,
-                //         room_id,
-                //         event_tl_item,
-                //         MessageOrSticker::Sticker(sticker.content()),
-                //         prev_event,
-                //         &mut tl_state.media_cache,
-                //         &tl_state.user_power,
-                //         item_drawn_status,
-                //         room_screen_widget_uid,
-                //     )
-                // }
-                // TimelineItemContent::RedactedMessage => populate_small_state_event(
-                //     cx,
-                //     list,
-                //     item_id,
-                //     room_id,
-                //     event_tl_item,
-                //     &RedactedMessageEventMarker,
-                //     item_drawn_status,
-                // ),
-                // TimelineItemContent::MembershipChange(membership_change) => populate_small_state_event(
-                //     cx,
-                //     list,
-                //     item_id,
-                //     room_id,
-                //     event_tl_item,
-                //     membership_change,
-                //     item_drawn_status,
-                // ),
-                // TimelineItemContent::ProfileChange(profile_change) => populate_small_state_event(
-                //     cx,
-                //     list,
-                //     item_id,
-                //     room_id,
-                //     event_tl_item,
-                //     profile_change,
-                //     item_drawn_status,
-                // ),
-                // TimelineItemContent::OtherState(other) => populate_small_state_event(
-                //     cx,
-                //     list,
-                //     item_id,
-                //     room_id,
-                //     event_tl_item,
-                //     other,
-                //     item_drawn_status,
-                // ),
-                _ => {}
+                TimelineItemContent::OtherState(state) => {
+                    return FrontendTimelineItem {
+                        event_id,
+                        is_local,
+                        is_own,
+                        timestamp,
+                        data: FrontendTimelineItemData::StateChange(
+                            FrontendStateEvent::OtherState(
+                                FrontendAnyOtherFullStateEventContent::from(
+                                    state.content().clone(),
+                                ),
+                            ),
+                        ),
+                    }
+                }
+                TimelineItemContent::MembershipChange(change) => {
+                    return FrontendTimelineItem {
+                        event_id,
+                        is_local,
+                        is_own,
+                        timestamp,
+                        data: FrontendTimelineItemData::StateChange(
+                            FrontendStateEvent::MembershipChange(
+                                FrontendRoomMembershipChange::from(change.clone()),
+                            ),
+                        ),
+                    }
+                }
+
+                TimelineItemContent::ProfileChange(change) => {
+                    return FrontendTimelineItem {
+                        event_id,
+                        is_local,
+                        is_own,
+                        timestamp,
+                        data: FrontendTimelineItemData::StateChange(
+                            FrontendStateEvent::ProfileChange(FrontendMemberProfileChange::from(
+                                change.clone(),
+                            )),
+                        ),
+                    }
+                }
+
+                TimelineItemContent::CallNotify | TimelineItemContent::CallInvite => {
+                    return FrontendTimelineItem {
+                        event_id,
+                        is_local,
+                        is_own,
+                        timestamp,
+                        data: FrontendTimelineItemData::Call,
+                    }
+                }
+
+                TimelineItemContent::FailedToParseMessageLike {
+                    event_type: _,
+                    error,
+                } => {
+                    return FrontendTimelineItem {
+                        event_id: None,
+                        data: FrontendTimelineItemData::Error(FrontendTimelineErrorItem {
+                            error: error.to_string(),
+                        }),
+                        is_local: true,
+                        is_own: true,
+                        timestamp: None,
+                    };
+                }
+
+                TimelineItemContent::FailedToParseState {
+                    state_key: _,
+                    event_type: _,
+                    error,
+                } => {
+                    return FrontendTimelineItem {
+                        event_id: None,
+                        data: FrontendTimelineItemData::Error(FrontendTimelineErrorItem {
+                            error: error.to_string(),
+                        }),
+                        is_local: true,
+                        is_own: true,
+                        timestamp: None,
+                    };
+                }
             }
         }
         TimelineItemKind::Virtual(event) => match event {
@@ -215,11 +288,21 @@ pub fn to_frontend_timeline_item<'a>(
             }
         },
     };
-    return FrontendTimelineItem {
-        event_id: None,
-        data: FrontendTimelineItemData::Error,
-        is_local: true,
-        is_own: true,
-        timestamp: None,
-    };
+}
+
+fn map_msg_event_content(content: MessageType) -> FrontendMsgLikeKind {
+    match content {
+        MessageType::Audio(c) => FrontendMsgLikeKind::Audio(c),
+        MessageType::File(c) => FrontendMsgLikeKind::File(c),
+        MessageType::Image(c) => FrontendMsgLikeKind::Image(c),
+        MessageType::Text(c) => FrontendMsgLikeKind::Text(c),
+        MessageType::Video(c) => FrontendMsgLikeKind::Video(c),
+        MessageType::Emote(c) => FrontendMsgLikeKind::Emote(c),
+        // Not supported by frontend
+        MessageType::Location(c) => FrontendMsgLikeKind::Location(c),
+        MessageType::Notice(c) => FrontendMsgLikeKind::Notice(c),
+        MessageType::ServerNotice(c) => FrontendMsgLikeKind::ServerNotice(c),
+        MessageType::VerificationRequest(c) => FrontendMsgLikeKind::VerificationRequest(c),
+        _ => FrontendMsgLikeKind::Unknown,
+    }
 }

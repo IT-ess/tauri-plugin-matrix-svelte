@@ -7,6 +7,7 @@
 		type InvitedRoomInfo
 	} from 'tauri-plugin-matrix-svelte-api';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
+	import { getInitials } from '$lib/utils';
 
 	type Props = {
 		room: InvitedRoomInfo;
@@ -14,15 +15,6 @@
 	};
 
 	let { room, disabled }: Props = $props();
-
-	// Get initials from name for avatar fallback
-	const getInitials = (name: string) => {
-		return name
-			.split(' ')
-			.map((n) => n[0])
-			.join('')
-			.toUpperCase();
-	};
 
 	const getLocalTimeAsFormattedString = (timestamp: number) => {
 		const date = new Date(timestamp);

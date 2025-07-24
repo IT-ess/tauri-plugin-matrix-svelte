@@ -69,7 +69,9 @@
 	});
 </script>
 
-{@render children()}
+<main class="container">
+	{@render children()}
+</main>
 
 <Toaster
 	richColors

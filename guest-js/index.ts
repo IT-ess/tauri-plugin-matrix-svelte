@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { Channel, invoke } from '@tauri-apps/api/core';
 import {
 	InvitedRoomInfo,
 	InviterInfo,
@@ -21,22 +21,20 @@ import {
 	TimelineItemData,
 	VirtualTimelineItem
 } from './timeline-items/timeline-item';
-import {
-	ImageMessageEventContent,
-	MsgLikeContent,
-	ReactionsByKeyBySender
-} from './timeline-items/message-like';
+import { MsgLikeContent, ReactionsByKeyBySender } from './timeline-items/message-like';
 import { MediaRequestParameters } from './matrix-requests/media';
 import { mediaCache } from './media-cache';
 import { watchNotifications } from './notifications/ios-notifications';
-
-export async function ping(value: string): Promise<string | null> {
-	return await invoke<{ value?: string }>('plugin:matrix-svelte|ping', {
-		payload: {
-			value
-		}
-	}).then((r) => (r.value ? r.value : null));
-}
+import {
+	AudioMessageEventContent,
+	EmoteMessageEventContent,
+	FileMessageEventContent,
+	ImageMessageEventContent,
+	StickerEventContent,
+	TextMessageEventContent,
+	VideoMessageEventContent
+} from './timeline-items/message-kinds';
+import { StateEvent } from './timeline-items/state-event';
 
 export async function loginAndCreateNewSession(config: MatrixClientConfig): Promise<null> {
 	return await invoke('plugin:matrix-svelte|login_and_create_new_session', {
@@ -47,6 +45,16 @@ export async function loginAndCreateNewSession(config: MatrixClientConfig): Prom
 export async function submitAsyncRequest(request: MatrixRequest): Promise<null> {
 	return await invoke('plugin:matrix-svelte|submit_async_request', {
 		request
+	});
+}
+
+export async function fetchMedia(
+	mediaRequest: MediaRequestParameters,
+	onEvent: Channel<events.MediaStreamEvent>
+) {
+	return await invoke('plugin:matrix-svelte|fetch_media', {
+		mediaRequest,
+		onEvent
 	});
 }
 
@@ -64,7 +72,14 @@ export {
 	TimelineItemData,
 	timelineDataGuards,
 	MsgLikeContent,
+	StateEvent,
+	TextMessageEventContent,
+	EmoteMessageEventContent,
 	ImageMessageEventContent,
+	AudioMessageEventContent,
+	FileMessageEventContent,
+	VideoMessageEventContent,
+	StickerEventContent,
 	MediaRequestParameters,
 	ReactionsByKeyBySender,
 	VirtualTimelineItem,

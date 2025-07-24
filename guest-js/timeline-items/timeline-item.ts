@@ -1,4 +1,6 @@
-import { isMsgLikeContent, isTextMessage, MsgLikeContent } from './message-like';
+import { isTextMessage } from './message-kinds';
+import { isMsgLikeContent, MsgLikeContent } from './message-like';
+import { StateEvent } from './state-event';
 
 // Base timeline item structure
 export type TimelineItem = {
@@ -12,13 +14,17 @@ export type TimelineItem = {
 export type TimelineItemData =
 	| { kind: 'msgLike'; data: MsgLikeContent }
 	| { kind: 'virtual'; data: VirtualTimelineItem }
-	| { kind: 'stateChange'; data: {} } // TODO - empty for now
-	| { kind: 'error'; data: {} } // TODO - empty for now
-	| { kind: 'call'; data: {} }; // TODO - empty for now
+	| { kind: 'stateChange'; data: StateEvent }
+	| { kind: 'error'; data: TimelineErrorItem }
+	| { kind: 'call' };
 
 // Virtual timeline item (referenced but not defined in the Rust code)
 export interface VirtualTimelineItem {
 	kind: 'dateDivider' | 'timelineStart' | 'readMarker';
+}
+
+export interface TimelineErrorItem {
+	error: string;
 }
 
 export const timelineDataGuards = {

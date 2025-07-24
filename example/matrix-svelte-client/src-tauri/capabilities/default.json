@@ -11,6 +11,19 @@
 		"os:default",
 		"os:allow-hostname",
 		"fs:default",
+		"fs:allow-applocaldata-write-recursive",
+		{
+			"identifier": "fs:allow-exists",
+			"allow": [{ "path": "$APPLOCALDATA/download/*" }]
+		},
+		{
+			"identifier": "opener:allow-open-path",
+			"allow": [
+				{
+					"path": "$APPLOCALDATA/download/*"
+				}
+			]
+		},
 		"notification:default"
 	]
 }
