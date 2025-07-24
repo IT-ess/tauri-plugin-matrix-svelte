@@ -8,9 +8,10 @@
 		roomId: string;
 		currentUserId: string;
 		profileStore: ProfileStore;
+		onReply?: (eventId: string, senderName: string, content: string) => void;
 	};
 
-	let { item, roomId, currentUserId, profileStore }: Props = $props();
+	let { item, roomId, currentUserId, profileStore, onReply }: Props = $props();
 </script>
 
 {#if item.kind === 'msgLike'}
@@ -22,6 +23,7 @@
 		eventId={item.eventId ?? ''}
 		{currentUserId}
 		{profileStore}
+		{onReply}
 	/>
 	<!-- eventId should always be defined in msgLike -->
 {:else if item.kind === 'virtual'}

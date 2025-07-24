@@ -1,5 +1,9 @@
-use matrix_sdk::ruma::{
-    events::room::message::RoomMessageEventContent, OwnedEventId, OwnedRoomId, OwnedUserId,
+use matrix_sdk::{
+    room::reply::{EnforceThread, Reply},
+    ruma::{
+        events::room::message::{ReplyWithinThread, RoomMessageEventContent},
+        OwnedEventId, OwnedRoomId, OwnedUserId,
+    },
 };
 use matrix_sdk_ui::timeline::TimelineEventItemId;
 use serde::{Deserialize, Deserializer};
@@ -117,9 +121,17 @@ impl<'de> Deserialize<'de> for MatrixRequest {
             "sendMessage" => {
                 let data: SendMessagePayload =
                     serde_json::from_value(payload.clone()).map_err(serde::de::Error::custom)?;
+                let reply_option = match data.reply_to_event_id {
+                    Some(id) => Some(Reply {
+                        event_id: id,
+                        enforce_thread: EnforceThread::Threaded(ReplyWithinThread::Yes),
+                    }),
+                    None => None,
+                };
                 Ok(MatrixRequest::SendMessage {
                     room_id: data.room_id,
                     message: data.message,
+                    replied_to: reply_option,
                 })
             }
             "sendTypingNotice" => {
@@ -313,6 +325,7 @@ struct GetNumberUnreadMessagesPayload {
 struct SendMessagePayload {
     room_id: OwnedRoomId,
     message: RoomMessageEventContent,
+    reply_to_event_id: Option<OwnedEventId>,
 }
 
 #[derive(Deserialize)]

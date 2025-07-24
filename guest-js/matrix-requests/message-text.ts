@@ -1,4 +1,4 @@
-import { RoomId } from './common';
+import { EventId, RoomId } from './common';
 
 // Main RoomMessageEventContent matching the Rust struct
 export interface RoomMessageEventContent {
@@ -50,6 +50,7 @@ export interface SendMessageRequest {
 	payload: {
 		roomId: RoomId;
 		message: RoomMessageEventContent;
+		replyToEventId?: EventId;
 	};
 }
 
@@ -62,6 +63,7 @@ export const sendTextMessage = (
 	roomId: RoomId,
 	body: string,
 	options?: {
+		replyToEventId?: EventId;
 		formatted?: FormattedBody;
 		mentions?: Mentions;
 		relatesTo?: Relation;
@@ -76,6 +78,7 @@ export const sendTextMessage = (
 			...(options?.formatted && { formatted: options.formatted }),
 			...(options?.relatesTo && { relates_to: options.relatesTo }),
 			...(options?.mentions && { 'm.mentions': options.mentions })
-		}
+		},
+		replyToEventId: options?.replyToEventId
 	}
 });

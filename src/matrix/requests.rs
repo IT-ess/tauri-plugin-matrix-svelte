@@ -1,6 +1,6 @@
 use matrix_sdk::{
     media::MediaRequestParameters,
-    room::{edit::EditedContent, RoomMember},
+    room::{edit::EditedContent, reply::Reply, RoomMember},
     ruma::{
         events::room::message::RoomMessageEventContent, matrix_uri::MatrixId, OwnedEventId,
         OwnedRoomAliasId, OwnedRoomId, OwnedUserId,
@@ -111,7 +111,7 @@ pub enum MatrixRequest {
     SendMessage {
         room_id: OwnedRoomId,
         message: RoomMessageEventContent,
-        // replied_to: Option<RepliedToInfo>,
+        replied_to: Option<Reply>,
     },
     /// Sends a notice to the given room that the current user is or is not typing.
     ///
