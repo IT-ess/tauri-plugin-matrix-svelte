@@ -10,7 +10,7 @@
 	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
 	import { Tooltip, TooltipContent, TooltipProvider } from '$lib/components/ui/tooltip';
 	import { Button } from '$lib/components/ui/button';
-	import { SmileIcon, ReplyIcon } from '@lucide/svelte';
+	import { SmileIcon, ReplyIcon, MessagesSquare } from '@lucide/svelte';
 	import ImageMessage from './image-message.svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { onMount } from 'svelte';
@@ -28,11 +28,21 @@
 		eventId: string;
 		currentUserId: string;
 		profileStore: ProfileStore;
+		repliedToMessage?: MsgLikeContent;
 		onReply?: (eventId: string, senderName: string, content: string) => void;
 	};
 
-	let { data, timestamp, isOwn, roomId, eventId, currentUserId, profileStore, onReply }: Props =
-		$props();
+	let {
+		data,
+		timestamp,
+		isOwn,
+		roomId,
+		eventId,
+		currentUserId,
+		profileStore,
+		onReply,
+		repliedToMessage
+	}: Props = $props();
 
 	const { senderId, sender } = data;
 
@@ -65,40 +75,33 @@
 	const handleReply = () => {
 		if (!onReply) return;
 
-		let content = '';
-
-		// Extract content based on message type
-		switch (data.kind) {
-			case 'text':
-			case 'emote':
-				content = data.body.body;
-				break;
-			case 'image':
-				content = data.body.body || 'Image';
-				break;
-			case 'audio':
-				content = data.body.body || 'Audio message';
-				break;
-			case 'video':
-				content = data.body.body || 'Video message';
-				break;
-			case 'file':
-				content = data.body.body || 'File';
-				break;
-			case 'sticker':
-				content = 'Sticker';
-				break;
-			case 'redacted':
-				content = 'This message has been deleted';
-				break;
-			case 'unableToDecrypt':
-				content = 'Encrypted message';
-				break;
-			default:
-				content = `Unsupported message type: ${data.kind}`;
-		}
+		let content = extractContentFromMsg(data);
 
 		onReply(eventId, sender ?? 'Unknown', content);
+	};
+
+	const extractContentFromMsg = (msg: MsgLikeContent): string => {
+		switch (msg.kind) {
+			case 'text':
+			case 'emote':
+				return msg.body.body;
+			case 'image':
+				return msg.body.body || 'Image';
+			case 'audio':
+				return msg.body.body || 'Audio message';
+			case 'video':
+				return msg.body.body || 'Video message';
+			case 'file':
+				return msg.body.body || 'File';
+			case 'sticker':
+				return 'Sticker';
+			case 'redacted':
+				return 'This message has been deleted';
+			case 'unableToDecrypt':
+				return 'Encrypted message';
+			default:
+				return `Unsupported message type: ${msg.kind}`;
+		}
 	};
 
 	onMount(async () => {
@@ -143,6 +146,14 @@
 					<p class="text-sm font-medium">{data.sender}</p>
 					<span class="text-xs opacity-70">{formatTime(timestamp ?? 0)}</span>
 				</div>
+				{#if repliedToMessage}
+					<!-- <p class="mt-1 text-sm">💬 Thread</p> -->
+					<div class="relative mt-1 rounded-lg bg-white p-2 text-sm text-black">
+						<MessagesSquare class="absolute top-1 right-1" />
+						<p class="text-sm font-medium">{repliedToMessage.sender}</p>
+						<p class="text-sm">{extractContentFromMsg(repliedToMessage)}</p>
+					</div>
+				{/if}
 				{#if data.kind === 'text'}
 					<p class="mt-1 text-sm">
 						{data.body.body}

@@ -72,6 +72,10 @@ pub fn to_frontend_timeline_item<'a>(
             };
             match event_tl_item.content() {
                 TimelineItemContent::MsgLike(msg_like) => {
+                    let thread_root = msg_like // We treat threads and in_reply_to the same way for the moment. TODO: handle threads in a better way.
+                        .in_reply_to
+                        .clone()
+                        .map_or(msg_like.thread_root.clone(), |o| Some(o.event_id));
                     // TODO: create a MsgLike mapper to refacto
                     match msg_like.kind.clone() {
                         MsgLikeKind::Message(message) => match message.msgtype().clone() {
@@ -89,7 +93,7 @@ pub fn to_frontend_timeline_item<'a>(
                                             ),
                                             sender_id,
                                             sender,
-                                            thread_root: None,
+                                            thread_root,
                                             kind: map_msg_event_content(message.msgtype().clone()),
                                         },
                                     ),
@@ -107,7 +111,7 @@ pub fn to_frontend_timeline_item<'a>(
                                     reactions: FrontendReactionsByKeyBySender(&msg_like.reactions),
                                     sender_id,
                                     sender,
-                                    thread_root: None,
+                                    thread_root,
                                     kind: FrontendMsgLikeKind::Sticker(
                                         FrontendStickerEventContent::from(
                                             sticker.content().clone(),
@@ -127,7 +131,7 @@ pub fn to_frontend_timeline_item<'a>(
                                     reactions: FrontendReactionsByKeyBySender(&msg_like.reactions),
                                     sender_id,
                                     sender,
-                                    thread_root: None,
+                                    thread_root,
                                     kind: FrontendMsgLikeKind::Redacted,
                                 }),
                             }
@@ -143,7 +147,7 @@ pub fn to_frontend_timeline_item<'a>(
                                     reactions: FrontendReactionsByKeyBySender(&msg_like.reactions),
                                     sender_id,
                                     sender,
-                                    thread_root: None,
+                                    thread_root,
                                     kind: FrontendMsgLikeKind::UnableToDecrypt,
                                 }),
                             }
@@ -160,7 +164,7 @@ pub fn to_frontend_timeline_item<'a>(
                                     reactions: FrontendReactionsByKeyBySender(&msg_like.reactions),
                                     sender_id,
                                     sender,
-                                    thread_root: None,
+                                    thread_root,
                                     kind: FrontendMsgLikeKind::Poll,
                                 }),
                             }

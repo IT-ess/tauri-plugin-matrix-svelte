@@ -8,10 +8,11 @@
 		roomId: string;
 		currentUserId: string;
 		profileStore: ProfileStore;
+		repliedToMessage?: TimelineItem;
 		onReply?: (eventId: string, senderName: string, content: string) => void;
 	};
 
-	let { item, roomId, currentUserId, profileStore, onReply }: Props = $props();
+	let { item, roomId, currentUserId, profileStore, onReply, repliedToMessage }: Props = $props();
 </script>
 
 {#if item.kind === 'msgLike'}
@@ -24,6 +25,7 @@
 		{currentUserId}
 		{profileStore}
 		{onReply}
+		repliedToMessage={repliedToMessage?.kind === 'msgLike' ? repliedToMessage.data : undefined}
 	/>
 	<!-- eventId should always be defined in msgLike -->
 {:else if item.kind === 'virtual'}

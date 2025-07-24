@@ -179,6 +179,9 @@
 									roomId={roomStore.id}
 									{currentUserId}
 									onReply={handleReplyTo}
+									repliedToMessage={item.kind === 'msgLike' && item.data.threadRoot !== null
+										? roomStore.state.tlState?.items.find((i) => i.eventId === item.data.threadRoot)
+										: undefined}
 								/>
 							</div>
 						{/each}
