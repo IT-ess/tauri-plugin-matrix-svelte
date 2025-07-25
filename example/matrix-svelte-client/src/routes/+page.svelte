@@ -48,7 +48,11 @@
 	};
 </script>
 
-<Profile profileStore={data.profileStore} currentUserId={data.loginStore.state.userId ?? ''} />
+<Profile
+	loginStore={data.loginStore}
+	profileStore={data.profileStore}
+	currentUserId={data.loginStore.state.userId ?? ''}
+/>
 <RoomList
 	roomsCollection={data.roomsCollection}
 	onRoomClick={setCurrentActiveRoomAndGoToRoomRoute}
