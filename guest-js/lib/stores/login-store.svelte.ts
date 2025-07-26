@@ -10,6 +10,7 @@ export type LoginStateType = {
 	state: 'initiating' | 'restored' | 'awaitingForLogin' | 'loggedIn';
 	userId: string | null;
 	verificationState: 'unknown' | 'verified' | 'unverified';
+	syncServiceState: 'idle' | 'error' | 'terminated' | 'running' | 'offline';
 };
 
 export class LoginStore extends RuneStore<LoginStateType> {
@@ -28,7 +29,12 @@ export class LoginStore extends RuneStore<LoginStateType> {
 
 		super(
 			LOGIN_STATE_STORE_ID,
-			{ state: 'initiating', userId: null, verificationState: 'unknown' },
+			{
+				state: 'initiating',
+				userId: null,
+				verificationState: 'unknown',
+				syncServiceState: 'offline'
+			},
 			options
 		);
 	}

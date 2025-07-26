@@ -11,16 +11,14 @@ use matrix_sdk_ui::{
 use tauri::{AppHandle, Runtime};
 
 use crate::matrix::{
-    room::rooms_list::{
-        enqueue_rooms_list_update, handle_room_list_service_loading_state, RoomsListUpdate,
-    },
+    room::rooms_list::{enqueue_rooms_list_update, handle_rooms_loading_states, RoomsListUpdate},
     rooms::{add_new_room, remove_room, update_room},
     singletons::{ALL_JOINED_ROOMS, LOG_ROOM_LIST_DIFFS},
 };
 
 use super::{rooms::RoomListServiceRoomInfo, singletons::SYNC_SERVICE};
 
-pub async fn sync<R: Runtime>(_app_handle: &AppHandle<R>, client: Client) -> anyhow::Result<()> {
+pub async fn sync<R: Runtime>(app_handle: &AppHandle<R>, client: Client) -> anyhow::Result<()> {
     let sync_service = SyncService::builder(client)
         .with_offline_mode()
         .build()
@@ -29,12 +27,17 @@ pub async fn sync<R: Runtime>(_app_handle: &AppHandle<R>, client: Client) -> any
     // Start the sync service
     sync_service.start().await;
     let room_list_service = sync_service.room_list_service();
+    let sync_service_state = sync_service.state();
     SYNC_SERVICE
         .set(sync_service)
         .unwrap_or_else(|_| panic!("BUG: SYNC_SERVICE already set!"));
 
     let all_rooms_list = room_list_service.all_rooms().await?;
-    handle_room_list_service_loading_state(all_rooms_list.loading_state());
+    handle_rooms_loading_states(
+        app_handle.clone(),
+        all_rooms_list.loading_state(),
+        sync_service_state,
+    );
 
     // TODO: paginate the rooms instead of getting them all
     let (room_diff_stream, room_list_dynamic_entries_controller) =

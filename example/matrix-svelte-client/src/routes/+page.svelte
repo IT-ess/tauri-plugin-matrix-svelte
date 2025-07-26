@@ -5,6 +5,7 @@
 	import Profile from '$lib/components/room-list/profile.svelte';
 	import { fetchMedia } from 'tauri-plugin-matrix-svelte-api';
 	import { invoke } from '@tauri-apps/api/core';
+	import SyncIndicator from '$lib/components/room-list/sync-indicator.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -49,6 +50,7 @@
 	};
 </script>
 
+<div class="m-2"><SyncIndicator loginStore={data.loginStore} /></div>
 <Profile
 	loginStore={data.loginStore}
 	profileStore={data.profileStore}
