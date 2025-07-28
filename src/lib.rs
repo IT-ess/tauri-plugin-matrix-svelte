@@ -74,7 +74,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
             commands::submit_async_request,
             commands::fetch_media,
             commands::fetch_user_profile,
-            commands::watch_notifications
+            commands::watch_notifications,
+            commands::get_devices
         ])
         .setup(|app, api| {
             // Create a channel to be used between UI thread(s) and the async worker thread.

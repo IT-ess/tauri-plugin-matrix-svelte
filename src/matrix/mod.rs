@@ -1,12 +1,15 @@
 use anyhow::anyhow;
-use matrix_sdk::{media::MediaRequestParameters, Client};
+use matrix_sdk::{media::MediaRequestParameters, ruma::UserId, Client};
 use session::{restore_client_from_session, try_get_session};
 use tauri::{ipc::Channel, AppHandle, Manager, Runtime};
 use tokio::sync::oneshot;
 
 use crate::{
-    matrix::{notifications::register_notifications, requests::MatrixRequest},
-    models::matrix::MediaStreamEvent,
+    matrix::{
+        notifications::register_notifications, requests::MatrixRequest, singletons::get_client,
+        utils::guess_device_type,
+    },
+    models::matrix::{FrontendDevice, MediaStreamEvent},
 };
 
 pub mod emoji_verification;
@@ -100,4 +103,25 @@ pub(crate) async fn fetch_media(
     }
 
     Ok(bytes_sent)
+}
+
+pub(crate) async fn get_devices(user_id: &UserId) -> crate::Result<Vec<FrontendDevice>> {
+    let client = get_client().expect("Client should be defined at this state");
+    let devices: Vec<FrontendDevice> = client
+        .encryption()
+        .get_user_devices(user_id)
+        .await?
+        .devices()
+        .filter(|device| !device.is_deleted())
+        .map(|device| FrontendDevice {
+            device_id: device.device_id().to_owned(),
+            display_name: device.display_name().map(|n| n.to_string()),
+            is_verified: device.is_verified(),
+            is_verified_with_cross_signing: device.is_verified_with_cross_signing(),
+            registration_date: device.first_time_seen_ts(),
+            guessed_type: guess_device_type(device.display_name()),
+            is_current_device: device.device_id().eq(client.device_id().unwrap()),
+        })
+        .collect();
+    Ok(devices)
 }

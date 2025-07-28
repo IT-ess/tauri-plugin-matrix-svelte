@@ -36,6 +36,9 @@
 					</p>
 				{/if}
 			</div>
+			<div>
+				<a href="/devices">Devices</a>
+			</div>
 		</div>
 		<Sheet.Footer>
 			<Sheet.Close class={buttonVariants({ variant: 'outline' })}>Close</Sheet.Close>

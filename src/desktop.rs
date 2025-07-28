@@ -8,12 +8,12 @@ use tauri::{ipc::Channel, plugin::PluginApi, AppHandle, Runtime};
 
 use crate::{
     matrix::{
-        create_session_to_state,
+        create_session_to_state, get_devices,
         login::{LoginRequest, MatrixClientConfig},
         requests::{submit_async_request, MatrixRequest},
         user_profile::fetch_user_profile,
     },
-    models::matrix::MediaStreamEvent,
+    models::matrix::{FrontendDevice, MediaStreamEvent},
     notifications::{GetTokenRequest, GetTokenResponse, WatchNotificationResult},
 };
 
@@ -55,6 +55,10 @@ impl<R: Runtime> MatrixSvelte<R> {
         room_id: Option<OwnedRoomId>,
     ) -> crate::Result<bool> {
         Ok(fetch_user_profile(user_id, room_id).await)
+    }
+
+    pub async fn get_devices(&self, user_id: OwnedUserId) -> crate::Result<Vec<FrontendDevice>> {
+        get_devices(&user_id).await
     }
 
     // Not implemented on desktop

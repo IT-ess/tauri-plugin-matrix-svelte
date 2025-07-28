@@ -7,4 +7,5 @@ permissions = [
     "allow-fetch-media",
     "allow-fetch-user-profile",
     "allow-watch-notifications",
+    "allow-get-devices",
 ]

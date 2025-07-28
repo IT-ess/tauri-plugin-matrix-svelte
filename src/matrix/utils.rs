@@ -5,6 +5,8 @@ use tokio::time::{sleep, Duration};
 use matrix_sdk::ruma::{OwnedRoomId, OwnedUserId, RoomId};
 use matrix_sdk_ui::timeline::{EventTimelineItem, TimelineDetails};
 
+use crate::models::matrix::DeviceGuessedType;
+
 use super::{
     requests::{submit_async_request, MatrixRequest},
     singletons::CLIENT,
@@ -208,4 +210,30 @@ pub fn debounce_broadcast<T: Clone + Send + 'static>(
     });
 
     rx
+}
+
+pub(crate) fn guess_device_type(display_name: Option<&str>) -> DeviceGuessedType {
+    if display_name.is_none() {
+        return DeviceGuessedType::Unknown;
+    };
+    let display_lower = display_name.unwrap().to_lowercase();
+
+    if display_lower.contains("ios")
+        || display_lower.contains("iphone")
+        || display_lower.contains("ipad")
+    {
+        DeviceGuessedType::Ios
+    } else if display_lower.contains("android") {
+        DeviceGuessedType::Android
+    } else if display_lower.contains("firefox")
+        || display_lower.contains("chrome")
+        || display_lower.contains("safari")
+        || display_lower.contains("web")
+    {
+        DeviceGuessedType::Web
+    } else if display_lower.contains("desktop") || display_lower.contains("element desktop") {
+        DeviceGuessedType::Desktop
+    } else {
+        DeviceGuessedType::Unknown
+    }
 }
