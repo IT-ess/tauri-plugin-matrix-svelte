@@ -4,7 +4,6 @@
 	import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 	import { cn, getInitials } from '$lib/utils';
 	import type { LoginStore, ProfileStore } from 'tauri-plugin-matrix-svelte-api';
-	import type { ClassValue } from 'clsx';
 	import { ShieldAlert, ShieldQuestion, ShieldUser } from '@lucide/svelte';
 
 	type Props = {

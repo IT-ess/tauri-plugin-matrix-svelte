@@ -1,19 +1,21 @@
 use std::iter::Peekable;
 
 use anyhow::bail;
+use eyeball::Subscriber;
 use futures::{pin_mut, StreamExt};
 use matrix_sdk::{Client, Room};
 use matrix_sdk_ui::{
     eyeball_im::{Vector, VectorDiff},
-    sync_service::SyncService,
+    sync_service::{self, SyncService},
     RoomListService,
 };
 use tauri::{AppHandle, Runtime};
 
 use crate::matrix::{
-    room::rooms_list::{enqueue_rooms_list_update, handle_rooms_loading_states, RoomsListUpdate},
+    room::rooms_list::{enqueue_rooms_list_update, handle_rooms_loading_state, RoomsListUpdate},
     rooms::{add_new_room, remove_room, update_room},
     singletons::{ALL_JOINED_ROOMS, LOG_ROOM_LIST_DIFFS},
+    stores::login_store::{update_sync_service_state, FrontendSyncServiceState},
 };
 
 use super::{rooms::RoomListServiceRoomInfo, singletons::SYNC_SERVICE};
@@ -33,11 +35,8 @@ pub async fn sync<R: Runtime>(app_handle: &AppHandle<R>, client: Client) -> anyh
         .unwrap_or_else(|_| panic!("BUG: SYNC_SERVICE already set!"));
 
     let all_rooms_list = room_list_service.all_rooms().await?;
-    handle_rooms_loading_states(
-        app_handle.clone(),
-        all_rooms_list.loading_state(),
-        sync_service_state,
-    );
+    handle_rooms_loading_state(all_rooms_list.loading_state());
+    handle_sync_service_state(app_handle.clone(), sync_service_state);
 
     // TODO: paginate the rooms instead of getting them all
     let (room_diff_stream, room_list_dynamic_entries_controller) =
@@ -261,4 +260,22 @@ async fn optimize_remove_then_add_into_update(
         remove_room(room);
     }
     Ok(())
+}
+
+pub fn handle_sync_service_state<R: Runtime>(
+    app_handle: AppHandle<R>,
+    mut sync_service_state: Subscriber<sync_service::State>,
+) {
+    tauri::async_runtime::spawn(async move {
+        update_sync_service_state(
+            &app_handle,
+            FrontendSyncServiceState::new(sync_service_state.get()),
+        )
+        .expect("Couldn't update login frontend store");
+        while let Some(state) = sync_service_state.next().await {
+            println!("Sync service changed state: {state:?}");
+            update_sync_service_state(&app_handle, FrontendSyncServiceState::new(state))
+                .expect("Couldn't update login frontend store");
+        }
+    });
 }

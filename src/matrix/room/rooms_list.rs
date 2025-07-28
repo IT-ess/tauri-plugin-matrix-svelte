@@ -12,7 +12,7 @@ use matrix_sdk::{
     },
     RoomDisplayName, RoomState,
 };
-use matrix_sdk_ui::{room_list_service::RoomListLoadingState, sync_service};
+use matrix_sdk_ui::room_list_service::RoomListLoadingState;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::{AppHandle, Manager, Runtime};
@@ -25,7 +25,6 @@ use crate::matrix::{
     rooms::UnreadMessageCount,
     singletons::{broadcast_event, UIUpdateMessage},
     stores::{
-        login_store::{update_sync_service_state, FrontendSyncServiceState},
         room_store::send_room_creation_request_and_await_response,
         rooms_collection::ROOMS_COLLECTION_STORE_ID,
     },
@@ -138,11 +137,7 @@ pub struct JoinedRoomInfo {
     pub(crate) is_direct: bool,
 }
 
-pub fn handle_rooms_loading_states<R: Runtime>(
-    app_handle: AppHandle<R>,
-    mut loading_state: Subscriber<RoomListLoadingState>,
-    mut sync_service_state: Subscriber<sync_service::State>,
-) {
+pub fn handle_rooms_loading_state(mut loading_state: Subscriber<RoomListLoadingState>) {
     println!(
         "Initial room list loading state is {:?}",
         loading_state.get()
@@ -162,13 +157,6 @@ pub fn handle_rooms_loading_states<R: Runtime>(
                     });
                 }
             }
-        }
-    });
-    tauri::async_runtime::spawn(async move {
-        while let Some(state) = sync_service_state.next().await {
-            println!("Sync service changed state: {state:?}");
-            update_sync_service_state(&app_handle, FrontendSyncServiceState::new(state))
-                .expect("Couldn't update login frontend store");
         }
     });
 }
