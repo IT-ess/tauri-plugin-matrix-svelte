@@ -191,7 +191,7 @@
 	<!-- Chat messages container -->
 	<div class="flex-1 overflow-hidden">
 		<ScrollArea.Root class="h-full bg-white">
-			<ScrollArea.Viewport bind:ref={viewportElement} class="h-full p-4">
+			<ScrollArea.Viewport bind:ref={viewportElement} class="h-full">
 				<div class="flex flex-col gap-4 p-4 pb-0">
 					<!-- Loading indicator -->
 					{#if isLoadingMore}

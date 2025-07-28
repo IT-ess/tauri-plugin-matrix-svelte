@@ -69,7 +69,8 @@
 	});
 </script>
 
-<main class="container">
+<header class="pt-safe-offset-2 pl-2 text-lg font-semibold">Matrix Svelte Client</header>
+<main class="pb-safe container">
 	{@render children()}
 </main>
 

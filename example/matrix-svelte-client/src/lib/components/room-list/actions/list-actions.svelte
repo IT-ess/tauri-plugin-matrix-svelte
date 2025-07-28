@@ -15,7 +15,7 @@
 	let actionCreateRoomOpen = $state(false);
 </script>
 
-<div class="absolute right-4 bottom-4">
+<div class="bottom-safe-or-4 absolute right-4">
 	<DropdownMenu bind:open={isActionButtonOpen}>
 		<DropdownMenuTrigger>
 			{#snippet child({ props: triggerProps })}
@@ -27,7 +27,7 @@
 			{/snippet}
 		</DropdownMenuTrigger>
 		<DropdownMenuContent align="end" side="top">
-			<DropdownMenuItem onSelect={() => (actionCreateRoomOpen = true)}
+			<DropdownMenuItem class="text-md" onSelect={() => (actionCreateRoomOpen = true)}
 				><UserPen />Create DM Room</DropdownMenuItem
 			>
 		</DropdownMenuContent>

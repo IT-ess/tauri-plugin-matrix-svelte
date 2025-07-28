@@ -16,12 +16,12 @@
 
 <Sheet.Root>
 	<Sheet.Trigger
-		class={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'fixed top-4 right-4')}
+		class={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'top-safe-or-4 fixed right-4')}
 	>
 		{@render avatar(false)}
 	</Sheet.Trigger>
 	<Sheet.Content side="right">
-		<Sheet.Header>
+		<Sheet.Header class="mt-safe">
 			<Sheet.Title>Profile</Sheet.Title>
 			<Sheet.Description>Your current profile.</Sheet.Description>
 		</Sheet.Header>

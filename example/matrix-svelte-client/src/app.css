@@ -2,6 +2,8 @@
 
 @import 'tw-animate-css';
 
+@import 'tailwindcss-safe-area';
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
