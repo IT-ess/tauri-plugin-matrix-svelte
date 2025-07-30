@@ -1,4 +1,4 @@
-import { Channel, invoke } from '@tauri-apps/api/core';
+import { invoke } from '@tauri-apps/api/core';
 import {
 	InvitedRoomInfo,
 	InviterInfo,
@@ -23,7 +23,7 @@ import {
 } from './timeline-items/timeline-item';
 import { MsgLikeContent, ReactionsByKeyBySender } from './timeline-items/message-like';
 import { MediaRequestParameters } from './matrix-requests/media';
-import { mediaCache } from './media-cache';
+import { fetchMedia, LoadingState, mediaCache } from './media-cache.svelte.js';
 import { watchNotifications } from './notifications/ios-notifications';
 import {
 	AudioMessageEventContent,
@@ -45,16 +45,6 @@ export async function loginAndCreateNewSession(config: MatrixClientConfig): Prom
 export async function submitAsyncRequest(request: MatrixRequest): Promise<null> {
 	return await invoke('plugin:matrix-svelte|submit_async_request', {
 		request
-	});
-}
-
-export async function fetchMedia(
-	mediaRequest: MediaRequestParameters,
-	onEvent: Channel<events.MediaStreamEvent>
-) {
-	return await invoke('plugin:matrix-svelte|fetch_media', {
-		mediaRequest,
-		onEvent
 	});
 }
 
@@ -90,5 +80,7 @@ export {
 	InvitedRoomInfo,
 	InviteState,
 	InviterInfo,
-	watchNotifications
+	watchNotifications,
+	LoadingState,
+	fetchMedia
 };

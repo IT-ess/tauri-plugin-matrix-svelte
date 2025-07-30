@@ -30,9 +30,10 @@
 				data.profileStore.state[key].data.avatarUrl !== undefined &&
 				data.profileStore.state[key].data.avatarDataUrl === undefined
 			) {
-				data.profileStore.state[key].data.avatarDataUrl = await mediaCache.get(
-					data.profileStore.state[key].data.avatarUrl
-				);
+				data.profileStore.state[key].data.avatarDataUrl = await mediaCache.get({
+					format: 'File',
+					source: { url: data.profileStore.state[key].data.avatarUrl }
+				});
 			}
 		} else if (
 			data.profileStore.state?.[key] &&

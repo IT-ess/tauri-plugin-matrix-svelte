@@ -5,12 +5,11 @@
 	import { XIcon } from '@lucide/svelte';
 	import {
 		fetchMedia,
-		type events,
 		type ImageMessageEventContent,
+		type LoadingState,
 		type MediaRequestParameters,
 		type StickerEventContent
 	} from 'tauri-plugin-matrix-svelte-api';
-	import { Channel } from '@tauri-apps/api/core';
 	import { onClickOutside } from 'runed';
 	import { cn } from '$lib/utils';
 
@@ -25,14 +24,19 @@
 	let alt = itemContent.body;
 
 	// State variables
-	let isLoaded = $state(false);
+	// let isLoaded = $state(false);
 	let isFullscreen = $state(false);
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
 	let imageSrc = $state<string>('');
-	let totalSize = $derived(itemContent.info?.size ?? 1);
-	let bytesReceived = $state(0);
-	let progress = $derived(bytesReceived / totalSize);
+	// let totalSize = $derived(itemContent.info?.size ?? 1);
+	// let bytesReceived = $state(0);
+	// let progress = $derived(bytesReceived / totalSize);
+	let loadingState = $state<LoadingState>({
+		isLoaded: false,
+		progress: 0,
+		totalSize: itemContent.info?.size ?? 1
+	});
 
 	let fullscreenContainer = $state<HTMLDivElement>()!;
 
@@ -43,58 +47,56 @@
 
 	// Load image function
 	const loadImage = async () => {
-		if (isLoaded || isLoading) return;
+		if (loadingState.isLoaded || isLoading) return;
 
 		isLoading = true;
-		error = null;
-		bytesReceived = 0;
 
-		const chunks: Uint8Array[] = [];
+		// const chunks: Uint8Array[] = [];
 		try {
-			const onEvent = new Channel<events.MediaStreamEvent>();
+			// const onEvent = new Channel<events.MediaStreamEvent>();
 
-			onEvent.onmessage = (message) => {
-				if (message.event === 'started') {
-					console.log(`Starting image fetch, total size: ${totalSize} bytes`);
-					return;
-				}
+			// onEvent.onmessage = (message) => {
+			// 	if (message.event === 'started') {
+			// 		console.log(`Starting image fetch, total size: ${totalSize} bytes`);
+			// 		return;
+			// 	}
 
-				if (message.event === 'chunk') {
-					chunks.push(new Uint8Array(message.data.data));
-					bytesReceived = message.data.bytesReceived;
-					console.log(
-						`Received chunk: ${message.data.chunkSize} bytes, total: ${bytesReceived}/${totalSize}`
-					);
-					return;
-				}
+			// 	if (message.event === 'chunk') {
+			// 		chunks.push(new Uint8Array(message.data.data));
+			// 		bytesReceived = message.data.bytesReceived;
+			// 		console.log(
+			// 			`Received chunk: ${message.data.chunkSize} bytes, total: ${bytesReceived}/${totalSize}`
+			// 		);
+			// 		return;
+			// 	}
 
-				if (message.event === 'finished') {
-					// Combine all chunks into a single Uint8Array
-					const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
-					const combined = new Uint8Array(totalLength);
-					let offset = 0;
+			// 	if (message.event === 'finished') {
+			// 		// Combine all chunks into a single Uint8Array
+			// 		const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+			// 		const combined = new Uint8Array(totalLength);
+			// 		let offset = 0;
 
-					for (const chunk of chunks) {
-						combined.set(chunk, offset);
-						offset += chunk.length;
-					}
+			// 		for (const chunk of chunks) {
+			// 			combined.set(chunk, offset);
+			// 			offset += chunk.length;
+			// 		}
 
-					// Create blob URL for display
-					const blob = new Blob([combined], { type: itemContent.info?.mimetype ?? 'image/jpeg' });
-					imageSrc = URL.createObjectURL(blob);
-					isLoaded = true;
-					isLoading = false;
-					console.log(`Image fetch completed: ${message.data.totalBytes} bytes`);
-					return;
-				}
+			// 		// Create blob URL for display
+			// 		const blob = new Blob([combined], { type: itemContent.info?.mimetype ?? 'image/jpeg' });
+			// 		imageSrc = URL.createObjectURL(blob);
+			// 		isLoaded = true;
+			// 		isLoading = false;
+			// 		console.log(`Image fetch completed: ${message.data.totalBytes} bytes`);
+			// 		return;
+			// 	}
 
-				if (message.event === 'error') {
-					error = message.data.message;
-					isLoading = false;
-					console.error('Image fetch error:', message.data.message);
-					return;
-				}
-			};
+			// 	if (message.event === 'error') {
+			// 		error = message.data.message;
+			// 		isLoading = false;
+			// 		console.error('Image fetch error:', message.data.message);
+			// 		return;
+			// 	}
+			// };
 
 			let mediaRequest: MediaRequestParameters =
 				itemContent.msgtype === 'm.image' // Images are encrypted while stickers aren't
@@ -107,7 +109,7 @@
 							source: { url: itemContent.url }
 						};
 
-			await fetchMedia(mediaRequest, onEvent);
+			imageSrc = await fetchMedia(mediaRequest, loadingState);
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Unknown error occurred';
 			isLoading = false;
@@ -121,14 +123,14 @@
 	});
 
 	const toggleFullscreen = () => {
-		if (isLoaded) {
+		if (loadingState.isLoaded) {
 			isFullscreen = !isFullscreen;
 		}
 	};
 </script>
 
 <div class={cn('bg-card relative mt-1 overflow-hidden', isSticker ? '' : 'rounded-lg border')}>
-	{#if !isLoaded}
+	{#if !loadingState.isLoaded}
 		<!-- Blurhash Canvas as optimistic UI -->
 		<div class="relative">
 			<canvas
@@ -150,7 +152,7 @@
 			{#if isLoading}
 				<div class="absolute inset-0 flex items-center justify-center bg-black/20">
 					<div class="rounded-full bg-white/90 px-3 py-1 text-xs">
-						{Math.round(progress * 100)}%
+						{Math.round(loadingState.progress * 100)}%
 					</div>
 				</div>
 			{/if}

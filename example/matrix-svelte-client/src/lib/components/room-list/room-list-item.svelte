@@ -40,7 +40,7 @@
     }}} -->
 	<Avatar>
 		{#if room.avatar !== null}
-			{#await mediaCache.get(room.avatar)}
+			{#await mediaCache.get({ format: 'File', source: { url: room.avatar } })}
 				{@render avatarFallback(room.roomName)}
 			{:then url}
 				<AvatarImage src={url} alt={room.roomName} />

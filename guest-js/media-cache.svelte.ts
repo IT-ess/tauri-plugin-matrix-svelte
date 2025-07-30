@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { Channel } from '@tauri-apps/api/core';
 import { fileTypeFromBuffer } from 'file-type';
 import type { MediaStreamEvent } from './tauri-events';
+import { isPlainMediaSource, MediaRequestParameters } from './matrix-requests/media';
 
 const CACHE_NAME = 'matrix-media-cache';
 const CACHE_VERSION = 'v1';
@@ -13,9 +14,19 @@ const CACHE_CONFIG = {
 	maxEntries: 1000 // Maximum number of cached images
 };
 
-// Called media cache for the moment, but it is only used by avatars for the moment.
-// In the future we may cache MsgLike media, but for now we only use the backend cache
-// without using this frontend cache.
+export type LoadingState = {
+	progress: number;
+	isLoaded: boolean;
+	totalSize: number;
+};
+
+export async function fetchMedia(
+	mediaRequest: MediaRequestParameters,
+	loadingState?: LoadingState
+) {
+	return mediaCache.get(mediaRequest, loadingState);
+}
+
 export class MediaCache {
 	private cache: Cache | null = null;
 	private pendingRequests: Map<string, Promise<string>> = new Map();
@@ -33,13 +44,15 @@ export class MediaCache {
 	}
 
 	/**
-	 * Main method: Get image from cache or fetch it if not available
+	 * Main method: Get media from cache or fetch it if not available
 	 */
-	async get(mxcUri: string): Promise<string> {
+	async get(request: MediaRequestParameters, loadingState?: LoadingState): Promise<string> {
 		// Initialize cache if not already done
 		if (!this.cache) {
 			await this.init();
 		}
+
+		let mxcUri = isPlainMediaSource(request.source) ? request.source.url : request.source.file.url;
 
 		// Check if image is already cached
 		const cachedImage = await this.getCachedMedia(mxcUri);
@@ -56,7 +69,7 @@ export class MediaCache {
 		}
 
 		// Create new fetch request
-		const fetchPromise = this.fetchAndCache(mxcUri);
+		const fetchPromise = this.fetchAndCache(mxcUri, request, loadingState);
 
 		// Register the pending request
 		this.pendingRequests.set(mxcUri, fetchPromise);
@@ -103,11 +116,18 @@ export class MediaCache {
 	/**
 	 * Fetch image from backend and cache it (private method)
 	 */
-	private async fetchAndCache(mxcUri: string): Promise<string> {
+	private async fetchAndCache(
+		mxcUri: string,
+		request: MediaRequestParameters,
+		loadingState?: LoadingState
+	): Promise<string> {
 		const chunks: Uint8Array[] = [];
 
 		return new Promise((resolve, reject) => {
 			const onEvent = new Channel<MediaStreamEvent>();
+
+			let bytesReceived = $state(0);
+			let localProgress = $derived(bytesReceived / (loadingState?.totalSize ?? 1));
 
 			onEvent.onmessage = async (message) => {
 				try {
@@ -117,6 +137,10 @@ export class MediaCache {
 
 					if (message.event === 'chunk') {
 						chunks.push(new Uint8Array(message.data.data));
+						bytesReceived = message.data.bytesReceived;
+						if (loadingState) {
+							loadingState.progress = localProgress;
+						}
 						console.log(`Received chunk: ${message.data.chunkSize} bytes`);
 						return;
 					}
@@ -141,6 +165,9 @@ export class MediaCache {
 						console.log(`Image fetch completed and cached: ${message.data.totalBytes} bytes`);
 
 						resolve(imageSrc);
+						if (loadingState) {
+							loadingState.isLoaded = true;
+						}
 						return;
 					}
 
@@ -157,10 +184,7 @@ export class MediaCache {
 
 			// Start the fetch
 			invoke('plugin:matrix-svelte|fetch_media', {
-				mediaRequest: {
-					format: 'File', // Maybe switch to a thumbnail instead ?
-					source: { url: mxcUri }
-				},
+				mediaRequest: request,
 				onEvent
 			}).catch(reject);
 		});
@@ -202,7 +226,7 @@ export class MediaCache {
 		// Cache API requires HTTP/HTTPS URLs, so we create a fake URL
 		// Using a consistent domain to avoid issues
 		const encoded = encodeURIComponent(mxcUri);
-		return `https://cache.local/avatar/${encoded}`;
+		return `https://cache.local/media/${encoded}`;
 	}
 
 	/**
