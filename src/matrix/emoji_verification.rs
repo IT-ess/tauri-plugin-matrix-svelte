@@ -1,17 +1,21 @@
+use anyhow::anyhow;
 use futures_util::stream::StreamExt;
 use matrix_sdk::{
     encryption::verification::{
         format_emojis, Emoji, SasState, SasVerification, Verification, VerificationRequest,
         VerificationRequestState,
     },
-    ruma::UserId,
+    ruma::{events::key::verification::VerificationMethod, DeviceId, UserId},
     Client,
 };
 use tauri::{AppHandle, Emitter, Listener, Runtime};
 
-use crate::models::matrix::{
-    MatrixSvelteEmitEvent, MatrixSvelteListenEvent, MatrixVerificationEmojis,
-    MatrixVerificationResponse,
+use crate::{
+    matrix::singletons::get_client,
+    models::matrix::{
+        MatrixSvelteEmitEvent, MatrixSvelteListenEvent, MatrixVerificationEmojis,
+        MatrixVerificationResponse,
+    },
 };
 
 async fn wait_for_confirmation<'a, R: Runtime>(
@@ -162,4 +166,69 @@ pub async fn request_verification_handler<R: Runtime>(
             VerificationRequestState::Done | VerificationRequestState::Cancelled(_) => break,
         }
     }
+}
+
+pub async fn verify_device<R: Runtime>(
+    app_handle: &AppHandle<R>,
+    user_id: &UserId,
+    device_id: &DeviceId,
+) -> anyhow::Result<()> {
+    let client = get_client().expect("Client should be defined at this state");
+    let device_option = client
+        .encryption()
+        .get_device(user_id, device_id)
+        .await
+        .map_err(|e| anyhow!(e))?;
+
+    let verification_methods = vec![VerificationMethod::SasV1];
+
+    let request = if let Some(device) = device_option {
+        device
+            .request_verification_with_methods(verification_methods)
+            .await?
+    } else {
+        return Err(anyhow!("The provided device ID is not found"));
+    };
+
+    let mut stream = request.changes();
+
+    while let Some(state) = stream.next().await {
+        match state {
+            VerificationRequestState::Created { .. }
+            | VerificationRequestState::Requested { .. }
+            | VerificationRequestState::Transitioned { .. } => (),
+            VerificationRequestState::Ready {
+                our_methods: _,
+                other_device_data: _,
+                their_methods,
+            } => {
+                if their_methods.contains(&VerificationMethod::SasV1) {
+                    if let Some(sas) = request.start_sas().await? {
+                        tauri::async_runtime::spawn(sas_verification_handler(
+                            client,
+                            sas,
+                            app_handle.clone(),
+                        ));
+                        break;
+                    };
+                } else {
+                    request.cancel().await?
+                }
+            }
+            // VerificationRequestState::Transitioned { verification: _ } => {
+            //     // // We only support SAS verification.
+            //     // if let Verification::SasV1(s) = verification {
+            //     //     tauri::async_runtime::spawn(sas_verification_handler(
+            //     //         client,
+            //     //         s,
+            //     //         app_handle.clone(),
+            //     //     ));
+            //     //     break;
+            //     // }
+            // }
+            VerificationRequestState::Done | VerificationRequestState::Cancelled(_) => break,
+        }
+    }
+
+    Ok(())
 }

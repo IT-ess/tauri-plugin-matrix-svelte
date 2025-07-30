@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use matrix_sdk::{
     media::MediaRequestParameters,
-    ruma::{OwnedRoomId, OwnedUserId},
+    ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId},
 };
 use serde::de::DeserializeOwned;
 use tauri::{ipc::Channel, plugin::PluginApi, AppHandle, Runtime};
@@ -12,6 +12,7 @@ use crate::{
         login::{LoginRequest, MatrixClientConfig},
         requests::{submit_async_request, MatrixRequest},
         user_profile::fetch_user_profile,
+        verify_device,
     },
     models::matrix::{FrontendDevice, MediaStreamEvent},
     notifications::{GetTokenRequest, GetTokenResponse, WatchNotificationResult},
@@ -59,6 +60,14 @@ impl<R: Runtime> MatrixSvelte<R> {
 
     pub async fn get_devices(&self, user_id: OwnedUserId) -> crate::Result<Vec<FrontendDevice>> {
         get_devices(&user_id).await
+    }
+
+    pub async fn verify_device(
+        &self,
+        user_id: OwnedUserId,
+        device_id: OwnedDeviceId,
+    ) -> crate::Result<()> {
+        verify_device(&self.0, &user_id, &device_id).await
     }
 
     // Not implemented on desktop

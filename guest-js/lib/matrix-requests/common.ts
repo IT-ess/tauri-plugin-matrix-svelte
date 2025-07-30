@@ -2,6 +2,7 @@
 export type RoomId = string;
 export type EventId = string;
 export type UserId = string;
+export type DeviceId = string;
 export type RoomAliasId = string;
 export type ServerName = string;
 export type MatrixId = string;

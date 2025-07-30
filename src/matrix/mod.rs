@@ -1,5 +1,9 @@
 use anyhow::anyhow;
-use matrix_sdk::{media::MediaRequestParameters, ruma::UserId, Client};
+use matrix_sdk::{
+    media::MediaRequestParameters,
+    ruma::{DeviceId, UserId},
+    Client,
+};
 use session::{restore_client_from_session, try_get_session};
 use tauri::{ipc::Channel, AppHandle, Manager, Runtime};
 use tokio::sync::oneshot;
@@ -124,4 +128,14 @@ pub(crate) async fn get_devices(user_id: &UserId) -> crate::Result<Vec<FrontendD
         })
         .collect();
     Ok(devices)
+}
+
+pub(crate) async fn verify_device<R: Runtime>(
+    app_handle: &AppHandle<R>,
+    user_id: &UserId,
+    device_id: &DeviceId,
+) -> crate::Result<()> {
+    emoji_verification::verify_device(app_handle, user_id, device_id)
+        .await
+        .map_err(|e| crate::Error::Anyhow(e))
 }

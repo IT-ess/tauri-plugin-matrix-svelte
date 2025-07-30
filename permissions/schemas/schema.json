@@ -367,6 +367,18 @@
           "markdownDescription": "Denies the submit_async_request command without any pre-configured scope."
         },
         {
+          "description": "Enables the verify_device command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-verify-device",
+          "markdownDescription": "Enables the verify_device command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the verify_device command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-verify-device",
+          "markdownDescription": "Denies the verify_device command without any pre-configured scope."
+        },
+        {
           "description": "Enables the watch_notifications command without any pre-configured scope.",
           "type": "string",
           "const": "allow-watch-notifications",
@@ -379,10 +391,10 @@
           "markdownDescription": "Denies the watch_notifications command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`\n- `allow-login-and-create-new-session`\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-watch-notifications`\n- `allow-get-devices`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`\n- `allow-login-and-create-new-session`\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-watch-notifications`\n- `allow-get-devices`\n- `allow-verify-device`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`\n- `allow-login-and-create-new-session`\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-watch-notifications`\n- `allow-get-devices`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`\n- `allow-login-and-create-new-session`\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-watch-notifications`\n- `allow-get-devices`\n- `allow-verify-device`"
         }
       ]
     }

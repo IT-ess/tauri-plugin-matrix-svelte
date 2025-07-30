@@ -75,6 +75,7 @@
 </main>
 
 <Toaster
+	class="mt-safe"
 	richColors
 	expand={isDesktop.current}
 	position={isDesktop.current ? 'top-right' : 'top-center'}

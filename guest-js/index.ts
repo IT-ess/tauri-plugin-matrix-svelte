@@ -36,7 +36,7 @@ import {
 	VideoMessageEventContent
 } from './timeline-items/message-kinds';
 import { StateEvent } from './timeline-items/state-event';
-import { UserId } from './matrix-requests/common';
+import { DeviceId, UserId } from './matrix-requests/common';
 
 export async function loginAndCreateNewSession(config: MatrixClientConfig): Promise<null> {
 	return await invoke('plugin:matrix-svelte|login_and_create_new_session', {
@@ -62,6 +62,10 @@ export async function fetchMedia(
 
 export async function getDevices(userId: UserId): Promise<Device[]> {
 	return await invoke('plugin:matrix-svelte|get_devices', { userId });
+}
+
+export async function verifyDevice(userId: UserId, deviceId: DeviceId): Promise<null> {
+	return await invoke('plugin:matrix-svelte|verify_device', { userId, deviceId });
 }
 
 export {

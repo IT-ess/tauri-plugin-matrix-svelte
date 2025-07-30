@@ -14,7 +14,6 @@ pub enum LoginState {
 }
 
 impl LoginState {
-    // Method to convert LoginState to camelCase string
     fn to_camel_case(&self) -> String {
         match self {
             LoginState::Initiating => "initiating".to_string(),

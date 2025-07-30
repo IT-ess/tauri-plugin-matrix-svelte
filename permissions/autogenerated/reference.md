@@ -11,6 +11,7 @@ Default permissions for the plugin
 - `allow-fetch-user-profile`
 - `allow-watch-notifications`
 - `allow-get-devices`
+- `allow-verify-device`
 
 ## Permission Table
 
@@ -172,6 +173,32 @@ Enables the submit_async_request command without any pre-configured scope.
 <td>
 
 Denies the submit_async_request command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-verify-device`
+
+</td>
+<td>
+
+Enables the verify_device command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-verify-device`
+
+</td>
+<td>
+
+Denies the verify_device command without any pre-configured scope.
 
 </td>
 </tr>

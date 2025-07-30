@@ -20,11 +20,13 @@
 
 	function handleViewDetails() {
 		console.log('View device details:', device.deviceId);
+		// TODO
 		isOpen = false;
 	}
 
 	function handleRemoveDevice() {
 		console.log('Remove device:', device.deviceId);
+		// TODO
 		isOpen = false;
 	}
 </script>

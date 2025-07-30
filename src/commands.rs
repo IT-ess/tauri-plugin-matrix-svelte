@@ -1,5 +1,5 @@
 use matrix_sdk::media::MediaRequestParameters;
-use matrix_sdk::ruma::{OwnedRoomId, OwnedUserId};
+use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId};
 use tauri::ipc::Channel;
 use tauri::{command, AppHandle, Runtime};
 
@@ -73,17 +73,31 @@ pub(crate) async fn fetch_user_profile<R: Runtime>(
 }
 
 #[command]
-pub(crate) async fn watch_notifications<R: Runtime>(
-    app_handle: AppHandle<R>,
-    channel: Channel,
-) -> Result<WatchNotificationResult> {
-    app_handle.matrix_svelte().watch_notifications(channel)
-}
-
-#[command]
 pub(crate) async fn get_devices<R: Runtime>(
     app_handle: AppHandle<R>,
     user_id: OwnedUserId,
 ) -> Result<Vec<FrontendDevice>> {
     app_handle.matrix_svelte().get_devices(user_id).await
+}
+
+#[command]
+pub(crate) async fn verify_device<R: Runtime>(
+    app_handle: AppHandle<R>,
+    user_id: OwnedUserId,
+    device_id: OwnedDeviceId,
+) -> Result<()> {
+    app_handle
+        .matrix_svelte()
+        .verify_device(user_id, device_id)
+        .await
+}
+
+// Mobile only
+
+#[command]
+pub(crate) async fn watch_notifications<R: Runtime>(
+    app_handle: AppHandle<R>,
+    channel: Channel,
+) -> Result<WatchNotificationResult> {
+    app_handle.matrix_svelte().watch_notifications(channel)
 }

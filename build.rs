@@ -6,6 +6,7 @@ const COMMANDS: &[&str] = &[
     "fetch_user_profile",
     "watch_notifications",
     "get_devices",
+    "verify_device",
 ];
 
 fn main() {

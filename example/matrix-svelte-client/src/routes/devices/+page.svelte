@@ -1,12 +1,13 @@
 <script lang="ts">
-	import type { Device } from 'tauri-plugin-matrix-svelte-api';
+	import { verifyDevice, type Device } from 'tauri-plugin-matrix-svelte-api';
 	import DeviceItem from './device-item.svelte';
 
 	let { data } = $props();
 
-	function handleVerifyDevice(device: Device) {
+	async function handleVerifyDevice(device: Device) {
 		console.log('Verifying device:', device.deviceId);
-		// Handle device verification logic here
+		// TODO: open a popup with a loader and handle the promise resolution.
+		await verifyDevice(data.userId, device.deviceId);
 	}
 
 	function sortDevices(device: Device[]): Device[] {
