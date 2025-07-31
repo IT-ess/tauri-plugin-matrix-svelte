@@ -23,7 +23,7 @@ import {
 } from './timeline-items/timeline-item.js';
 import type { MsgLikeContent, ReactionsByKeyBySender } from './timeline-items/message-like.js';
 import type { MediaRequestParameters } from './matrix-requests/media.js';
-import { fetchMedia, MediaLoadingState, mediaCache } from './media-cache.svelte.js';
+import { fetchMedia, MediaLoadingState } from './media-cache.svelte.js';
 import { watchNotifications } from './notifications/ios-notifications.js';
 import type {
 	AudioMessageEventContent,
@@ -76,7 +76,6 @@ export {
 	type TimelineState,
 	createMatrixRequest,
 	type MatrixRequest,
-	mediaCache,
 	type InvitedRoomInfo,
 	type InviteState,
 	type InviterInfo,

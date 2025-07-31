@@ -82,7 +82,9 @@ export class MediaCache {
 			await this.init();
 		}
 
-		let mxcUri = isPlainMediaSource(request.source) ? request.source.url : request.source.file.url;
+		const mxcUri = isPlainMediaSource(request.source)
+			? request.source.url
+			: request.source.file.url;
 
 		// Check if media is already cached
 		const cachedImage = await this.getCachedMedia(mxcUri);

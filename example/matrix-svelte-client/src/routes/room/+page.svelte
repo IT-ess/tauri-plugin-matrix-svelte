@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import type { PageProps } from './$types';
-	import { events, mediaCache } from 'tauri-plugin-matrix-svelte-api';
+	import { events, fetchMedia } from 'tauri-plugin-matrix-svelte-api';
 	import { emit } from '@tauri-apps/api/event';
 	import Room from '$lib/components/room/room.svelte';
 	import { invoke } from '@tauri-apps/api/core';
@@ -44,7 +44,7 @@
 				data.profileStore.state[key].data.avatarUrl !== undefined &&
 				data.profileStore.state[key].data.avatarDataUrl === undefined
 			) {
-				data.profileStore.state[key].data.avatarDataUrl = await mediaCache.get({
+				data.profileStore.state[key].data.avatarDataUrl = await fetchMedia({
 					format: 'File',
 					source: { url: data.profileStore.state[key].data.avatarUrl }
 				});
