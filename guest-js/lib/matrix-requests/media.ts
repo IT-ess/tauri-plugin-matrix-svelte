@@ -1,4 +1,4 @@
-import { Base64, UInt, MxcUri } from './common';
+import type { Base64, UInt, MxcUri } from './common.js';
 
 export interface JsonWebKey {
 	kty: 'oct';

@@ -17,7 +17,7 @@ export class LoginStore extends RuneStore<LoginStateType> {
 	 */
 	constructor() {
 		const hooks: StoreHooks = {
-			error: (err) => console.error(err)
+			error: (err: any) => console.error(err)
 		};
 		const options: TauriPluginSvelteRuneStoreOptions<LoginStateType> = {
 			hooks,

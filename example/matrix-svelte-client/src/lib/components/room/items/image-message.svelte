@@ -5,8 +5,8 @@
 	import { XIcon } from '@lucide/svelte';
 	import {
 		fetchMedia,
+		MediaLoadingState,
 		type ImageMessageEventContent,
-		type LoadingState,
 		type MediaRequestParameters,
 		type StickerEventContent
 	} from 'tauri-plugin-matrix-svelte-api';
@@ -24,20 +24,11 @@
 	let alt = itemContent.body;
 
 	// State variables
-	// let isLoaded = $state(false);
 	let isFullscreen = $state(false);
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
 	let imageSrc = $state<string>('');
-	// let totalSize = $derived(itemContent.info?.size ?? 1);
-	// let bytesReceived = $state(0);
-	// let progress = $derived(bytesReceived / totalSize);
-	let loadingState = $state<LoadingState>({
-		isLoaded: false,
-		progress: 0,
-		totalSize: itemContent.info?.size ?? 1
-	});
-
+	let loadingState = new MediaLoadingState(itemContent.info?.size ?? 1);
 	let fullscreenContainer = $state<HTMLDivElement>()!;
 
 	onClickOutside(
@@ -51,53 +42,7 @@
 
 		isLoading = true;
 
-		// const chunks: Uint8Array[] = [];
 		try {
-			// const onEvent = new Channel<events.MediaStreamEvent>();
-
-			// onEvent.onmessage = (message) => {
-			// 	if (message.event === 'started') {
-			// 		console.log(`Starting image fetch, total size: ${totalSize} bytes`);
-			// 		return;
-			// 	}
-
-			// 	if (message.event === 'chunk') {
-			// 		chunks.push(new Uint8Array(message.data.data));
-			// 		bytesReceived = message.data.bytesReceived;
-			// 		console.log(
-			// 			`Received chunk: ${message.data.chunkSize} bytes, total: ${bytesReceived}/${totalSize}`
-			// 		);
-			// 		return;
-			// 	}
-
-			// 	if (message.event === 'finished') {
-			// 		// Combine all chunks into a single Uint8Array
-			// 		const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
-			// 		const combined = new Uint8Array(totalLength);
-			// 		let offset = 0;
-
-			// 		for (const chunk of chunks) {
-			// 			combined.set(chunk, offset);
-			// 			offset += chunk.length;
-			// 		}
-
-			// 		// Create blob URL for display
-			// 		const blob = new Blob([combined], { type: itemContent.info?.mimetype ?? 'image/jpeg' });
-			// 		imageSrc = URL.createObjectURL(blob);
-			// 		isLoaded = true;
-			// 		isLoading = false;
-			// 		console.log(`Image fetch completed: ${message.data.totalBytes} bytes`);
-			// 		return;
-			// 	}
-
-			// 	if (message.event === 'error') {
-			// 		error = message.data.message;
-			// 		isLoading = false;
-			// 		console.error('Image fetch error:', message.data.message);
-			// 		return;
-			// 	}
-			// };
-
 			let mediaRequest: MediaRequestParameters =
 				itemContent.msgtype === 'm.image' // Images are encrypted while stickers aren't
 					? {

@@ -3,7 +3,7 @@ import {
 	type StoreHooks,
 	type TauriPluginSvelteRuneStoreOptions
 } from '@tauri-store/svelte';
-import type { UserId } from '../matrix-requests/common';
+import type { UserId } from '../matrix-requests/common.js';
 
 export const PROFILES_STORE_ID = 'profiles';
 
@@ -29,7 +29,7 @@ export class ProfileStore extends RuneStore<ProfileRecord> {
 
 	constructor() {
 		const hooks: StoreHooks<ProfileRecord> = {
-			error: (err) => console.error(err)
+			error: (err: any) => console.error(err)
 		};
 		const options: TauriPluginSvelteRuneStoreOptions<ProfileRecord> = {
 			hooks,

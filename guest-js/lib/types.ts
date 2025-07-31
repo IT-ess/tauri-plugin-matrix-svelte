@@ -1,4 +1,4 @@
-import { TimelineItem } from './timeline-items/timeline-item';
+import { type TimelineItem } from './timeline-items/timeline-item.js';
 
 export type MatrixClientConfig = {
 	username: string;

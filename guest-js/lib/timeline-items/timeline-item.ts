@@ -1,6 +1,6 @@
-import { isTextMessage } from './message-kinds';
-import { isMsgLikeContent, MsgLikeContent } from './message-like';
-import { StateEvent } from './state-event';
+import { isTextMessage } from './message-kinds.js';
+import { isMsgLikeContent, type MsgLikeContent } from './message-like.js';
+import { type StateEvent } from './state-event.js';
 
 // Base timeline item structure
 export type TimelineItem = {

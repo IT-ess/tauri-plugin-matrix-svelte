@@ -1,14 +1,17 @@
 {
-  "compilerOptions": {
-    "target": "es2021",
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "skipLibCheck": true,
-    "strict": true,
-    "noUnusedLocals": true,
-    "noImplicitAny": true,
-    "noEmit": true
-  },
-  "include": ["guest-js/*.ts"],
-  "exclude": ["dist-js", "node_modules"]
+	"extends": "./.svelte-kit/tsconfig.json",
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext"
+	},
+	"include": ["guest-js/**/*.js", "guest-js/**/*.ts", "guest-js/**/*.svelte"],
+	"exclude": ["dist", "node_modules"]
 }

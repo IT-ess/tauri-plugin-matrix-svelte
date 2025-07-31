@@ -1,8 +1,8 @@
 import { invoke } from '@tauri-apps/api/core';
 import { Channel } from '@tauri-apps/api/core';
 import { fileTypeFromBuffer } from 'file-type';
-import type { MediaStreamEvent } from './tauri-events';
-import { isPlainMediaSource, MediaRequestParameters } from './matrix-requests/media';
+import type { MediaStreamEvent } from './tauri-events.js';
+import { isPlainMediaSource, type MediaRequestParameters } from './matrix-requests/media.js';
 
 const CACHE_NAME = 'matrix-media-cache';
 const CACHE_VERSION = 'v1';
@@ -14,15 +14,45 @@ const CACHE_CONFIG = {
 	maxEntries: 1000 // Maximum number of cached images
 };
 
-export type LoadingState = {
-	progress: number;
-	isLoaded: boolean;
-	totalSize: number;
-};
+export class MediaLoadingState {
+	#progress: number;
+	#isLoaded: boolean;
+	#totalSize: number;
+
+	constructor(totalSize: number) {
+		this.#progress = $state(0);
+		this.#isLoaded = $state(false);
+		this.#totalSize = $state(totalSize);
+	}
+
+	public get progress(): number {
+		return this.#progress;
+	}
+
+	public get isLoaded(): boolean {
+		return this.#isLoaded;
+	}
+
+	public get totalSize(): number {
+		return this.#totalSize;
+	}
+
+	public set progress(value: number) {
+		this.#progress = value;
+	}
+
+	public set isLoaded(value: boolean) {
+		this.#isLoaded = value;
+	}
+
+	public set totalSize(value: number) {
+		this.#totalSize = value;
+	}
+}
 
 export async function fetchMedia(
 	mediaRequest: MediaRequestParameters,
-	loadingState?: LoadingState
+	loadingState?: MediaLoadingState
 ) {
 	return mediaCache.get(mediaRequest, loadingState);
 }
@@ -46,7 +76,7 @@ export class MediaCache {
 	/**
 	 * Main method: Get media from cache or fetch it if not available
 	 */
-	async get(request: MediaRequestParameters, loadingState?: LoadingState): Promise<string> {
+	async get(request: MediaRequestParameters, loadingState?: MediaLoadingState): Promise<string> {
 		// Initialize cache if not already done
 		if (!this.cache) {
 			await this.init();
@@ -54,10 +84,13 @@ export class MediaCache {
 
 		let mxcUri = isPlainMediaSource(request.source) ? request.source.url : request.source.file.url;
 
-		// Check if image is already cached
+		// Check if media is already cached
 		const cachedImage = await this.getCachedMedia(mxcUri);
 		if (cachedImage) {
 			console.log(`Avatar loaded from cache: ${mxcUri}`);
+			if (loadingState) {
+				loadingState.isLoaded = true;
+			}
 			return cachedImage;
 		}
 
@@ -119,7 +152,7 @@ export class MediaCache {
 	private async fetchAndCache(
 		mxcUri: string,
 		request: MediaRequestParameters,
-		loadingState?: LoadingState
+		loadingState?: MediaLoadingState
 	): Promise<string> {
 		const chunks: Uint8Array[] = [];
 
