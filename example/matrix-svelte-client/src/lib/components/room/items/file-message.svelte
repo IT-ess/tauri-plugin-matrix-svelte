@@ -1,11 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import {
-		fetchMedia,
-		type events,
-		type FileMessageEventContent
-	} from 'tauri-plugin-matrix-svelte-api';
-	import { Channel } from '@tauri-apps/api/core';
+	import { type events, type FileMessageEventContent } from 'tauri-plugin-matrix-svelte-api';
+	import { Channel, invoke } from '@tauri-apps/api/core';
 	import { Download, Paperclip } from '@lucide/svelte';
 	import { writeFile, BaseDirectory, exists } from '@tauri-apps/plugin-fs';
 	import { onMount } from 'svelte';
@@ -99,13 +95,13 @@
 				}
 			};
 
-			await fetchMedia(
-				{
+			await invoke('plugin:matrix-svelte|fetch_media', {
+				mediaRequest: {
 					format: 'File',
 					source: { file: itemContent.file }
 				},
 				onEvent
-			);
+			});
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Unknown error occurred';
 			isLoading = false;

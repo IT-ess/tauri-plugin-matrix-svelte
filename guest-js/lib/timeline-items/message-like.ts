@@ -1,6 +1,6 @@
-import { EventId, UserId } from '../matrix-requests/common';
-import { TimelineItem } from './timeline-item';
-import { MsgLikeKind } from './message-kinds';
+import type { EventId, UserId } from '../matrix-requests/common.js';
+import type { TimelineItem } from './timeline-item.js';
+import type { MsgLikeKind } from './message-kinds.js';
 
 // Discriminated union for message-like content
 export type MsgLikeContent = {

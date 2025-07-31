@@ -4,8 +4,8 @@ import {
 	type StoreHooks,
 	type TauriPluginSvelteRuneStoreOptions
 } from '@tauri-store/svelte';
-import { MatrixSvelteEmitEvent } from '../tauri-events';
-import { RoomsCollectionType } from '../types';
+import { MatrixSvelteEmitEvent } from '../tauri-events.js';
+import { type RoomsCollectionType } from '../types.js';
 
 export const ROOMS_COLLECTION_STORE_ID = 'rooms-collection';
 
@@ -16,7 +16,7 @@ export class RoomsCollection extends RuneStore<RoomsCollectionType> {
 
 	constructor() {
 		const hooks: StoreHooks = {
-			error: (err) => console.error(err)
+			error: (err: any) => console.error(err)
 		};
 		const options: TauriPluginSvelteRuneStoreOptions<RoomsCollectionType> = {
 			hooks,

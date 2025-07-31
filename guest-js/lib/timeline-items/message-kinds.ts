@@ -1,5 +1,9 @@
-import { EncryptedMediaSource, MediaSource, PlainMediaSource } from '../matrix-requests/media';
-import { MsgLikeContent } from './message-like';
+import type {
+	EncryptedMediaSource,
+	MediaSource,
+	PlainMediaSource
+} from '../matrix-requests/media.js';
+import { type MsgLikeContent } from './message-like.js';
 
 export type MsgLikeKind =
 	| { kind: 'text'; body: TextMessageEventContent }

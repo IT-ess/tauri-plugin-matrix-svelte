@@ -3,7 +3,7 @@
 	import RoomList from '$lib/components/room-list/room-list.svelte';
 	import { goto } from '$app/navigation';
 	import Profile from '$lib/components/room-list/profile.svelte';
-	import { mediaCache } from 'tauri-plugin-matrix-svelte-api';
+	import { fetchMedia } from 'tauri-plugin-matrix-svelte-api';
 	import { invoke } from '@tauri-apps/api/core';
 
 	let { data }: PageProps = $props();
@@ -30,9 +30,10 @@
 				data.profileStore.state[key].data.avatarUrl !== undefined &&
 				data.profileStore.state[key].data.avatarDataUrl === undefined
 			) {
-				data.profileStore.state[key].data.avatarDataUrl = await mediaCache.get(
-					data.profileStore.state[key].data.avatarUrl
-				);
+				data.profileStore.state[key].data.avatarDataUrl = await fetchMedia({
+					format: 'File',
+					source: { url: data.profileStore.state[key].data.avatarUrl }
+				});
 			}
 		} else if (
 			data.profileStore.state?.[key] &&

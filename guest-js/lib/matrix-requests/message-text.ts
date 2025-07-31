@@ -1,4 +1,4 @@
-import { EventId, RoomId } from './common';
+import type { EventId, RoomId } from './common.js';
 
 // Main RoomMessageEventContent matching the Rust struct
 export interface RoomMessageEventContent {

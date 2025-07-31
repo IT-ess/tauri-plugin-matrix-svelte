@@ -2,7 +2,7 @@
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Badge } from '$lib/components/ui/badge';
 	import { getInitials } from '$lib/utils';
-	import { mediaCache, type JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
+	import { fetchMedia, type JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
 		room: JoinedRoomInfo;
@@ -40,7 +40,7 @@
     }}} -->
 	<Avatar>
 		{#if room.avatar !== null}
-			{#await mediaCache.get(room.avatar)}
+			{#await fetchMedia({ format: 'File', source: { url: room.avatar } })}
 				{@render avatarFallback(room.roomName)}
 			{:then url}
 				<AvatarImage src={url} alt={room.roomName} />

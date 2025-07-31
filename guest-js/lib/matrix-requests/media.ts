@@ -1,4 +1,4 @@
-import { Base64, UInt, MxcUri } from './common';
+import type { Base64, UInt, MxcUri } from './common.js';
 
 export interface JsonWebKey {
 	kty: 'oct';
@@ -21,6 +21,15 @@ export type MediaSource = PlainMediaSource | EncryptedMediaSource;
 export type PlainMediaSource = { url: MxcUri }; // Corresponds to Plain variant, renamed to "url". We don't support Plain for now
 
 export type EncryptedMediaSource = { file: EncryptedFile }; // Corresponds to Encrypted variant, renamed to "file"
+
+export function isPlainMediaSource(source: MediaSource): source is PlainMediaSource {
+	return (
+		typeof source === 'object' &&
+		source !== null &&
+		'url' in source &&
+		typeof source.url === 'string'
+	);
+}
 
 export type MediaFormat = 'File' | { Thumbnail: MediaThumbnailSettings };
 

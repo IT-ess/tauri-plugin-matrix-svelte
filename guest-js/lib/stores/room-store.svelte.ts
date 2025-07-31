@@ -3,10 +3,10 @@ import {
 	type StoreHooks,
 	type TauriPluginSvelteRuneStoreOptions
 } from '@tauri-store/svelte';
-import type { Room } from '../types';
+import type { Room } from '../types.js';
 import { emit } from '@tauri-apps/api/event';
 import { RoomsCollection } from './rooms-collection.svelte';
-import { MatrixSvelteEmitEvent, RoomCreatedEventType } from '../tauri-events';
+import { MatrixSvelteEmitEvent, type RoomCreatedEventType } from '../tauri-events.js';
 
 export class RoomStore extends RuneStore<Room> {
 	/**
@@ -24,7 +24,7 @@ export class RoomStore extends RuneStore<Room> {
 		};
 
 		const hooks: StoreHooks = {
-			error: (err) => console.error(err)
+			error: (err: any) => console.error(err)
 		};
 
 		options = {

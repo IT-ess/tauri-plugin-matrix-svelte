@@ -1,4 +1,4 @@
-import {
+import type {
 	MatrixId,
 	EventId,
 	RoomAliasId,
@@ -6,13 +6,13 @@ import {
 	ServerName,
 	UserId,
 	TimelineEventItemId
-} from './common';
+} from './common.js';
 import {
-	RoomMessageEventContent,
+	type RoomMessageEventContent,
 	sendMessage,
-	SendMessageRequest,
+	type SendMessageRequest,
 	sendTextMessage
-} from './message-text';
+} from './message-text.js';
 
 // Enums and other types
 type PaginationDirection = 'backwards' | 'forwards';

@@ -2,7 +2,7 @@
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import {
 		createMatrixRequest,
-		mediaCache,
+		fetchMedia,
 		submitAsyncRequest,
 		type InvitedRoomInfo
 	} from 'tauri-plugin-matrix-svelte-api';
@@ -57,7 +57,7 @@
 >
 	<Avatar>
 		{#if room.roomAvatar !== null}
-			{#await mediaCache.get(room.roomAvatar)}
+			{#await fetchMedia({ format: 'File', source: { url: room.roomAvatar } })}
 				{@render avatarFallback(room.roomName)}
 			{:then url}
 				<AvatarImage src={url} alt={room.roomName} />
