@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import type {
+	Device,
 	InvitedRoomInfo,
 	InviterInfo,
 	InviteState,
@@ -35,6 +36,7 @@ import type {
 	VideoMessageEventContent
 } from './timeline-items/message-kinds.js';
 import type { StateEvent } from './timeline-items/state-event.js';
+import type { UserId, DeviceId } from './matrix-requests/common.js';
 
 export async function loginAndCreateNewSession(config: MatrixClientConfig): Promise<null> {
 	return await invoke('plugin:matrix-svelte|login_and_create_new_session', {
@@ -46,6 +48,14 @@ export async function submitAsyncRequest(request: MatrixRequest): Promise<null> 
 	return await invoke('plugin:matrix-svelte|submit_async_request', {
 		request
 	});
+}
+
+export async function getDevices(userId: UserId): Promise<Device[]> {
+	return await invoke('plugin:matrix-svelte|get_devices', { userId });
+}
+
+export async function verifyDevice(userId: UserId, deviceId: DeviceId): Promise<null> {
+	return await invoke('plugin:matrix-svelte|verify_device', { userId, deviceId });
 }
 
 export {
@@ -81,5 +91,6 @@ export {
 	type InviterInfo,
 	watchNotifications,
 	MediaLoadingState,
-	fetchMedia
+	fetchMedia,
+	type Device
 };

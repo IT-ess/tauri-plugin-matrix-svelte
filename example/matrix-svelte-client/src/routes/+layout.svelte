@@ -8,6 +8,8 @@
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Toaster, toast } from 'svelte-sonner';
 	import { MediaQuery } from 'svelte/reactivity';
+	import { page } from '$app/state';
+	import { ChevronLeft } from '@lucide/svelte';
 
 	let { children, data } = $props();
 
@@ -69,11 +71,18 @@
 	});
 </script>
 
-<main class="container">
+<header class="pt-safe-offset-2 flex items-center gap-2 pl-2">
+	{#if page.route.id !== '/'}
+		<Button onclick={() => goto('/')} size="icon" variant="outline"><ChevronLeft /></Button>
+	{/if}
+	<p class="text-lg font-semibold">Matrix Svelte Client</p>
+</header>
+<main class="pb-safe container">
 	{@render children()}
 </main>
 
 <Toaster
+	class="mt-safe"
 	richColors
 	expand={isDesktop.current}
 	position={isDesktop.current ? 'top-right' : 'top-center'}

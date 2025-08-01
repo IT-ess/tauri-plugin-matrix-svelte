@@ -17,10 +17,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::{AppHandle, Manager, Runtime};
 use tauri_plugin_svelte::{ManagerExt, StoreState};
-use tokio::{
-    runtime::Handle,
-    sync::oneshot::{self, Sender},
-};
+use tokio::sync::oneshot::{self, Sender};
 
 use crate::matrix::{
     invited_room::InvitedRoomInfo,
@@ -140,12 +137,12 @@ pub struct JoinedRoomInfo {
     pub(crate) is_direct: bool,
 }
 
-pub fn handle_room_list_service_loading_state(mut loading_state: Subscriber<RoomListLoadingState>) {
+pub fn handle_rooms_loading_state(mut loading_state: Subscriber<RoomListLoadingState>) {
     println!(
         "Initial room list loading state is {:?}",
         loading_state.get()
     );
-    Handle::current().spawn(async move {
+    tauri::async_runtime::spawn(async move {
         while let Some(state) = loading_state.next().await {
             println!("Received a room list loading state update: {state:?}");
             match state {

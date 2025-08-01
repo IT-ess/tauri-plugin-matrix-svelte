@@ -10,6 +10,8 @@ Default permissions for the plugin
 - `allow-fetch-media`
 - `allow-fetch-user-profile`
 - `allow-watch-notifications`
+- `allow-get-devices`
+- `allow-verify-device`
 
 ## Permission Table
 
@@ -18,6 +20,7 @@ Default permissions for the plugin
 <th>Identifier</th>
 <th>Description</th>
 </tr>
+
 
 <tr>
 <td>
@@ -67,6 +70,32 @@ Enables the fetch_user_profile command without any pre-configured scope.
 <td>
 
 Denies the fetch_user_profile command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-get-devices`
+
+</td>
+<td>
+
+Enables the get_devices command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-get-devices`
+
+</td>
+<td>
+
+Denies the get_devices command without any pre-configured scope.
 
 </td>
 </tr>
@@ -145,6 +174,32 @@ Enables the submit_async_request command without any pre-configured scope.
 <td>
 
 Denies the submit_async_request command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-verify-device`
+
+</td>
+<td>
+
+Enables the verify_device command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-verify-device`
+
+</td>
+<td>
+
+Denies the verify_device command without any pre-configured scope.
 
 </td>
 </tr>

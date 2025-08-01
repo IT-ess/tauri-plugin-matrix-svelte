@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use matrix_sdk::{
     media::MediaRequestParameters,
-    ruma::{OwnedRoomId, OwnedUserId},
+    ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId},
 };
 use serde::de::DeserializeOwned;
 use tauri::{
@@ -12,12 +12,13 @@ use tauri::{
 
 use crate::{
     matrix::{
-        create_session_to_state,
+        create_session_to_state, get_devices,
         login::{LoginRequest, MatrixClientConfig},
         requests::{submit_async_request, MatrixRequest},
         user_profile::fetch_user_profile,
+        verify_device,
     },
-    models::matrix::MediaStreamEvent,
+    models::matrix::{FrontendDevice, MediaStreamEvent},
 };
 
 use crate::models::notifications::{
@@ -72,6 +73,20 @@ impl<R: Runtime> MatrixSvelte<R> {
     ) -> crate::Result<bool> {
         Ok(fetch_user_profile(user_id, room_id).await)
     }
+
+    pub async fn get_devices(&self, user_id: OwnedUserId) -> crate::Result<Vec<FrontendDevice>> {
+        get_devices(&user_id).await
+    }
+
+    pub async fn verify_device(
+        &self,
+        user_id: OwnedUserId,
+        device_id: OwnedDeviceId,
+    ) -> crate::Result<()> {
+        verify_device(&self.0.app(), &user_id, &device_id).await
+    }
+
+    // Mobile only
 
     pub fn get_token(&self, payload: GetTokenRequest) -> crate::Result<GetTokenResponse> {
         self.0

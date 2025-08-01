@@ -70,7 +70,7 @@
 	</Dialog.Root>
 {:else}
 	<Drawer.Root bind:open={actionCreateRoomOpen}>
-		<Drawer.Content>
+		<Drawer.Content class="pb-safe">
 			<Drawer.Header class="text-left">
 				<Drawer.Title>Create DM Room</Drawer.Title>
 				<Drawer.Description>Invite a friend to discuss.</Drawer.Description>

@@ -91,3 +91,13 @@ export type InviterInfo = {
 	displayName: string;
 	avatar: string | null;
 };
+
+export type Device = {
+	deviceId: string;
+	displayName: string;
+	isVerified: boolean;
+	isVerifiedWithCrossSigning: boolean;
+	registrationDate: number;
+	guessedType: 'ios' | 'android' | 'web' | 'desktop' | 'unknown';
+	isCurrentDevice: boolean;
+};

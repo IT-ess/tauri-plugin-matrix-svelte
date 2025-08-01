@@ -39,8 +39,10 @@ use mobile::MatrixSvelte;
 
 use crate::{
     matrix::{
-        notifications::enqueue_toast_notification, room::rooms_list::RoomsCollectionStatus,
+        notifications::enqueue_toast_notification,
+        room::rooms_list::RoomsCollectionStatus,
         singletons::TEMP_DIR,
+        stores::login_store::{update_verification_state, FrontendVerificationState},
     },
     models::matrix::{ToastNotificationRequest, ToastNotificationVariant},
     utils::fs::get_temp_dir_or_create_it,
@@ -72,7 +74,9 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
             commands::submit_async_request,
             commands::fetch_media,
             commands::fetch_user_profile,
-            commands::watch_notifications
+            commands::watch_notifications,
+            commands::get_devices,
+            commands::verify_device
         ])
         .setup(|app, api| {
             // Create a channel to be used between UI thread(s) and the async worker thread.
@@ -140,6 +144,20 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
                         client
                     }
                 };
+
+                let mut verification_subscriber = client.encryption().verification_state();
+
+                let verification_state_app_handle = main_loop_app_handle.clone();
+
+                tokio::task::spawn(async move {
+                    while let Some(state) = verification_subscriber.next().await {
+                        update_verification_state(
+                            &verification_state_app_handle,
+                            FrontendVerificationState::new(state),
+                        )
+                        .expect("Couldn't update verification state in Svelte Store");
+                    }
+                });
 
                 let mut ui_event_receiver = crate::matrix::singletons::subscribe_to_events()
                     .expect("Couldn't get UI event receiver"); // subscribe to events so the sender(s) never fail
