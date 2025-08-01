@@ -215,17 +215,6 @@ pub async fn verify_device<R: Runtime>(
                     request.cancel().await?
                 }
             }
-            // VerificationRequestState::Transitioned { verification: _ } => {
-            //     // // We only support SAS verification.
-            //     // if let Verification::SasV1(s) = verification {
-            //     //     tauri::async_runtime::spawn(sas_verification_handler(
-            //     //         client,
-            //     //         s,
-            //     //         app_handle.clone(),
-            //     //     ));
-            //     //     break;
-            //     // }
-            // }
             VerificationRequestState::Done | VerificationRequestState::Cancelled(_) => break,
         }
     }

@@ -91,5 +91,6 @@ export {
 	type InviterInfo,
 	watchNotifications,
 	MediaLoadingState,
-	fetchMedia
+	fetchMedia,
+	type Device
 };

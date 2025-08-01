@@ -6,8 +6,9 @@
 
 	async function handleVerifyDevice(device: Device) {
 		console.log('Verifying device:', device.deviceId);
-		// TODO: open a popup with a loader and handle the promise resolution.
 		await verifyDevice(data.userId, device.deviceId);
+		// If the targeted device accepts, it will spawn a verification modal
+		// triggered by the listener in hooks.client.ts.
 	}
 
 	function sortDevices(device: Device[]): Device[] {

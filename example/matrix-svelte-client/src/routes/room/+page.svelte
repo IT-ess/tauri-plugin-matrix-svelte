@@ -5,9 +5,6 @@
 	import { emit } from '@tauri-apps/api/event';
 	import Room from '$lib/components/room/room.svelte';
 	import { invoke } from '@tauri-apps/api/core';
-	import { ChevronLeft } from '@lucide/svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { goto } from '$app/navigation';
 
 	let { data }: PageProps = $props();
 
