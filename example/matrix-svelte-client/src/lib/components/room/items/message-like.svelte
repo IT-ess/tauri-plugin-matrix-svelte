@@ -6,11 +6,7 @@
 		submitAsyncRequest,
 		type MsgLikeContent
 	} from 'tauri-plugin-matrix-svelte-api';
-	import Reactions from './reactions.svelte';
-	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
-	import { Tooltip, TooltipContent, TooltipProvider } from '$lib/components/ui/tooltip';
-	import { Button } from '$lib/components/ui/button';
-	import { SmileIcon, ReplyIcon, MessagesSquare } from '@lucide/svelte';
+	import { MessagesSquare, ReplyIcon, Share2Icon } from '@lucide/svelte';
 	import ImageMessage from './image-message.svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { onMount } from 'svelte';
@@ -19,6 +15,18 @@
 	import VideoMessage from './video-message.svelte';
 	import FileMessage from './file-message.svelte';
 	import { Badge } from '$lib/components/ui/badge';
+	import { platform } from '@tauri-apps/plugin-os';
+	import DesktopActions from './item-actions/desktop-actions.svelte';
+	import { press } from 'svelte-gestures';
+	import {
+		DropdownMenu,
+		DropdownMenuContent,
+		DropdownMenuItem,
+		DropdownMenuTrigger
+	} from '$lib/components/ui/dropdown-menu';
+	import { Popover, PopoverContent } from '$lib/components/ui/popover';
+	import { Button } from '$lib/components/ui/button';
+	import PopoverTrigger from '$lib/components/ui/popover/popover-trigger.svelte';
 
 	type Props = {
 		data: MsgLikeContent;
@@ -47,10 +55,11 @@
 	}: Props = $props();
 
 	const { senderId, sender } = data;
-
 	let reactionsArray = $derived(Object.keys(data.reactions));
+
 	let showActions = $state(false);
-	let isReactionPopoverOpen = $state(false);
+	let showDropdown = $state(false);
+	let reactionsPopoverAnchor = $state<HTMLElement>(null!);
 
 	// Format timestamp
 	const formatTime = (timestamp: number) => {
@@ -71,6 +80,7 @@
 			timelineEventId: eventId
 		});
 		await submitAsyncRequest(request);
+		showDropdown = false;
 	};
 
 	// Handle reply action
@@ -80,6 +90,14 @@
 		let content = extractContentFromMsg(data);
 
 		onReply(eventId, sender ?? 'Unknown', content);
+	};
+
+	const handleShare = () => {
+		console.log('TODO');
+	};
+
+	const handleShowdropdown = () => {
+		showDropdown = true;
 	};
 
 	const extractContentFromMsg = (msg: MsgLikeContent): string => {
@@ -106,6 +124,8 @@
 		}
 	};
 
+	const currentPlatform = platform();
+
 	const handleReplyClick = () => {
 		if (onScrollToMessage && data.threadRoot) {
 			onScrollToMessage(data.threadRoot);
@@ -123,130 +143,143 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div
-	class={['group flex gap-2', isOwn && 'flex-row-reverse']}
-	onmouseenter={() => (showActions = true)}
-	onmouseleave={() => (showActions = false)}
->
-	<Avatar>
-		<!-- Reactive store, once the profile is loaded we load the image -->
-		{#if profileStore.state[senderId]?.state === 'loaded' && profileStore.state[senderId].data.avatarDataUrl}
-			<AvatarImage src={profileStore.state[senderId].data.avatarDataUrl} alt={sender} />
-		{:else}
-			{@render avatarFallback(sender)}
-		{/if}
-	</Avatar>
-
-	{#if data.kind === 'sticker'}
-		<!-- Render sticker outside the block -->
-		<div class="relative max-w-[30%] p-3">
-			<ImageMessage itemContent={data.body} isSticker />
-		</div>
-	{:else}
-		<div class="relative max-w-[60%]">
-			<div
-				class={[
-					'relative  rounded-lg p-3',
-					isOwn ? 'bg-primary text-primary-foreground' : 'bg-muted'
-				]}
-			>
-				<div class="flex items-center gap-2">
-					<p class="text-sm font-medium">{data.sender}</p>
-					<span class="text-xs opacity-70">{formatTime(timestamp ?? 0)}</span>
+<Popover bind:open={showDropdown}>
+	<div
+		onmouseenter={() => (showActions = true)}
+		onmouseleave={() => (showActions = false)}
+		use:press={() => ({ timeframe: 300, triggerBeforeFinished: true })}
+		onpress={() => {
+			showDropdown = true;
+		}}
+		class={['group flex gap-2', isOwn && 'flex-row-reverse']}
+	>
+		<PopoverTrigger />
+		<Avatar>
+			<!-- Reactive store, once the profile is loaded we load the image -->
+			{#if profileStore.state[senderId]?.state === 'loaded' && profileStore.state[senderId].data.avatarDataUrl}
+				<AvatarImage src={profileStore.state[senderId].data.avatarDataUrl} alt={sender} />
+			{:else}
+				{@render avatarFallback(sender)}
+			{/if}
+		</Avatar>
+		<DropdownMenu bind:open={showDropdown}>
+			<DropdownMenuTrigger />
+			{#if data.kind === 'sticker'}
+				<!-- Render sticker outside the block -->
+				<div class="relative max-w-[30%] p-3">
+					<ImageMessage itemContent={data.body} isSticker />
 				</div>
-				{#if repliedToMessage}
+			{:else}
+				<div bind:this={reactionsPopoverAnchor} class="relative max-w-[60%]">
 					<div
-						class="relative mt-1 cursor-pointer rounded-lg bg-white p-2 text-sm text-black transition-colors hover:bg-gray-100"
-						onclick={handleReplyClick}
-						role="button"
-						tabindex="0"
-						onkeydown={(e) => e.key === 'Enter' && handleReplyClick()}
+						class={[
+							'relative  rounded-lg p-3',
+							isOwn ? 'bg-primary text-primary-foreground' : 'bg-muted'
+						]}
 					>
-						<MessagesSquare class="absolute top-1 right-1" />
-						<p class="mr-8 text-sm font-medium">{repliedToMessage.sender}</p>
-						<p class="text-sm">{extractContentFromMsg(repliedToMessage)}</p>
-					</div>
-				{/if}
-				{#if data.kind === 'text'}
-					<p class="mt-1 text-sm">
-						{data.body.body}
-					</p>
-				{:else if data.kind === 'emote'}
-					<p class="mt-1 text-sm">
-						<b>{data.sender}:</b>{data.body.body}
-						<!-- same as a text message, but with sender name in front -->
-					</p>
-				{:else if data.kind === 'image'}
-					<ImageMessage itemContent={data.body} />
-				{:else if data.kind === 'audio'}
-					<AudioMessage itemContent={data.body} />
-				{:else if data.kind === 'video'}
-					<VideoMessage itemContent={data.body} />
-				{:else if data.kind === 'file'}
-					<FileMessage itemContent={data.body} />
-				{:else if data.kind === 'redacted'}
-					<Badge variant="destructive">This message has been deleted</Badge>
-				{:else if data.kind === 'unableToDecrypt'}
-					<Badge variant={isOwn ? 'secondary' : 'default'}>Encrypted message</Badge>
-				{:else}
-					<p class="text-muted text-sm">The message type: {data.kind} is not supported yet</p>
-				{/if}
-			</div>
-		</div>
-	{/if}
-
-	<!-- Reaction button and existing actions -->
-	<div class={['flex items-center gap-1', isOwn && 'flex-row-reverse']}>
-		{#if (showActions && onReply) || isReactionPopoverOpen}
-			<!-- Reply button -->
-			<TooltipProvider>
-				<Tooltip>
-					<Button variant="ghost" size="icon" class="h-6 w-6" onclick={handleReply}>
-						<ReplyIcon class="h-4 w-4" />
-					</Button>
-					<TooltipContent>Reply</TooltipContent>
-				</Tooltip>
-			</TooltipProvider>
-			<!-- Reaction button -->
-			<TooltipProvider>
-				<Popover bind:open={isReactionPopoverOpen}>
-					<PopoverTrigger>
-						{#snippet child({ props: triggerProps })}
-							<Tooltip>
-								<Button variant="ghost" size="icon" class="h-6 w-6" {...triggerProps}>
-									<SmileIcon class="h-4 w-4" />
-								</Button>
-							</Tooltip>
-						{/snippet}
-						<TooltipContent>Add reaction</TooltipContent>
-					</PopoverTrigger>
-					<PopoverContent class="w-fit p-2">
-						<div class="flex gap-1">
-							{#each commonEmojis as emoji (emoji)}
-								<Button
-									variant={reactionsArray.includes(emoji)
-										? Object.keys(data.reactions[emoji]).includes(currentUserId)
-											? 'secondary'
-											: 'ghost'
-										: 'ghost'}
-									size="icon"
-									class="h-8 w-8"
-									onclick={() => handleAddReaction(emoji)}
-								>
-									{emoji}
-								</Button>
-							{/each}
+						<div class="flex items-center gap-2">
+							<p class="text-sm font-medium">{data.sender}</p>
+							<span class="text-xs opacity-70">{formatTime(timestamp ?? 0)}</span>
 						</div>
-					</PopoverContent>
-				</Popover>
-			</TooltipProvider>
-		{/if}
+						{#if repliedToMessage}
+							<div
+								class="relative mt-1 cursor-pointer rounded-lg bg-white p-2 text-sm text-black transition-colors hover:bg-gray-100"
+								onclick={handleReplyClick}
+								role="button"
+								tabindex="0"
+								onkeydown={(e) => e.key === 'Enter' && handleReplyClick()}
+							>
+								<MessagesSquare class="absolute top-1 right-1" />
+								<p class="mr-8 text-sm font-medium">{repliedToMessage.sender}</p>
+								<p class="text-sm">{extractContentFromMsg(repliedToMessage)}</p>
+							</div>
+						{/if}
+						{#if data.kind === 'text'}
+							<p class="mt-1 text-sm">
+								{data.body.body}
+							</p>
+						{:else if data.kind === 'emote'}
+							<p class="mt-1 text-sm">
+								<b>{data.sender}:</b>{data.body.body}
+								<!-- same as a text message, but with sender name in front -->
+							</p>
+						{:else if data.kind === 'image'}
+							<ImageMessage itemContent={data.body} />
+						{:else if data.kind === 'audio'}
+							<AudioMessage itemContent={data.body} />
+						{:else if data.kind === 'video'}
+							<VideoMessage itemContent={data.body} />
+						{:else if data.kind === 'file'}
+							<FileMessage itemContent={data.body} />
+						{:else if data.kind === 'redacted'}
+							<Badge variant="destructive">This message has been deleted</Badge>
+						{:else if data.kind === 'unableToDecrypt'}
+							<Badge variant={isOwn ? 'secondary' : 'default'}>Encrypted message</Badge>
+						{:else}
+							<p class="text-muted text-sm">
+								The message type: {data.kind} is not supported yet
+							</p>
+						{/if}
+					</div>
+				</div>
+			{/if}
 
-		{#if reactionsArray.length > 0}
-			<Reactions reactions={data.reactions} />
-		{/if}
+			{#if currentPlatform !== 'android' && currentPlatform !== 'ios'}
+				<DesktopActions
+					bind:showActions
+					{commonEmojis}
+					{currentUserId}
+					{isOwn}
+					{handleAddReaction}
+					{handleReply}
+					reactions={data.reactions}
+					{handleShowdropdown}
+				/>
+			{/if}
+			<DropdownMenuContent
+				customAnchor={reactionsPopoverAnchor}
+				align="end"
+				side={isOwn ? 'left' : 'right'}
+			>
+				<DropdownMenuItem onclick={handleReply} class="text-md">
+					<ReplyIcon class="h-4 w-4" />
+					Reply</DropdownMenuItem
+				>
+				{#if currentPlatform === 'android' || currentPlatform === 'ios'}
+					<DropdownMenuItem onclick={handleShare} class="text-md">
+						<Share2Icon class="h-4 w-4" />
+						Share</DropdownMenuItem
+					>
+				{/if}
+			</DropdownMenuContent>
+		</DropdownMenu>
 	</div>
-</div>
+	<PopoverContent
+		side="top"
+		align={isOwn ? 'end' : 'start'}
+		customAnchor={reactionsPopoverAnchor}
+		class="relative top-0 w-fit p-2"
+	>
+		<div class="flex gap-1">
+			{#each commonEmojis as emoji (emoji)}
+				<Button
+					variant={reactionsArray.includes(emoji)
+						? Object.keys(data.reactions[emoji]).includes(currentUserId)
+							? 'secondary'
+							: 'ghost'
+						: 'ghost'}
+					size="icon"
+					class="h-8 w-8"
+					onclick={() => {
+						handleAddReaction(emoji);
+					}}
+				>
+					{emoji}
+				</Button>
+			{/each}
+		</div>
+	</PopoverContent>
+</Popover>
 
 {#snippet avatarFallback(sender?: string)}
 	<AvatarFallback>{getInitials(sender ?? 'John Doe')}</AvatarFallback>
