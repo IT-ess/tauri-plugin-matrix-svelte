@@ -64,7 +64,6 @@
 </script>
 
 <h1>Room with id {data.roomStore.id}</h1>
-<Button onclick={() => goto('/')} size="icon" variant="outline"><ChevronLeft /></Button>
 <Room
 	roomStore={data.roomStore}
 	profileStore={data.profileStore}

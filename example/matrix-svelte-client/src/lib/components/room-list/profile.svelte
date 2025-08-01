@@ -1,10 +1,10 @@
 <script lang="ts">
 	import * as Sheet from '$lib/components/ui/sheet/index';
-	import { buttonVariants } from '$lib/components/ui/button/index';
+	import { Button, buttonVariants } from '$lib/components/ui/button/index';
 	import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 	import { cn, getInitials } from '$lib/utils';
 	import type { LoginStore, ProfileStore } from 'tauri-plugin-matrix-svelte-api';
-	import { ShieldAlert, ShieldQuestion, ShieldUser } from '@lucide/svelte';
+	import { MonitorSmartphone, ShieldAlert, ShieldQuestion, ShieldUser } from '@lucide/svelte';
 
 	type Props = {
 		profileStore: ProfileStore;
@@ -36,8 +36,10 @@
 					</p>
 				{/if}
 			</div>
-			<div>
-				<a href="/devices">Devices</a>
+			<div class="flex w-full">
+				<Button class="w-full" size="lg" variant="outline" href="/devices"
+					><MonitorSmartphone />Devices</Button
+				>
 			</div>
 		</div>
 		<Sheet.Footer>
