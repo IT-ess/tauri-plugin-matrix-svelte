@@ -12,6 +12,11 @@ pub fn run() {
         builder = builder.plugin(devtools);
     }
 
+    #[cfg(mobile)]
+    {
+        builder = builder.plugin(tauri_plugin_sharesheet::init());
+    }
+
     builder
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_os::init())
