@@ -10,14 +10,14 @@
 	import ImageMessage from './image-message.svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { onMount } from 'svelte';
-	import { getInitials } from '$lib/utils';
+	import { cn, getInitials } from '$lib/utils';
 	import AudioMessage from './audio-message.svelte';
 	import VideoMessage from './video-message.svelte';
 	import FileMessage from './file-message.svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { platform } from '@tauri-apps/plugin-os';
 	import DesktopActions from './item-actions/desktop-actions.svelte';
-	import { press } from 'svelte-gestures';
+	import { press, swipe, type SwipeCustomEvent } from 'svelte-gestures';
 	import {
 		DropdownMenu,
 		DropdownMenuContent,
@@ -27,6 +27,8 @@
 	import { Popover, PopoverContent } from '$lib/components/ui/popover';
 	import { Button } from '$lib/components/ui/button';
 	import PopoverTrigger from '$lib/components/ui/popover/popover-trigger.svelte';
+	import { Tween } from 'svelte/motion';
+	import { cubicOut } from 'svelte/easing';
 
 	type Props = {
 		data: MsgLikeContent;
@@ -100,6 +102,71 @@
 		showDropdown = true;
 	};
 
+	// SWIPE TO REPLY
+
+	// Animation state
+	const swipeOffset = new Tween(0, { duration: 200, easing: cubicOut });
+	const replyOpacity = new Tween(0, { duration: 150, easing: cubicOut });
+
+	let isSwipeActive = $state(false);
+	let isDragging = $state(false);
+	let startX = $state(0);
+	let currentX = $state(0);
+
+	// Swipe threshold for triggering reply
+	const SWIPE_THRESHOLD = 100; // TODO: adapt the threshold for responsive ?
+	const MAX_SWIPE = 150;
+
+	function handleSwipeStart(event: PointerEvent) {
+		isDragging = true;
+		startX = event.clientX;
+		currentX = event.clientX;
+	}
+
+	function handleSwipeMove(event: PointerEvent) {
+		if (!isDragging) return;
+
+		currentX = event.clientX;
+		const deltaX = currentX - startX;
+
+		// Only allow swipe from left to right (for reply action)
+		if (deltaX > 0) {
+			const clampedDelta = Math.min(deltaX, MAX_SWIPE);
+			swipeOffset.set(clampedDelta, { duration: 0 });
+
+			// Show reply icon with opacity based on swipe distance
+			const opacity = Math.min(clampedDelta / SWIPE_THRESHOLD, 1);
+			replyOpacity.set(opacity, { duration: 0 });
+
+			isSwipeActive = clampedDelta > SWIPE_THRESHOLD / 2;
+		}
+	}
+
+	function handleSwipeEnd() {
+		if (!isDragging) return;
+
+		const deltaX = currentX - startX;
+		const shouldTriggerReply = deltaX >= SWIPE_THRESHOLD;
+
+		if (shouldTriggerReply) {
+			// Trigger reply action
+			handleReply();
+		}
+
+		// Reset animation state
+		swipeOffset.set(0);
+		replyOpacity.set(0);
+		isSwipeActive = false;
+		isDragging = false;
+	}
+
+	function handleSwipe(event: SwipeCustomEvent) {
+		if (event.detail.direction === 'right') {
+			// We only swipe to reply to others
+			handleReply();
+		}
+	}
+
 	const extractContentFromMsg = (msg: MsgLikeContent): string => {
 		switch (msg.kind) {
 			case 'text':
@@ -142,7 +209,6 @@
 	});
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
 <Popover bind:open={showDropdown}>
 	<div
 		onmouseenter={() => (showActions = true)}
@@ -151,7 +217,21 @@
 		onpress={() => {
 			showDropdown = true;
 		}}
-		class={['group flex gap-2', isOwn && 'flex-row-reverse']}
+		style="transform: translateX({swipeOffset.current}px)"
+		use:swipe={() => ({ timeframe: 300, minSwipeDistance: 60, touchAction: 'pan-y' })}
+		onswipe={handleSwipe}
+		onpointerdown={handleSwipeStart}
+		onpointermove={handleSwipeMove}
+		onpointerup={handleSwipeEnd}
+		onpointerleave={handleSwipeEnd}
+		class={cn(
+			'group flex gap-2 transition-transform duration-200',
+			isOwn && 'flex-row-reverse',
+			`translate-[${swipeOffset.current}]px`
+		)}
+		role="button"
+		tabindex="0"
+		aria-label="Swipe right to reply"
 	>
 		<PopoverTrigger />
 		<Avatar>
@@ -166,7 +246,7 @@
 			<DropdownMenuTrigger />
 			{#if data.kind === 'sticker'}
 				<!-- Render sticker outside the block -->
-				<div class="relative max-w-[30%] p-3">
+				<div class={cn('relative max-w-[30%] p-3', isSwipeActive ? 'ring-2 ring-blue-300' : '')}>
 					<ImageMessage itemContent={data.body} isSticker />
 				</div>
 			{:else}
@@ -174,7 +254,8 @@
 					<div
 						class={[
 							'relative  rounded-lg p-3',
-							isOwn ? 'bg-primary text-primary-foreground' : 'bg-muted'
+							isOwn ? 'bg-primary text-primary-foreground' : 'bg-muted',
+							isSwipeActive ? 'ring-2 ring-blue-300' : ''
 						]}
 					>
 						<div class="flex items-center gap-2">
