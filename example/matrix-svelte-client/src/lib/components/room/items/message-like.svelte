@@ -17,7 +17,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { platform } from '@tauri-apps/plugin-os';
 	import DesktopActions from './item-actions/desktop-actions.svelte';
-	import { press, swipe, type SwipeCustomEvent } from 'svelte-gestures';
+	import { press, swipe, type GestureCustomEvent } from 'svelte-gestures';
 	import {
 		DropdownMenu,
 		DropdownMenuContent,
@@ -29,6 +29,7 @@
 	import PopoverTrigger from '$lib/components/ui/popover/popover-trigger.svelte';
 	import { Tween } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
+	import { shareText } from '@buildyourwebapp/tauri-plugin-sharesheet';
 
 	type Props = {
 		data: MsgLikeContent;
@@ -94,8 +95,10 @@
 		onReply(eventId, sender ?? 'Unknown', content);
 	};
 
-	const handleShare = () => {
-		console.log('TODO');
+	const handleShare = async () => {
+		if (data.kind === 'text') {
+			await shareText(data.body.body, { mimeType: 'plain/text' });
+		}
 	};
 
 	const handleShowdropdown = () => {
@@ -117,16 +120,16 @@
 	const SWIPE_THRESHOLD = 100; // TODO: adapt the threshold for responsive ?
 	const MAX_SWIPE = 150;
 
-	function handleSwipeStart(event: PointerEvent) {
+	function handleSwipeStart(event: GestureCustomEvent) {
 		isDragging = true;
-		startX = event.clientX;
-		currentX = event.clientX;
+		startX = event.detail.x;
+		currentX = event.detail.x;
 	}
 
-	function handleSwipeMove(event: PointerEvent) {
+	function handleSwipeMove(event: GestureCustomEvent) {
 		if (!isDragging) return;
 
-		currentX = event.clientX;
+		currentX = event.detail.x;
 		const deltaX = currentX - startX;
 
 		// Only allow swipe from left to right (for reply action)
@@ -158,13 +161,6 @@
 		replyOpacity.set(0);
 		isSwipeActive = false;
 		isDragging = false;
-	}
-
-	function handleSwipe(event: SwipeCustomEvent) {
-		if (event.detail.direction === 'right') {
-			// We only swipe to reply to others
-			handleReply();
-		}
 	}
 
 	const extractContentFromMsg = (msg: MsgLikeContent): string => {
@@ -219,11 +215,9 @@
 		}}
 		style="transform: translateX({swipeOffset.current}px)"
 		use:swipe={() => ({ timeframe: 300, minSwipeDistance: 60, touchAction: 'pan-y' })}
-		onswipe={handleSwipe}
-		onpointerdown={handleSwipeStart}
-		onpointermove={handleSwipeMove}
-		onpointerup={handleSwipeEnd}
-		onpointerleave={handleSwipeEnd}
+		onswipedown={handleSwipeStart}
+		onswipemove={handleSwipeMove}
+		onswipeup={handleSwipeEnd}
 		class={cn(
 			'group flex gap-2 transition-transform duration-200',
 			isOwn && 'flex-row-reverse',
@@ -326,7 +320,7 @@
 					<ReplyIcon class="h-4 w-4" />
 					Reply</DropdownMenuItem
 				>
-				{#if currentPlatform === 'android' || currentPlatform === 'ios'}
+				{#if (currentPlatform === 'android' || currentPlatform === 'ios') && data.kind === 'text'}
 					<DropdownMenuItem onclick={handleShare} class="text-md">
 						<Share2Icon class="h-4 w-4" />
 						Share</DropdownMenuItem

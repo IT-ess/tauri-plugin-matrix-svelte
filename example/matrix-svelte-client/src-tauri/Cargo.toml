@@ -30,6 +30,9 @@ tauri-plugin-fs = "2"
 tauri-plugin-svelte = "2.6.1"
 tauri-plugin-notification = "2.3.0"
 
+[target."cfg(any(target_os = \"android\", target_os = \"ios\"))".dependencies]
+tauri-plugin-sharesheet = { git = "https://github.com/buildyourwebapp/tauri-plugin-sharesheet" }
+
 [profile.dev]
 incremental = true # Compile your binary in smaller steps.
 

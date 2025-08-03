@@ -41,6 +41,7 @@
 		"tauri-plugin-matrix-svelte-api": "file:../.."
 	},
 	"devDependencies": {
+		"@buildyourwebapp/tauri-plugin-sharesheet": "^0.0.1",
 		"@eslint/compat": "^1.3.1",
 		"@eslint/js": "^9.31.0",
 		"@internationalized/date": "^3.8.2",
