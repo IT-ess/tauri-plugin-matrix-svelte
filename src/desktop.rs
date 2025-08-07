@@ -2,13 +2,7 @@ use anyhow::anyhow;
 
 use matrix_ui_serializable::{
     MatrixClientConfig, MediaRequestParameters, OwnedDeviceId, OwnedRoomId, OwnedUserId,
-    commands::{
-        fetch_user_profile, get_devices, login_and_create_new_session, submit_async_request,
-        verify_device,
-    },
-    device::FrontendDevice,
-    models::requests::MediaStreamEvent,
-    requests::MatrixRequest,
+    device::FrontendDevice, models::requests::MediaStreamEvent, requests::MatrixRequest,
 };
 use serde::de::DeserializeOwned;
 use tauri::{AppHandle, Manager, Runtime, ipc::Channel, plugin::PluginApi};
@@ -36,7 +30,12 @@ impl<R: Runtime> MatrixSvelte<R> {
     ) -> crate::Result<()> {
         let app_data_dir = get_app_dir_or_create_it(&self.0)?;
 
-        let session_string = login_and_create_new_session(config, None, app_data_dir).await?;
+        let session_string = matrix_ui_serializable::commands::login_and_create_new_session(
+            config,
+            None,
+            app_data_dir,
+        )
+        .await?;
 
         let snapshot_path = &self.0.state::<SnapshotPath>().0.clone();
         let collection_state = &self.0.state::<StrongholdCollection>();
@@ -55,7 +54,7 @@ impl<R: Runtime> MatrixSvelte<R> {
     }
 
     pub fn submit_async_request(&self, request: MatrixRequest) -> crate::Result<()> {
-        submit_async_request(request)?;
+        matrix_ui_serializable::commands::submit_async_request(request)?;
         Ok(())
     }
 
@@ -102,13 +101,13 @@ impl<R: Runtime> MatrixSvelte<R> {
         user_id: OwnedUserId,
         room_id: Option<OwnedRoomId>,
     ) -> crate::Result<bool> {
-        fetch_user_profile(user_id, room_id)
+        matrix_ui_serializable::commands::fetch_user_profile(user_id, room_id)
             .await
             .map_err(|e| crate::Error::MatrixLib(e))
     }
 
     pub async fn get_devices(&self, user_id: OwnedUserId) -> crate::Result<Vec<FrontendDevice>> {
-        get_devices(&user_id)
+        matrix_ui_serializable::commands::get_devices(&user_id)
             .await
             .map_err(|e| crate::Error::MatrixLib(e))
     }
@@ -118,7 +117,7 @@ impl<R: Runtime> MatrixSvelte<R> {
         user_id: OwnedUserId,
         device_id: OwnedDeviceId,
     ) -> crate::Result<()> {
-        verify_device(user_id, device_id)
+        matrix_ui_serializable::commands::verify_device(user_id, device_id)
             .await
             .map_err(|e| crate::Error::MatrixLib(e))
     }

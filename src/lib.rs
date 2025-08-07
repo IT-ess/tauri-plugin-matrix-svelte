@@ -122,11 +122,12 @@ fn get_push_config<R: Runtime>(_app_handle: &AppHandle<R>) -> Option<MobilePushN
     #[cfg(mobile)]
     {
         use crate::MatrixSvelteExt;
-        use crate::mobile::GetTokenRequest;
+        use crate::models::mobile::GetTokenRequest;
+        use crate::utils::config::get_plugin_config;
         if let Ok(push_token) = _app_handle.matrix_svelte().get_token(GetTokenRequest {}) {
             let plugin_config =
                 get_plugin_config(_app_handle).expect("The plugin config is not defined !");
-            let identifier = _app_handle.config().identifier;
+            let identifier = _app_handle.config().identifier.clone();
             #[cfg(target_os = "android")]
             let identifier = identifier.replace("-", "_"); // On android, - are replaced by _ in bundle names
 
