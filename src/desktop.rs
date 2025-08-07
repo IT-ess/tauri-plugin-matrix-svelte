@@ -1,21 +1,22 @@
 use anyhow::anyhow;
-use matrix_sdk::{
-    media::MediaRequestParameters,
-    ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId},
-};
-use serde::de::DeserializeOwned;
-use tauri::{ipc::Channel, plugin::PluginApi, AppHandle, Runtime};
 
-use crate::{
-    matrix::{
-        create_session_to_state, get_devices,
-        login::{LoginRequest, MatrixClientConfig},
-        requests::{submit_async_request, MatrixRequest},
-        user_profile::fetch_user_profile,
+use matrix_ui_serializable::{
+    MatrixClientConfig, MediaRequestParameters, OwnedDeviceId, OwnedRoomId, OwnedUserId,
+    commands::{
+        fetch_user_profile, get_devices, login_and_create_new_session, submit_async_request,
         verify_device,
     },
-    models::matrix::{FrontendDevice, MediaStreamEvent},
-    notifications::{GetTokenRequest, GetTokenResponse, WatchNotificationResult},
+    device::FrontendDevice,
+    models::requests::MediaStreamEvent,
+    requests::MatrixRequest,
+};
+use serde::de::DeserializeOwned;
+use tauri::{AppHandle, Manager, Runtime, ipc::Channel, plugin::PluginApi};
+
+use crate::{
+    models::mobile::{GetTokenRequest, GetTokenResponse, WatchNotificationResult},
+    stronghold::{SnapshotPath, StrongholdCollection, utils::BytesDto},
+    utils::fs::get_app_dir_or_create_it,
 };
 
 pub fn init<R: Runtime, C: DeserializeOwned>(
@@ -33,12 +34,28 @@ impl<R: Runtime> MatrixSvelte<R> {
         &self,
         config: MatrixClientConfig,
     ) -> crate::Result<()> {
-        create_session_to_state(&self.0, LoginRequest::LoginByPassword(config)).await?;
+        let app_data_dir = get_app_dir_or_create_it(&self.0)?;
+
+        let session_string = login_and_create_new_session(config, None, app_data_dir).await?;
+
+        let snapshot_path = &self.0.state::<SnapshotPath>().0.clone();
+        let collection_state = &self.0.state::<StrongholdCollection>();
+        let client_key = BytesDto::Text("matrix_session".to_string());
+
+        crate::stronghold::store::save_store_record(
+            collection_state.clone(),
+            snapshot_path.clone(),
+            client_key,
+            "current".to_string(),
+            session_string.into(),
+            None,
+        )
+        .await?;
         Ok(())
     }
 
     pub fn submit_async_request(&self, request: MatrixRequest) -> crate::Result<()> {
-        submit_async_request(request);
+        submit_async_request(request)?;
         Ok(())
     }
 
@@ -47,7 +64,37 @@ impl<R: Runtime> MatrixSvelte<R> {
         media_request: MediaRequestParameters,
         on_event: &Channel<MediaStreamEvent>,
     ) -> anyhow::Result<usize> {
-        crate::matrix::fetch_media(media_request, on_event).await
+        let (tx, rx) = matrix_ui_serializable::oneshot::channel();
+        matrix_ui_serializable::commands::submit_async_request(MatrixRequest::FetchMedia {
+            media_request,
+            content_sender: tx,
+        })?;
+
+        let image_data: Vec<u8> = match rx.await {
+            Ok(data) => match data {
+                Ok(data) => data,
+                Err(e) => return Err(anyhow!("Failed to fetch image: {}", e)),
+            },
+            Err(e) => return Err(anyhow!("Media receiver failed: {}", e)),
+        };
+
+        // Stream the image in chunks of 8KB
+        const CHUNK_SIZE: usize = 8192;
+        let mut bytes_sent = 0;
+
+        for chunk in image_data.chunks(CHUNK_SIZE) {
+            bytes_sent += chunk.len();
+
+            if let Err(e) = on_event.send(MediaStreamEvent::Chunk {
+                data: chunk.to_vec(),
+                chunk_size: chunk.len(),
+                bytes_received: bytes_sent,
+            }) {
+                return Err(anyhow!("Failed to send media chunk: {}", e));
+            }
+        }
+
+        Ok(bytes_sent)
     }
 
     pub async fn fetch_user_profile(
@@ -55,11 +102,15 @@ impl<R: Runtime> MatrixSvelte<R> {
         user_id: OwnedUserId,
         room_id: Option<OwnedRoomId>,
     ) -> crate::Result<bool> {
-        Ok(fetch_user_profile(user_id, room_id).await)
+        fetch_user_profile(user_id, room_id)
+            .await
+            .map_err(|e| crate::Error::MatrixLib(e))
     }
 
     pub async fn get_devices(&self, user_id: OwnedUserId) -> crate::Result<Vec<FrontendDevice>> {
-        get_devices(&user_id).await
+        get_devices(&user_id)
+            .await
+            .map_err(|e| crate::Error::MatrixLib(e))
     }
 
     pub async fn verify_device(
@@ -67,7 +118,9 @@ impl<R: Runtime> MatrixSvelte<R> {
         user_id: OwnedUserId,
         device_id: OwnedDeviceId,
     ) -> crate::Result<()> {
-        verify_device(&self.0, &user_id, &device_id).await
+        verify_device(user_id, device_id)
+            .await
+            .map_err(|e| crate::Error::MatrixLib(e))
     }
 
     // Not implemented on desktop

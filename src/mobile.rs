@@ -4,25 +4,23 @@ use matrix_sdk::{
     ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId},
 };
 use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
+use tauri::ipc::Channel;
 use tauri::{
+    AppHandle, Runtime,
     ipc::Channel,
     plugin::{PluginApi, PluginHandle},
-    AppHandle, Runtime,
 };
 
 use crate::{
     matrix::{
         create_session_to_state, get_devices,
         login::{LoginRequest, MatrixClientConfig},
-        requests::{submit_async_request, MatrixRequest},
+        requests::{MatrixRequest, submit_async_request},
         user_profile::fetch_user_profile,
         verify_device,
     },
     models::matrix::{FrontendDevice, MediaStreamEvent},
-};
-
-use crate::models::notifications::{
-    GetTokenRequest, GetTokenResponse, WatchNotificationResult, WatchNotificationsArgs,
 };
 
 #[cfg(target_os = "ios")]

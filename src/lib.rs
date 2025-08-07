@@ -1,21 +1,10 @@
-use std::{thread, time::Duration};
-
-use matrix::{
-    requests::MatrixRequest,
-    room::rooms_list::{enqueue_rooms_list_update, RoomsListUpdate},
-    singletons::{CLIENT, LOGIN_STORE_READY, REQUEST_SENDER},
-    stores::login_store::{update_login_state, LoginState},
-    try_restore_session_to_state,
-    workers::{async_main_loop, async_worker},
-};
+use matrix_ui_serializable::{LibConfig, notifications::MobilePushNotificationConfig};
 use serde::Deserialize;
 use stronghold::init_stronghold_client;
 use tauri::{
+    AppHandle, Manager, Runtime,
     plugin::{Builder, TauriPlugin},
-    Manager, Runtime,
 };
-
-pub use models::*;
 
 #[cfg(desktop)]
 mod desktop;
@@ -24,11 +13,11 @@ mod mobile;
 
 mod commands;
 mod error;
-
-pub mod matrix;
-pub mod models;
-pub mod stronghold;
-pub mod utils;
+mod events;
+mod models;
+mod state_updaters;
+mod stronghold;
+mod utils;
 
 pub use error::{Error, Result};
 
@@ -38,13 +27,9 @@ use desktop::MatrixSvelte;
 use mobile::MatrixSvelte;
 
 use crate::{
-    matrix::{
-        notifications::enqueue_toast_notification,
-        room::rooms_list::RoomsCollectionStatus,
-        singletons::TEMP_DIR,
-        stores::login_store::{update_verification_state, FrontendVerificationState},
-    },
-    models::matrix::{ToastNotificationRequest, ToastNotificationVariant},
+    events::{event_forwarder, handle_incoming_events},
+    state_updaters::Updaters,
+    stronghold::get_matrix_session_option,
     utils::fs::get_temp_dir_or_create_it,
 };
 
@@ -52,6 +37,7 @@ use crate::{
 #[derive(Deserialize)]
 pub struct PluginConfig {
     stronghold_password: String,
+    #[cfg(mobile)]
     sygnal_gateway_url: String,
 }
 
@@ -79,22 +65,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
             commands::verify_device
         ])
         .setup(|app, api| {
-            // Create a channel to be used between UI thread(s) and the async worker thread.
-            crate::matrix::singletons::init_broadcaster(16)
-                .expect("Couldn't init the UI broadcaster"); // TODO: adapt capacity if needed
-
-            let (sender, receiver) = tokio::sync::mpsc::unbounded_channel::<MatrixRequest>();
-            REQUEST_SENDER
-                .set(sender)
-                .expect("BUG: REQUEST_SENDER already set!");
-
             let init_app_handle = app.app_handle().clone();
             let stronghold_app_handle = app.app_handle().clone();
-            let main_loop_app_handle = app.app_handle().clone();
 
             let temp_dir = get_temp_dir_or_create_it(&init_app_handle)?;
-
-            TEMP_DIR.set(temp_dir).expect("Couldn't set temporary dir");
 
             let stronghold_handle = tauri::async_runtime::spawn(async move {
                 init_stronghold_client(&stronghold_app_handle)
@@ -105,124 +79,33 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
                 stronghold_handle
                     .await
                     .expect("Couldn't init stronghold client");
-                let client = try_restore_session_to_state(&init_app_handle)
+
+                let session_option = get_matrix_session_option(&init_app_handle)
                     .await
-                    .expect("Couldn't try to restore session");
+                    .expect("Couldn't get session option");
 
-                LOGIN_STORE_READY.wait();
-                let client = match client {
-                    Some(new_login) => {
-                        // Should check that the login store is available before. With the on_load store hook ?
-                        update_login_state(
-                            &init_app_handle,
-                            LoginState::Restored,
-                            new_login
-                                .user_id()
-                                .map_or(None, |val| Some(val.to_string())),
-                        )
-                        .expect("Couldn't update login state");
-                        new_login
-                    }
-                    None => {
-                        println!("Waiting for login request...");
-                        thread::sleep(Duration::from_secs(3)); // Block the thread for 3 secs to let the frontend init itself.
-                        update_login_state(&init_app_handle, LoginState::AwaitingForLogin, None)
-                            .expect("Couldn't update login state");
-                        // We await frontend to call the login command and set the client
-                        // loop until client is set
-                        CLIENT.wait();
-                        let client = CLIENT.get().unwrap().clone();
-                        update_login_state(
-                            &init_app_handle,
-                            LoginState::LoggedIn,
-                            client
-                                .user_id()
-                                .clone()
-                                .map_or(None, |val| Some(val.to_string())),
-                        )
-                        .expect("Couldn't update login state");
-                        client
-                    }
-                };
+                let event_receivers = handle_incoming_events(&init_app_handle);
 
-                let mut verification_subscriber = client.encryption().verification_state();
+                let push_config = get_push_config(&init_app_handle);
 
-                let verification_state_app_handle = main_loop_app_handle.clone();
+                let updaters_handle = init_app_handle.clone();
+                let updaters = Updaters::new(updaters_handle);
 
-                tokio::task::spawn(async move {
-                    while let Some(state) = verification_subscriber.next().await {
-                        update_verification_state(
-                            &verification_state_app_handle,
-                            FrontendVerificationState::new(state),
-                        )
-                        .expect("Couldn't update verification state in Svelte Store");
-                    }
-                });
+                let config = LibConfig::new(
+                    Box::new(updaters),
+                    push_config,
+                    event_receivers,
+                    session_option,
+                    temp_dir,
+                );
+                let receiver = matrix_ui_serializable::init(config);
 
-                let mut ui_event_receiver = crate::matrix::singletons::subscribe_to_events()
-                    .expect("Couldn't get UI event receiver"); // subscribe to events so the sender(s) never fail
-
-                // Spawn the actual async worker thread.
-                let mut worker_join_handle = tauri::async_runtime::spawn(async_worker(receiver));
-
-                // // Start the main loop that drives the Matrix client SDK.
-                let mut main_loop_join_handle =
-                    tauri::async_runtime::spawn(async_main_loop(main_loop_app_handle, client));
-
-                #[allow(clippy::never_loop)] // unsure if needed, just following tokio's examples.
-                loop {
-                    tokio::select! {
-                        result = &mut main_loop_join_handle => {
-                            match result {
-                                Ok(Ok(())) => {
-                                    eprintln!("BUG: main async loop task ended unexpectedly!");
-                                }
-                                Ok(Err(e)) => {
-                                    eprintln!("Error: main async loop task ended:\n\t{e:?}");
-                                    enqueue_rooms_list_update(RoomsListUpdate::Status {
-                                        status: RoomsCollectionStatus::Error(e.to_string()),
-                                    });
-                                    enqueue_toast_notification(ToastNotificationRequest::new(
-                                        format!("Rooms list update error: {e}"),
-                                        None,
-                                        ToastNotificationVariant::Error,
-                                    ));
-                                },
-                                Err(e) => {
-                                    eprintln!("BUG: failed to join main async loop task: {e:?}");
-                                }
-                            }
-                            break;
-                        }
-                        result = &mut worker_join_handle => {
-                            match result {
-                                Ok(Ok(())) => {
-                                    eprintln!("BUG: async worker task ended unexpectedly!");
-                                }
-                                Ok(Err(e)) => {
-                                    eprintln!("Error: async worker task ended:\n\t{e:?}");
-                                    enqueue_rooms_list_update(RoomsListUpdate::Status {
-                                        status: RoomsCollectionStatus::Error(e.to_string()),
-                                    });
-                                    enqueue_toast_notification(ToastNotificationRequest::new(
-                                        format!("Rooms list update error: {e}"),
-                                        None,
-                                        ToastNotificationVariant::Error,
-                                    ));
-                                },
-                                Err(e) => {
-                                    eprintln!("BUG: failed to join async worker task: {e:?}");
-                                }
-                            }
-                            break;
-                        }
-                        _ = ui_event_receiver.recv() => {
-                            #[cfg(debug_assertions)]
-                            println!("Received UI update event");
-                        }
-                    }
-                }
+                let inner_app_handle = init_app_handle.clone();
+                tauri::async_runtime::spawn(async move {
+                    futures::executor::block_on(event_forwarder(inner_app_handle, receiver))
+                })
             });
+
             #[cfg(mobile)]
             let matrix_svelte = mobile::init(app, api)?;
             #[cfg(desktop)]
@@ -232,3 +115,32 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
         })
         .build()
 }
+
+fn get_push_config<R: Runtime>(_app_handle: &AppHandle<R>) -> Option<MobilePushNotificationConfig> {
+    #[cfg(desktop)]
+    return None;
+    #[cfg(mobile)]
+    {
+        use crate::MatrixSvelteExt;
+        use crate::mobile::GetTokenRequest;
+        if let Ok(push_token) = _app_handle.matrix_svelte().get_token(GetTokenRequest {}) {
+            let plugin_config =
+                get_plugin_config(_app_handle).expect("The plugin config is not defined !");
+            let identifier = _app_handle.config().identifier;
+            #[cfg(target_os = "android")]
+            let identifier = identifier.replace("-", "_"); // On android, - are replaced by _ in bundle names
+
+            return Some(MobilePushNotificationConfig::new(
+                push_token.token,
+                plugin_config.sygnal_gateway_url,
+                identifier,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
+// Re-export for app
+pub use crate::state_updaters::LOGIN_STATE_STORE_ID;
+pub use matrix_ui_serializable::LOGIN_STORE_READY;

@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use super::utils::KeyDerivation;
-use super::{client::Stronghold, StrongholdCollection};
+use super::{StrongholdCollection, client::Stronghold};
 use tauri::{AppHandle, Manager, Runtime, State};
 
 use super::error::Result;
@@ -41,14 +41,14 @@ pub struct Builder {
 }
 
 impl Builder {
-    pub fn new<F: Fn(&str) -> Vec<u8> + Send + Sync + 'static>(password_hash_function: F) -> Self {
+    pub fn _new<F: Fn(&str) -> Vec<u8> + Send + Sync + 'static>(password_hash_function: F) -> Self {
         Self {
             password_hash_function: PasswordHashFunctionKind::Custom(Box::new(
                 password_hash_function,
             )),
         }
     }
-    pub fn with_argon2(salt_path: &std::path::Path) -> Self {
+    pub fn _with_argon2(salt_path: &std::path::Path) -> Self {
         Self {
             password_hash_function: PasswordHashFunctionKind::Argon2(salt_path.to_owned()),
         }
