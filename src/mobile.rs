@@ -42,16 +42,23 @@ impl<R: Runtime> MatrixSvelte<R> {
     ) -> crate::Result<()> {
         let app_data_dir = get_app_dir_or_create_it(&self.0.app())?;
 
+        let snapshot_path = &self.0.state::<SnapshotPath>().0.clone();
+        let collection_state = &self.0.state::<StrongholdCollection>();
+        let client_key = BytesDto::Text("matrix_session".to_string());
+
+        crate::stronghold::client::load_stronghold_client_or_create_it(
+            collection_state.clone(),
+            snapshot_path.clone(),
+            client_key.clone(),
+        )
+        .await?;
+
         let session_string = matrix_ui_serializable::commands::login_and_create_new_session(
             config,
             None,
             app_data_dir,
         )
         .await?;
-
-        let snapshot_path = &self.0.app().state::<SnapshotPath>().0.clone();
-        let collection_state = &self.0.app().state::<StrongholdCollection>();
-        let client_key = BytesDto::Text("matrix_session".to_string());
 
         crate::stronghold::store::save_store_record(
             collection_state.clone(),
@@ -62,6 +69,8 @@ impl<R: Runtime> MatrixSvelte<R> {
             None,
         )
         .await?;
+
+        crate::stronghold::client::save(collection_state.clone(), snapshot_path.clone()).await?;
         Ok(())
     }
 

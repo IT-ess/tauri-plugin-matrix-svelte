@@ -31,7 +31,7 @@ impl Stronghold {
         })
     }
 
-    pub fn _save(&self) -> Result<()> {
+    pub fn save(&self) -> Result<()> {
         self.inner
             .commit_with_keyprovider(&self._path, &self._keyprovider)?;
         Ok(())
@@ -55,7 +55,7 @@ pub async fn _destroy(
 ) -> Result<()> {
     let mut collection = collection.0.lock().unwrap();
     if let Some(stronghold) = collection.remove(&snapshot_path) {
-        if let Err(e) = stronghold._save() {
+        if let Err(e) = stronghold.save() {
             collection.insert(snapshot_path, stronghold);
             return Err(e);
         }
@@ -63,13 +63,13 @@ pub async fn _destroy(
     Ok(())
 }
 
-pub async fn _save(
+pub async fn save(
     collection: State<'_, StrongholdCollection>,
     snapshot_path: PathBuf,
 ) -> Result<()> {
     let collection = collection.0.lock().unwrap();
     if let Some(stronghold) = collection.get(&snapshot_path) {
-        stronghold._save()?;
+        stronghold.save()?;
     }
     Ok(())
 }
