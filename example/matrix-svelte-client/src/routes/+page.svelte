@@ -29,6 +29,7 @@
 		if (data.profileStore.state?.[key] && data.profileStore.state?.[key].state == 'loaded') {
 			if (
 				data.profileStore.state[key].data.avatarUrl !== undefined &&
+				data.profileStore.state[key].data.avatarUrl !== null &&
 				data.profileStore.state[key].data.avatarDataUrl === undefined
 			) {
 				data.profileStore.state[key].data.avatarDataUrl = await fetchMedia({
