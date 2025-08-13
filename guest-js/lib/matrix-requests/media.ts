@@ -23,12 +23,7 @@ export type PlainMediaSource = { url: MxcUri }; // Corresponds to Plain variant,
 export type EncryptedMediaSource = { file: EncryptedFile }; // Corresponds to Encrypted variant, renamed to "file"
 
 export function isPlainMediaSource(source: MediaSource): source is PlainMediaSource {
-	return (
-		typeof source === 'object' &&
-		source !== null &&
-		'url' in source &&
-		typeof source.url === 'string'
-	);
+	return typeof source === 'object' && source !== null && 'url' in source;
 }
 
 export type MediaFormat = 'File' | { Thumbnail: MediaThumbnailSettings };
