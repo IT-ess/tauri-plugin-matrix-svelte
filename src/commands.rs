@@ -1,8 +1,7 @@
-use matrix_ui_serializable::device::FrontendDevice;
-use matrix_ui_serializable::models::requests::MediaStreamEvent;
-use matrix_ui_serializable::requests::MatrixRequest;
+use matrix_ui_serializable::models::events::{FrontendDevice, MediaStreamEvent};
 use matrix_ui_serializable::{
-    MatrixClientConfig, MediaRequestParameters, OwnedDeviceId, OwnedRoomId, OwnedUserId,
+    MatrixClientConfig, MatrixRequest, MediaRequestParameters, OwnedDeviceId, OwnedRoomId,
+    OwnedUserId,
 };
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Runtime, command};

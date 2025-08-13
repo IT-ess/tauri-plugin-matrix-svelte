@@ -1,8 +1,9 @@
 use anyhow::anyhow;
 
 use matrix_ui_serializable::{
-    MatrixClientConfig, MediaRequestParameters, OwnedDeviceId, OwnedRoomId, OwnedUserId,
-    device::FrontendDevice, models::requests::MediaStreamEvent, requests::MatrixRequest,
+    MatrixClientConfig, MatrixRequest, MediaRequestParameters, OwnedDeviceId, OwnedRoomId,
+    OwnedUserId,
+    models::events::{FrontendDevice, MediaStreamEvent},
 };
 use serde::de::DeserializeOwned;
 use tauri::{AppHandle, Manager, Runtime, ipc::Channel, plugin::PluginApi};

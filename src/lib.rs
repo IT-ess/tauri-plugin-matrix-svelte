@@ -1,4 +1,4 @@
-use matrix_ui_serializable::{LibConfig, notifications::MobilePushNotificationConfig};
+use matrix_ui_serializable::{LibConfig, MobilePushNotificationConfig};
 use serde::Deserialize;
 use stronghold::init_stronghold_client;
 use tauri::{

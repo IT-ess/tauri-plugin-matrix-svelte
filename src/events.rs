@@ -2,7 +2,7 @@ use matrix_ui_serializable::{
     EventReceivers,
     models::{
         event_bridge::broadcast,
-        requests::{
+        events::{
             EmitEvent, MatrixRoomStoreCreatedRequest, MatrixUpdateCurrentActiveRoom,
             MatrixVerificationResponse,
         },
