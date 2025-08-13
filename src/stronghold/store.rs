@@ -1,7 +1,7 @@
 use std::{path::PathBuf, time::Duration};
 
 use super::client::get_client;
-use super::{utils::BytesDto, StrongholdCollection};
+use super::{StrongholdCollection, utils::BytesDto};
 use tauri::State;
 
 use super::error::Result;
@@ -31,7 +31,7 @@ pub async fn save_store_record(
         .map_err(Into::into)
 }
 
-pub async fn remove_store_record(
+pub async fn _remove_store_record(
     collection: State<'_, StrongholdCollection>,
     snapshot_path: PathBuf,
     client: BytesDto,

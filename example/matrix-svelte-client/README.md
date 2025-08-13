@@ -1,7 +1,11 @@
-# Tauri + SvelteKit + TypeScript
+# matrix-svelte-client
 
-This template should help get you started developing with Tauri, SvelteKit and TypeScript in Vite.
+An example frontend implementation over the [matrix-ui-serializable](https://github.com/IT-ess/matrix-ui-serializable) and tauri-plugin-matrix-svelte backend.
 
-## Recommended IDE Setup
+# Usage
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer).
+## Running the app in dev mode
+
+- Check out if you meet Tauri [prerequisites](https://tauri.app/start/prerequisites/)
+- `pnpm install` (the plugin JS bindings must be built)
+- `pnpm tauri dev` for desktop or `pnpm tauri [android|ios] dev` for mobile

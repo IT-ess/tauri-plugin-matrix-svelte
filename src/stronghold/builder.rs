@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use super::utils::KeyDerivation;
-use super::{client::Stronghold, StrongholdCollection};
+use super::{StrongholdCollection, client::Stronghold};
 use tauri::{AppHandle, Manager, Runtime, State};
 
 use super::error::Result;
@@ -12,9 +12,9 @@ type PasswordHashFn = dyn Fn(&str) -> Vec<u8> + Send + Sync;
 pub struct PasswordHashFunction(Box<PasswordHashFn>);
 
 enum PasswordHashFunctionKind {
-    Argon2(PathBuf),
+    _Argon2(PathBuf),
     Blake2(PathBuf),
-    Custom(Box<PasswordHashFn>),
+    _Custom(Box<PasswordHashFn>),
 }
 
 pub fn initialize(
@@ -41,16 +41,16 @@ pub struct Builder {
 }
 
 impl Builder {
-    pub fn new<F: Fn(&str) -> Vec<u8> + Send + Sync + 'static>(password_hash_function: F) -> Self {
+    pub fn _new<F: Fn(&str) -> Vec<u8> + Send + Sync + 'static>(password_hash_function: F) -> Self {
         Self {
-            password_hash_function: PasswordHashFunctionKind::Custom(Box::new(
+            password_hash_function: PasswordHashFunctionKind::_Custom(Box::new(
                 password_hash_function,
             )),
         }
     }
-    pub fn with_argon2(salt_path: &std::path::Path) -> Self {
+    pub fn _with_argon2(salt_path: &std::path::Path) -> Self {
         Self {
-            password_hash_function: PasswordHashFunctionKind::Argon2(salt_path.to_owned()),
+            password_hash_function: PasswordHashFunctionKind::_Argon2(salt_path.to_owned()),
         }
     }
 
@@ -70,13 +70,13 @@ impl Builder {
 
         app_handle.manage(StrongholdCollection::default());
         app_handle.manage(PasswordHashFunction(match password_hash_function {
-            PasswordHashFunctionKind::Argon2(path) => {
+            PasswordHashFunctionKind::_Argon2(path) => {
                 Box::new(move |p| KeyDerivation::argon2(p, &path))
             }
             PasswordHashFunctionKind::Blake2(path) => {
                 Box::new(move |p| KeyDerivation::blake2(p, &path))
             }
-            PasswordHashFunctionKind::Custom(f) => f,
+            PasswordHashFunctionKind::_Custom(f) => f,
         }));
 
         let collection_state = app_handle.state::<StrongholdCollection>();

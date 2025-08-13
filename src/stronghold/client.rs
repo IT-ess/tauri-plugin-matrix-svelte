@@ -8,12 +8,12 @@ use zeroize::Zeroizing;
 use super::error::{Error, Result};
 use std::path::Path;
 
-use super::{utils::BytesDto, StrongholdCollection};
+use super::{StrongholdCollection, utils::BytesDto};
 
 pub struct Stronghold {
     inner: iota_stronghold::Stronghold,
-    path: SnapshotPath,
-    keyprovider: KeyProvider,
+    _path: SnapshotPath,
+    _keyprovider: KeyProvider,
 }
 
 impl Stronghold {
@@ -26,14 +26,14 @@ impl Stronghold {
         }
         Ok(Self {
             inner: stronghold,
-            path,
-            keyprovider,
+            _path: path,
+            _keyprovider: keyprovider,
         })
     }
 
     pub fn save(&self) -> Result<()> {
         self.inner
-            .commit_with_keyprovider(&self.path, &self.keyprovider)?;
+            .commit_with_keyprovider(&self._path, &self._keyprovider)?;
         Ok(())
     }
 
@@ -49,7 +49,7 @@ impl Deref for Stronghold {
     }
 }
 
-pub async fn destroy(
+pub async fn _destroy(
     collection: State<'_, StrongholdCollection>,
     snapshot_path: PathBuf,
 ) -> Result<()> {

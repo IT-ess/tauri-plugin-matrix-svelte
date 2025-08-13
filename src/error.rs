@@ -1,4 +1,4 @@
-use serde::{ser::Serializer, Serialize};
+use serde::{Serialize, ser::Serializer};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -11,7 +11,7 @@ pub enum Error {
     #[error(transparent)]
     Anyhow(#[from] anyhow::Error),
     #[error(transparent)]
-    MatrixSdk(#[from] matrix_sdk::Error),
+    MatrixLib(#[from] matrix_ui_serializable::Error),
     #[error(transparent)]
     Stronghold(#[from] crate::stronghold::error::Error),
     #[cfg(mobile)]

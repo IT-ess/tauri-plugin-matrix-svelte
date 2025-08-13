@@ -1,13 +1,13 @@
-use matrix_sdk::media::MediaRequestParameters;
-use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId};
+use matrix_ui_serializable::models::events::{FrontendDevice, MediaStreamEvent};
+use matrix_ui_serializable::{
+    MatrixClientConfig, MatrixRequest, MediaRequestParameters, OwnedDeviceId, OwnedRoomId,
+    OwnedUserId,
+};
 use tauri::ipc::Channel;
-use tauri::{command, AppHandle, Runtime};
+use tauri::{AppHandle, Runtime, command};
 
-use crate::matrix::login::MatrixClientConfig;
-use crate::matrix::requests::MatrixRequest;
-use crate::models::matrix::{FrontendDevice, MediaStreamEvent};
-use crate::notifications::WatchNotificationResult;
 use crate::Result;
+use crate::models::mobile::WatchNotificationResult;
 use crate::{Error, MatrixSvelteExt};
 
 #[command]

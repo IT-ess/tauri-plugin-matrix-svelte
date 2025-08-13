@@ -15,41 +15,20 @@ license = "Apache-2.0"
 tauri = { version = "2.7.0" }
 serde = "1.0"
 thiserror = "2"
-anyhow = "1.0.97"
-matrix-sdk = { version = "0.13.0", default-features = false, features = [
-    "anyhow",
-    "bundled-sqlite",
-    "rustls-tls",
-    "e2e-encryption",
-    "automatic-room-key-forwarding",
-] }
-matrix-sdk-ui = { version = "0.13.0", default-features = false, features = [
-    "rustls-tls",
-] }
+anyhow = "1.0.98"
 tracing-subscriber = "0.3.19"
-url = "2.5.4"
-serde_json = "1.0.140"
+serde_json = "1.0.142"
 iota_stronghold = "2.1.0"
 zeroize = "1.8.1"
 rust-argon2 = "2.1.0"
 rand_chacha = { version = "0.3.1" }
 rand_core = { version = "0.6.4", features = ["getrandom"] }
+futures = "0.3.31"
 futures-util = "0.3.31"
 blake2 = "0.10.6"
-rand = "0.9.1"
-tokio = { version = "1.45.1", features = ["macros", "rt-multi-thread"] }
 tauri-plugin-svelte = "2.6.1"
-futures = "0.3.31"
-eyeball = "0.8.8"
-crossbeam-channel = "0.5.15"
-bitflags = "2.9.1"
-crossbeam-queue = "0.3.12"
-htmlize = "1.0.6"
-linkify = "0.10.0"
-rangemap = "1.5.1"
-indexmap = { version = "2.9.0", features = ["serde"] }
 tauri-plugin-notification = "2.3.0"
-unicode-segmentation = "1.12.0"
+matrix-ui-serializable = { git = "https://github.com/IT-ess/matrix-ui-serializable" }
 
 [build-dependencies]
 tauri-plugin = { version = "2.3.0", features = ["build"] }
