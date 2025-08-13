@@ -17,14 +17,28 @@ export type Room = {
 
 export type TimelineState = {
 	roomId: string;
-	userPower: number;
+	userPower: UserPowerLevels;
 	fullyPaginated: boolean;
 	items: TimelineItem[];
-	lastScrolledIndex: number;
-	prevFirstIndex?: number;
 	scrolledPastReadMarker: boolean;
-	latestOwnUserReceipt?: any; // Not handled for the moment
+	latestOwnUserReceipt?: { ts: number };
 };
+
+type UserPowerLevel =
+	| 'ban'
+	| 'invite'
+	| 'kick'
+	| 'redact'
+	| 'notifyRoom'
+	| 'location'
+	| 'message'
+	| 'reaction'
+	| 'roomMessage'
+	| 'roomRedaction'
+	| 'sticker'
+	| 'roomPinnedEvents';
+
+type UserPowerLevels = UserPowerLevel[];
 
 export type RoomMember = {
 	name: string;

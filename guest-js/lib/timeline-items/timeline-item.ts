@@ -8,7 +8,19 @@ export type TimelineItem = {
 	timestamp?: number; // UInt maps to number in TypeScript
 	isOwn: boolean;
 	isLocal: boolean;
+	abilities: MessageAbilities;
 } & TimelineItemData;
+
+type MessageAbility =
+	| 'canReact'
+	| 'canReplyTo'
+	| 'canEdit'
+	| 'canPin'
+	| 'canUnpin'
+	| 'canDelete'
+	| 'hasHtml';
+
+type MessageAbilities = MessageAbility[];
 
 // Discriminated union for the different timeline item data variants
 export type TimelineItemData =
