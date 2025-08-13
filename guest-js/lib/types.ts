@@ -13,6 +13,8 @@ export type Room = {
 	roomName: string;
 	tlState?: TimelineState;
 	members: Record<string, RoomMember>;
+	typingUsers: string[];
+	doneLoading: boolean;
 };
 
 export type TimelineState = {
