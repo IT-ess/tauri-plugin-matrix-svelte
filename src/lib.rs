@@ -33,12 +33,12 @@ use crate::{
     utils::fs::get_temp_dir_or_create_it,
 };
 
-// Plugin config
+/// Plugin config to be set in tauri.conf.json
 #[derive(Deserialize)]
 pub struct PluginConfig {
-    stronghold_password: String,
+    pub(crate) stronghold_password: String,
     #[cfg(mobile)]
-    sygnal_gateway_url: String,
+    pub(crate) sygnal_gateway_url: String,
 }
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the Matrix Svelte APIs.
