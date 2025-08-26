@@ -12,7 +12,7 @@ readme = "README.md"
 license = "Apache-2.0"
 
 [dependencies]
-tauri = { version = "2.7.0" }
+tauri = { version = "2.8.4" }
 serde = "1.0"
 thiserror = "2"
 anyhow = "1.0.98"
@@ -27,8 +27,8 @@ futures = "0.3.31"
 futures-util = "0.3.31"
 blake2 = "0.10.6"
 tauri-plugin-svelte = "2.6.1"
-tauri-plugin-notification = "2.3.0"
+tauri-plugin-notification = "2.3.1"
 matrix-ui-serializable = { git = "https://github.com/IT-ess/matrix-ui-serializable" }
 
 [build-dependencies]
-tauri-plugin = { version = "2.3.0", features = ["build"] }
+tauri-plugin = { version = "2.4.0", features = ["build"] }
