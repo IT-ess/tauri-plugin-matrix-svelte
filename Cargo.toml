@@ -28,7 +28,7 @@ futures-util = "0.3.31"
 blake2 = "0.10.6"
 tauri-plugin-svelte = "2.6.1"
 tauri-plugin-notification = "2.3.1"
-matrix-ui-serializable = "0.1.0"
+matrix-ui-serializable = { git = "https://github.com/IT-ess/matrix-ui-serializable" }
 
 [build-dependencies]
 tauri-plugin = { version = "2.4.0", features = ["build"] }

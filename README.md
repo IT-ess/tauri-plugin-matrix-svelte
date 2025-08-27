@@ -10,7 +10,14 @@ Check [here](https://github.com/IT-ess/matrix-ui-serializable?tab=readme-ov-file
 
 ## Installation
 
-This project is still in progress, if you want to play with the plugin, please check the [matrix-svelte-client](github.com/IT-ess/tauri-plugin-matrix-svelte/tree/main/example/matrix-svelte-client) example provided in this same repo.
+An example client is provided in this same repo to showcase the possibilities : [matrix-svelte-client](github.com/IT-ess/tauri-plugin-matrix-svelte/tree/main/example/matrix-svelte-client).
+
+### Example client screenshots
+<div style="display: flex; justify-content: space-between; gap: 15px; margin: 0 -5px; max-width: 100%;">
+  <img src="assets/room_list.png" alt="Room List" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
+  <img src="assets/room.png" alt="Room" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
+  <img src="assets/device_list.png" alt="Device list" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
+</div>
 
 ## Building
 
