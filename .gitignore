@@ -30,3 +30,5 @@ vite.config.ts.timestamp-*
 /build
 /dist
 .aider*
+
+example/matrix-svelte-client/logs-app.log

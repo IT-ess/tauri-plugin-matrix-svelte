@@ -15,6 +15,7 @@
 	import { ScrollState } from 'runed';
 	import { useDebounce } from 'runed';
 	import { tick } from 'svelte';
+	import SearchBar from './search-bar.svelte';
 
 	type Props = {
 		roomStore: RoomStore;
@@ -188,6 +189,7 @@
 </script>
 
 <div class="bg-background relative flex h-[600px] flex-col rounded-lg border">
+	<SearchBar roomId={roomStore.id} />
 	<!-- Chat messages container -->
 	<div class="flex-1 overflow-hidden">
 		<ScrollArea.Root class="h-full bg-white">

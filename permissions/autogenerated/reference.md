@@ -12,6 +12,7 @@ Default permissions for the plugin
 - `allow-watch-notifications`
 - `allow-get-devices`
 - `allow-verify-device`
+- `allow-search-messages`
 
 ## Permission Table
 
@@ -148,6 +149,32 @@ Enables the ping command without any pre-configured scope.
 <td>
 
 Denies the ping command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-search-messages`
+
+</td>
+<td>
+
+Enables the search_messages command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-search-messages`
+
+</td>
+<td>
+
+Denies the search_messages command without any pre-configured scope.
 
 </td>
 </tr>

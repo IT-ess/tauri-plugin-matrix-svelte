@@ -8,6 +8,9 @@ import type {
 	MatrixClientConfig,
 	Room,
 	RoomsCollectionType,
+	SearchBatch,
+	SearchConfig,
+	SearchResult,
 	TimelineState
 } from './types.js';
 import { RoomStore } from './stores/room-store.svelte';
@@ -37,6 +40,7 @@ import type {
 } from './timeline-items/message-kinds.js';
 import type { StateEvent } from './timeline-items/state-event.js';
 import type { UserId, DeviceId } from './matrix-requests/common.js';
+import { jsonSourceEventToObject } from './utils.js';
 
 export async function loginAndCreateNewSession(config: MatrixClientConfig): Promise<null> {
 	return await invoke('plugin:matrix-svelte|login_and_create_new_session', {
@@ -56,6 +60,16 @@ export async function getDevices(userId: UserId): Promise<Device[]> {
 
 export async function verifyDevice(userId: UserId, deviceId: DeviceId): Promise<null> {
 	return await invoke('plugin:matrix-svelte|verify_device', { userId, deviceId });
+}
+
+export async function searchMessages(
+	searchTerm: string,
+	searchConfig: SearchConfig
+): Promise<SearchBatch> {
+	return await invoke<SearchBatch>('plugin:matrix-svelte|search_messages', {
+		searchTerm,
+		searchConfig
+	});
 }
 
 export {
@@ -92,5 +106,11 @@ export {
 	watchNotifications,
 	MediaLoadingState,
 	fetchMedia,
-	type Device
+	type Device,
+
+	// Search
+	type SearchConfig,
+	type SearchBatch,
+	type SearchResult,
+	jsonSourceEventToObject
 };
