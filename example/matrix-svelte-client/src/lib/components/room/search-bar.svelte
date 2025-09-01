@@ -47,21 +47,6 @@
 			isOpen = false;
 		}, 150);
 	}
-
-	// // Handle result selection
-	// function selectResult(message: (typeof sampleMessages)[0]) {
-	// 	searchQuery = message.content;
-	// 	isOpen = false;
-	// 	searchInput.blur();
-	// }
-
-	// // Handle keyboard navigation
-	// function handleKeydown(event: KeyboardEvent) {
-	// 	if (event.key === 'Escape') {
-	// 		isOpen = false;
-	// 		searchInput.blur();
-	// 	}
-	// }
 </script>
 
 <div class="relative w-full">
@@ -93,16 +78,17 @@
 						<button
 							class="hover:bg-accent hover:text-accent-foreground flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors"
 						>
-							<!-- onclick={() => selectResult(message)} -->
 							<div class="text-muted-foreground mt-0.5 flex-shrink-0">
 								<MessageCircleIcon size={16} />
 							</div>
 							<div class="min-w-0 flex-1">
 								<div class="mb-1 flex items-center gap-2">
 									<span class="text-foreground text-sm font-medium"
-										>{message.matchedEvent.userId}</span
+										>{message.matchedEvent.senderId}</span
 									>
-									<!-- <span class="text-muted-foreground text-xs">{message.timestamp}</span> -->
+									<span class="text-muted-foreground text-xs"
+										>{message.matchedEvent.timestamp.toLocaleDateString()}</span
+									>
 								</div>
 								<div class="text-muted-foreground line-clamp-2 text-sm leading-relaxed">
 									{message.matchedEvent.body}

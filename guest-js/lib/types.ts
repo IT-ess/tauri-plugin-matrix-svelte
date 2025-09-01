@@ -147,11 +147,14 @@ export type SearchResult = {
 	profile_info: Record<string, SearchProfileInfo>;
 };
 
+// The event stored in index mapped to JS
 export type SourceEvent = {
-	// For now we only store the body in the index
 	body: string;
 	eventId: string;
-	userId: string;
+	senderId: string;
+	timestamp: Date;
+	roomId: string;
+	msgtype: string;
 };
 
 export type SearchProfileInfo = {
