@@ -1,3 +1,4 @@
+use matrix_ui_serializable::commands::{SearchBatch, SearchConfig};
 use matrix_ui_serializable::models::events::{FrontendDevice, MediaStreamEvent};
 use matrix_ui_serializable::{
     MatrixClientConfig, MatrixRequest, MediaRequestParameters, OwnedDeviceId, OwnedRoomId,
@@ -89,6 +90,18 @@ pub(crate) async fn verify_device<R: Runtime>(
     app_handle
         .matrix_svelte()
         .verify_device(user_id, device_id)
+        .await
+}
+
+#[command]
+pub(crate) async fn search_messages<R: Runtime>(
+    app_handle: AppHandle<R>,
+    search_term: String,
+    search_config: SearchConfig,
+) -> Result<SearchBatch> {
+    app_handle
+        .matrix_svelte()
+        .search_event(search_term, search_config)
         .await
 }
 

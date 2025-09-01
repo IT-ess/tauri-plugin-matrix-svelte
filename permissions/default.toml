@@ -9,4 +9,5 @@ permissions = [
     "allow-watch-notifications",
     "allow-get-devices",
     "allow-verify-device",
+    "allow-search-messages",
 ]

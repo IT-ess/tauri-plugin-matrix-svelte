@@ -2,6 +2,7 @@ use anyhow::anyhow;
 use matrix_ui_serializable::{
     MatrixClientConfig, MatrixRequest, MediaRequestParameters, OwnedDeviceId, OwnedRoomId,
     OwnedUserId,
+    commands::{SearchBatch, SearchConfig},
     models::events::{FrontendDevice, MediaStreamEvent},
 };
 use serde::de::DeserializeOwned;
@@ -142,6 +143,16 @@ impl<R: Runtime> MatrixSvelte<R> {
         matrix_ui_serializable::commands::verify_device(user_id, device_id)
             .await
             .map_err(|e| crate::Error::MatrixLib(e))
+    }
+
+    pub async fn search_event(
+        &self,
+        search_term: String,
+        search_config: SearchConfig,
+    ) -> crate::Result<SearchBatch> {
+        matrix_ui_serializable::commands::search_event_index(search_term, search_config)
+            .await
+            .map_err(|e| crate::Error::Anyhow(e))
     }
 
     // Mobile only

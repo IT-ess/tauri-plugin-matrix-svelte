@@ -7,6 +7,7 @@ const COMMANDS: &[&str] = &[
     "watch_notifications",
     "get_devices",
     "verify_device",
+    "search_messages",
 ];
 
 fn main() {

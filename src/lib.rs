@@ -62,7 +62,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
             commands::fetch_user_profile,
             commands::watch_notifications,
             commands::get_devices,
-            commands::verify_device
+            commands::verify_device,
+            commands::search_messages
         ])
         .setup(|app, api| {
             let init_app_handle = app.app_handle().clone();
