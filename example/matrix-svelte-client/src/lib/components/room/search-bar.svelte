@@ -12,7 +12,6 @@
 
 	let searchQuery = $state('');
 	let isOpen = $state(false);
-	// let searchInput: HTMLInputElement;
 
 	// Filter results based on search query
 	const filteredResults = $derived.by(async () => {
@@ -26,12 +25,11 @@
 			next_batch: null,
 			order_by_recency: false
 		};
-		let test = await searchMessages(searchQuery, searchConfig);
-		console.log('end of search !');
-		console.log(test);
-		return test.results.map((res) => {
+		let searchBatch = await searchMessages(searchQuery, searchConfig);
+		console.log(`Matched items for term "${searchQuery}" :`);
+		console.log(searchBatch);
+		return searchBatch.results.map((res) => {
 			const mapped = jsonSourceEventToObject(res.event_source);
-			// const userInfo = res.profile_info?[mapped.userId] ?? undefined;
 			return { matchedEvent: mapped };
 		});
 	});
