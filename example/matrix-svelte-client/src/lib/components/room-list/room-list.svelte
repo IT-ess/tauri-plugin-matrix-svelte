@@ -21,7 +21,7 @@
 	let rooms = $derived.by(getSortedRoomArray(roomsCollection));
 	let invitedRooms = $derived(Object.values(roomsCollection.state.invitedRooms));
 
-	let disabled = $derived(roomsCollection.state.status.status !== 'loaded');
+	let disabled = $derived(!['loaded', 'loading'].includes(roomsCollection.state.status.status));
 </script>
 
 <div class="mx-auto flex w-full max-w-sm flex-col gap-6">

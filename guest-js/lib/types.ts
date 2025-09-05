@@ -45,7 +45,8 @@ type UserPowerLevels = UserPowerLevel[];
 
 export type RoomMember = {
 	name: string;
-	maxPowerLevel: number;
+	// Change of matrix sdk 0.14: if maxPowerLevel = true, then it has infinite power (he's the room creator)
+	maxPowerLevel: number | boolean;
 	displayNameAmbiguous: boolean;
 	isIgnored: boolean;
 };

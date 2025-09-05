@@ -13,6 +13,7 @@ pub struct GetTokenResponse {
 }
 
 #[derive(Serialize)]
+#[allow(dead_code)]
 pub struct WatchNotificationsArgs {
     pub channel: Channel,
 }
