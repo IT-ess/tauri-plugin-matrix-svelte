@@ -279,7 +279,7 @@
 								<!-- same as a text message, but with sender name in front -->
 							</p>
 						{:else if data.kind === 'image'}
-							<ImageMessage itemContent={data.body} />
+							<ImageMessage itemContent={data.body} isSticker={false} />
 						{:else if data.kind === 'audio'}
 							<AudioMessage itemContent={data.body} />
 						{:else if data.kind === 'video'}

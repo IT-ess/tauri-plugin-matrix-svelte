@@ -28,13 +28,11 @@ export type MsgLikeKind =
 // Text & Emote
 
 export type TextMessageEventContent = {
-	msgtype: 'm.text';
 	body: string;
 } & FormattedBody;
 
 export type EmoteMessageEventContent = {
 	// Exactly the same as text message except msgtype
-	msgtype: 'm.emote';
 	body: string;
 } & FormattedBody;
 
@@ -42,7 +40,6 @@ export type EmoteMessageEventContent = {
 
 export type ImageMessageEventContent = {
 	body: string;
-	msgtype: 'm.image';
 	info?: ImageInfo;
 } & EncryptedMediaSource & // We assume that we'll only use encrypted media.
 	FormattedBody;
@@ -62,7 +59,6 @@ export interface ImageInfo {
 
 export type AudioMessageEventContent = {
 	body: string;
-	msgtype: 'm.audio';
 	filename?: string;
 	info?: AudioInfo;
 } & EncryptedMediaSource & // We assume that we'll only use encrypted media.
@@ -81,7 +77,6 @@ export type AudioInfo = {
 
 export type FileMessageEventContent = {
 	body: string;
-	msgtype: 'm.file';
 	filename?: string;
 	info?: FileInfo;
 } & EncryptedMediaSource & // We assume that we'll only use encrypted media.
@@ -97,7 +92,6 @@ export type FileInfo = {
 
 export type VideoMessageEventContent = {
 	body: string;
-	msgtype: 'm.video';
 	filename?: string;
 	info?: VideoInfo;
 } & EncryptedMediaSource & // We assume that we'll only use encrypted media.
@@ -120,7 +114,6 @@ export type VideoInfo = {
 
 export type StickerEventContent = {
 	body: string;
-	msgtype: 'm.sticker';
 	info: ImageInfo;
 } & PlainMediaSource; // Stickers aren't encrypted
 

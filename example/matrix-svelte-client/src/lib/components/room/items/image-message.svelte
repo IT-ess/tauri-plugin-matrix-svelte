@@ -15,7 +15,7 @@
 
 	type Props = {
 		itemContent: ImageMessageEventContent | StickerEventContent;
-		isSticker?: boolean;
+		isSticker: boolean;
 	};
 
 	let { itemContent, isSticker = false }: Props = $props();
@@ -43,16 +43,15 @@
 		isLoading = true;
 
 		try {
-			let mediaRequest: MediaRequestParameters =
-				itemContent.msgtype === 'm.image' // Images are encrypted while stickers aren't
-					? {
-							format: 'File',
-							source: { file: itemContent.file }
-						}
-					: {
-							format: 'File',
-							source: { url: itemContent.url }
-						};
+			let mediaRequest: MediaRequestParameters = !isSticker // Images are encrypted while stickers aren't
+				? {
+						format: 'File',
+						source: { file: (itemContent as ImageMessageEventContent).file }
+					}
+				: {
+						format: 'File',
+						source: { url: (itemContent as StickerEventContent).url }
+					};
 
 			imageSrc = await fetchMedia(mediaRequest, loadingState);
 		} catch (err) {
