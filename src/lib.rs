@@ -1,6 +1,5 @@
 use matrix_ui_serializable::{LibConfig, MobilePushNotificationConfig};
 use serde::Deserialize;
-use stronghold::init_stronghold_client;
 use tauri::{
     AppHandle, Manager, Runtime,
     plugin::{Builder, TauriPlugin},
@@ -14,9 +13,9 @@ mod mobile;
 mod commands;
 mod error;
 mod events;
+mod keyring;
 mod models;
 mod state_updaters;
-mod stronghold;
 mod utils;
 
 pub use error::{Error, Result};
@@ -28,15 +27,14 @@ use mobile::MatrixSvelte;
 
 use crate::{
     events::{event_forwarder, handle_incoming_events},
+    keyring::get_matrix_session_option,
     state_updaters::Updaters,
-    stronghold::get_matrix_session_option,
     utils::fs::get_temp_dir_or_create_it,
 };
 
 /// Plugin config to be set in tauri.conf.json
 #[derive(Deserialize)]
 pub struct PluginConfig {
-    pub(crate) stronghold_password: String,
     #[cfg(mobile)]
     pub(crate) sygnal_gateway_url: String,
 }
@@ -67,20 +65,17 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
         ])
         .setup(|app, api| {
             let init_app_handle = app.app_handle().clone();
-            let stronghold_app_handle = app.app_handle().clone();
 
             let temp_dir = get_temp_dir_or_create_it(&init_app_handle)?;
 
-            let stronghold_handle = tauri::async_runtime::spawn(async move {
-                init_stronghold_client(&stronghold_app_handle)
-                    .expect("Couldn't init stronghold client")
-            });
+            use tauri_plugin_keyring::KeyringExt;
+
+            // Init the keyring store
+            app.keyring()
+                .initialize_service(app.config().identifier.clone())
+                .map_err(|e| e.to_string())?;
 
             let _monitor = tauri::async_runtime::spawn(async move {
-                stronghold_handle
-                    .await
-                    .expect("Couldn't init stronghold client");
-
                 let session_option = get_matrix_session_option(&init_app_handle)
                     .await
                     .expect("Couldn't get session option");
@@ -124,10 +119,10 @@ fn get_push_config<R: Runtime>(_app_handle: &AppHandle<R>) -> Option<MobilePushN
     {
         use crate::MatrixSvelteExt;
         use crate::models::mobile::GetTokenRequest;
-        use crate::utils::config::get_plugin_config;
+        use crate::utils::config::_get_plugin_config;
         if let Ok(push_token) = _app_handle.matrix_svelte().get_token(GetTokenRequest {}) {
             let plugin_config =
-                get_plugin_config(_app_handle).expect("The plugin config is not defined !");
+                _get_plugin_config(_app_handle).expect("The plugin config is not defined !");
             let identifier = _app_handle.config().identifier.clone();
             #[cfg(target_os = "android")]
             let identifier = identifier.replace("-", "_"); // On android, - are replaced by _ in bundle names
