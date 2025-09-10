@@ -30,22 +30,12 @@ const roomsCollection = new RoomsCollection();
 let storeListener: UnlistenFn;
 
 export const init: ClientInit = async () => {
-	await loginStore.start();
 	await profileStore.start();
 	await roomsCollection.startStoreAndSendConfirmationEvent();
-	const roomIds = roomsCollection.getDisplayedJoinedRoomsIds();
-	console.log(roomIds);
-	// TODO: we keep this for the moment, but it may be not necessary since the stores are created quickly already
-	for (const id of roomIds) {
-		const newRoom = new RoomStore(id);
-		await newRoom.startStoreAndSendConfirmationEvent(id, roomsCollection);
-		roomStoresMap.set(id, newRoom);
-		console.log(`Room Store with id ${id} has been restored`);
-	}
 	storeListener = await getCurrentWebviewWindow().listen<events.RoomCreateEventType>(
 		events.MatrixSvelteListenEvent.RoomCreate,
 		async ({ payload }) => {
-			let { id } = payload;
+			const { id } = payload;
 			console.log(
 				`Matrix room creation event received. Begining creation of store room with id ${id}`
 			);
@@ -55,6 +45,8 @@ export const init: ClientInit = async () => {
 			roomsCollection.addDisplayedJoinedRoomId(id);
 		}
 	);
+	// The login store start allows the rust lib to pursue its init.
+	await loginStore.start();
 
 	// Do we have permission to send a notification?
 	let permissionGranted = await isPermissionGranted();

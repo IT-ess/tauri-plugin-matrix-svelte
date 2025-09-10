@@ -20,11 +20,6 @@ export class RoomsCollection extends RuneStore<RoomsCollectionType> {
 		};
 		const options: TauriPluginSvelteRuneStoreOptions<RoomsCollectionType> = {
 			hooks,
-			saveOnChange: true,
-			// TODO: tweak default params if necessary
-			// see : https://tb.dev.br/tauri-store/plugin-svelte/guide/synchronization
-			// saveStrategy: "debounce",
-			// saveInterval: 500,
 			syncStrategy: 'debounce',
 			syncInterval: 1000
 		};

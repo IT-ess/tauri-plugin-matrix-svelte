@@ -7,11 +7,10 @@ use matrix_ui_serializable::{
     models::events::{FrontendDevice, MediaStreamEvent},
 };
 use serde::de::DeserializeOwned;
-use tauri::{AppHandle, Manager, Runtime, ipc::Channel, plugin::PluginApi};
+use tauri::{AppHandle, Runtime, ipc::Channel, plugin::PluginApi};
 
 use crate::{
     models::mobile::{GetTokenRequest, GetTokenResponse, WatchNotificationResult},
-    stronghold::{SnapshotPath, StrongholdCollection, utils::BytesDto},
     utils::fs::get_app_dir_or_create_it,
 };
 
@@ -32,35 +31,23 @@ impl<R: Runtime> MatrixSvelte<R> {
     ) -> crate::Result<()> {
         let app_data_dir = get_app_dir_or_create_it(&self.0)?;
 
-        let snapshot_path = &self.0.state::<SnapshotPath>().0.clone();
-        let collection_state = &self.0.state::<StrongholdCollection>();
-        let client_key = BytesDto::Text("matrix_session".to_string());
-
-        crate::stronghold::client::load_stronghold_client_or_create_it(
-            collection_state.clone(),
-            snapshot_path.clone(),
-            client_key.clone(),
-        )
-        .await?;
-
         let session_string = matrix_ui_serializable::commands::login_and_create_new_session(
-            config,
+            config.clone(),
             None,
-            app_data_dir,
+            app_data_dir.clone(),
         )
         .await?;
 
-        crate::stronghold::store::save_store_record(
-            collection_state.clone(),
-            snapshot_path.clone(),
-            client_key,
-            "current".to_string(),
-            session_string.into(),
-            None,
-        )
-        .await?;
+        crate::keyring::set_current_username(app_data_dir, config.username())?;
 
-        crate::stronghold::client::save(collection_state.clone(), snapshot_path.clone()).await?;
+        use tauri_plugin_keyring::KeyringExt;
+
+        self.0.keyring().set(
+            &config.username(),
+            tauri_plugin_keyring::CredentialType::Secret,
+            tauri_plugin_keyring::CredentialValue::Secret(session_string.into_bytes()),
+        )?;
+
         Ok(())
     }
 

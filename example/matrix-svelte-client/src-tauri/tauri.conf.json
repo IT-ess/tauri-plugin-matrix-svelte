@@ -24,7 +24,6 @@
 	},
 	"plugins": {
 		"matrix-svelte": {
-			"stronghold_password": "password",
 			"sygnal_gateway_url": "https://sygnal.lucide.space"
 		}
 	},
