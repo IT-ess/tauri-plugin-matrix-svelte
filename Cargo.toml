@@ -22,7 +22,7 @@ futures = "0.3.31"
 futures-util = "0.3.31"
 tauri-plugin-svelte = "2.6.1"
 tauri-plugin-notification = "2.3.1"
-matrix-ui-serializable = { path = "../matrix-ui-serializable" }
+matrix-ui-serializable = { git = "https://github.com/IT-ess/matrix-ui-serializable" }
 tauri-plugin-keyring = { git = "https://github.com/IT-ess/tauri-plugin-keyring", branch = "feat/add-linux-support"}
 
 [build-dependencies]

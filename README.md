@@ -34,7 +34,7 @@ An example client is provided in this same repo to showcase the possibilities : 
 
 - [tauri 2.0](https://tauri.app/) : allowing one codebase for 5 platforms
 - [matrix-ui-serializable](https://github.com/IT-ess/matrix-ui-serializable) : high level abstraction of a Matrix client in Rust
-- [iota_stronghold](https://docs.rs/crate/iota_stronghold/latest): to store securely the matrix database passphrase
+- [tauri-plugin-keyring](https://github.com/charlesportwoodii/tauri-plugin-keyring): to store securely the matrix database passphrase into the native OS keyring store
 - [tauri-plugin-svelte](https://github.com/ferreira-tb/tauri-store/tree/main/packages/plugin-svelte): to communicate easily with Svelte frontend in a reactive way
 
 ## Special thanks to :
