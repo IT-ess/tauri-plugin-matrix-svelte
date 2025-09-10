@@ -156,8 +156,18 @@ impl<R: Runtime> MatrixSvelte<R> {
             "Not implemented on Android yet"
         )));
         #[cfg(target_os = "ios")]
-        self.0
-            .run_mobile_plugin("watchNotifications", WatchNotificationsArgs { channel })
-            .map_err(Into::into)
+        {
+            use serde::Serialize;
+            use tauri::ipc::Channel;
+
+            #[derive(Serialize)]
+            pub struct WatchNotificationsArgs {
+                pub channel: Channel,
+            }
+
+            self.0
+                .run_mobile_plugin("watchNotifications", WatchNotificationsArgs { channel })
+                .map_err(Into::into)
+        }
     }
 }
