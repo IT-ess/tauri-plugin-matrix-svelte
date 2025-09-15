@@ -19,7 +19,9 @@ pub fn get_app_dir_or_create_it<R: Runtime>(app_handle: &AppHandle<R>) -> anyhow
     Ok(app_data_dir)
 }
 
-pub fn get_temp_dir_or_create_it<R: Runtime>(app_handle: &AppHandle<R>) -> anyhow::Result<PathBuf> {
+pub fn _get_temp_dir_or_create_it<R: Runtime>(
+    app_handle: &AppHandle<R>,
+) -> anyhow::Result<PathBuf> {
     let temp_data_dir = app_handle.path().temp_dir()?;
 
     match std::fs::create_dir(&temp_data_dir) {

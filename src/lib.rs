@@ -29,7 +29,7 @@ use crate::{
     events::{event_forwarder, handle_incoming_events},
     keyring::get_matrix_session_option,
     state_updaters::Updaters,
-    utils::fs::get_temp_dir_or_create_it,
+    utils::fs::get_app_dir_or_create_it,
 };
 
 /// Plugin config to be set in tauri.conf.json
@@ -66,7 +66,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
         .setup(|app, api| {
             let init_app_handle = app.app_handle().clone();
 
-            let temp_dir = get_temp_dir_or_create_it(&init_app_handle)?;
+            let app_data_dir = get_app_dir_or_create_it(&init_app_handle)?;
 
             use tauri_plugin_keyring::KeyringExt;
 
@@ -92,7 +92,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
                     push_config,
                     event_receivers,
                     session_option,
-                    temp_dir,
+                    app_data_dir,
                 );
                 let receiver = matrix_ui_serializable::init(config);
 
