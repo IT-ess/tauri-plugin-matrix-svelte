@@ -350,7 +350,7 @@
 			{/if}
 			<DropdownMenuContent
 				customAnchor={reactionsPopoverAnchor}
-				align="end"
+				align="start"
 				side={isOwn ? 'left' : 'right'}
 			>
 				{#if abilities.includes('canReplyTo')}
