@@ -11,7 +11,7 @@ export type TimelineItem = {
 	abilities: MessageAbilities;
 } & TimelineItemData;
 
-type MessageAbility =
+export type MessageAbility =
 	| 'canReact'
 	| 'canReplyTo'
 	| 'canEdit'
@@ -20,7 +20,7 @@ type MessageAbility =
 	| 'canDelete'
 	| 'hasHtml';
 
-type MessageAbilities = MessageAbility[];
+export type MessageAbilities = MessageAbility[];
 
 // Discriminated union for the different timeline item data variants
 export type TimelineItemData =

@@ -18,9 +18,15 @@ import { RoomsCollection } from './stores/rooms-collection.svelte';
 import { LoginStore } from './stores/login-store.svelte';
 import { ProfileStore } from './stores/profiles-store.svelte';
 import * as events from './tauri-events.js';
-import { type MatrixRequest, createMatrixRequest } from './matrix-requests/requests.js';
+import {
+	type MatrixRequest,
+	type RoomMessageEventContentWithoutRelation,
+	createMatrixRequest
+} from './matrix-requests/requests.js';
 import {
 	timelineDataGuards,
+	type MessageAbilities,
+	type MessageAbility,
 	type TimelineItem,
 	type TimelineItemData,
 	type VirtualTimelineItem
@@ -107,6 +113,9 @@ export {
 	MediaLoadingState,
 	fetchMedia,
 	type Device,
+	type RoomMessageEventContentWithoutRelation,
+	type MessageAbility,
+	type MessageAbilities,
 
 	// Search
 	type SearchConfig,

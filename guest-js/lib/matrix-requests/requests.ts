@@ -22,9 +22,10 @@ interface RoomMemberships {
 	[key: string]: any;
 }
 
-interface EditedContent {
-	// Define based on your Rust EditedContent type
-	[key: string]: any;
+export interface RoomMessageEventContentWithoutRelation {
+	msgtype: 'm.text'; // we only support editing text for the moment
+	body: string; // the new message
+	// "m.mentions"?: Mentions // Not supported for the moment
 }
 
 interface RoomMember {
@@ -49,8 +50,8 @@ interface EditMessageRequest {
 	event: 'editMessage';
 	payload: {
 		roomId: RoomId;
-		timelineEventItemId: TimelineEventItemId;
-		editedContent: EditedContent;
+		timelineEventItemId: EventId; // Only remote event ids for now
+		editedContent: RoomMessageEventContentWithoutRelation;
 	};
 }
 
@@ -205,7 +206,7 @@ interface CreateDMRoomRequest {
 // Union type combining all request types
 export type MatrixRequest =
 	| PaginateRoomTimelineRequest
-	// | EditMessageRequest
+	| EditMessageRequest
 	| FetchDetailsForEventRequest
 	// | SyncRoomMemberListRequest
 	| JoinRoomRequest
@@ -223,14 +224,14 @@ export type MatrixRequest =
 	| FullyReadReceiptRequest
 	| GetRoomPowerLevelsRequest
 	| ToggleReactionRequest
-	// | RedactMessageRequest
+	| RedactMessageRequest
 	// | GetMatrixRoomLinkPillInfoRequest;
 	| CreateDMRoomRequest;
 
 // Export individual types as well for convenience
 export type {
 	PaginateRoomTimelineRequest,
-	// EditMessageRequest,
+	EditMessageRequest,
 	FetchDetailsForEventRequest,
 	// SyncRoomMemberListRequest,
 	JoinRoomRequest,
@@ -248,13 +249,12 @@ export type {
 	FullyReadReceiptRequest,
 	GetRoomPowerLevelsRequest,
 	ToggleReactionRequest,
-	// RedactMessageRequest,
+	RedactMessageRequest,
 	// GetMatrixRoomLinkPillInfoRequest,
 	CreateDMRoomRequest,
 	// Base types
 	PaginationDirection,
 	RoomMemberships,
-	EditedContent,
 	RoomMember,
 	RoomMessageEventContent
 };
