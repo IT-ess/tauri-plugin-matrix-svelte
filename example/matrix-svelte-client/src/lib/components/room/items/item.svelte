@@ -37,6 +37,7 @@
 			{onReply}
 			{onScrollToMessage}
 			repliedToMessage={repliedToMessage?.kind === 'msgLike' ? repliedToMessage.data : undefined}
+			abilities={item.abilities}
 		/>
 	</div>
 {:else if item.kind === 'virtual'}

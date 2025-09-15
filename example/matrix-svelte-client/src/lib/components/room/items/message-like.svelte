@@ -4,9 +4,10 @@
 		createMatrixRequest,
 		ProfileStore,
 		submitAsyncRequest,
+		type MessageAbilities,
 		type MsgLikeContent
 	} from 'tauri-plugin-matrix-svelte-api';
-	import { MessagesSquare, ReplyIcon, Share2Icon } from '@lucide/svelte';
+	import { MessagesSquare, ReplyIcon, Share2Icon, SquarePenIcon, Trash2Icon } from '@lucide/svelte';
 	import ImageMessage from './image-message.svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { onMount } from 'svelte';
@@ -30,6 +31,7 @@
 	import { Tween } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
 	import { shareText } from '@buildyourwebapp/tauri-plugin-sharesheet';
+	import EditTextMessage from './item-actions/edit-text-message.svelte';
 
 	type Props = {
 		data: MsgLikeContent;
@@ -42,6 +44,7 @@
 		repliedToMessage?: MsgLikeContent;
 		onReply?: (eventId: string, senderName: string, content: string) => void;
 		onScrollToMessage?: (eventId: string) => void;
+		abilities: MessageAbilities;
 	};
 
 	let {
@@ -54,7 +57,8 @@
 		profileStore,
 		onReply,
 		repliedToMessage,
-		onScrollToMessage
+		onScrollToMessage,
+		abilities
 	}: Props = $props();
 
 	const { senderId, sender } = data;
@@ -62,6 +66,7 @@
 
 	let showActions = $state(false);
 	let showDropdown = $state(false);
+	let isEditing = $state(false);
 	let reactionsPopoverAnchor = $state<HTMLElement>(null!);
 
 	// Format timestamp
@@ -93,6 +98,29 @@
 		let content = extractContentFromMsg(data);
 
 		onReply(eventId, sender ?? 'Unknown', content);
+	};
+
+	const onSubmitEditMessage = (newMessage: string) => {
+		// We only support editing text messages right now
+		if (data.kind !== 'text') return;
+		let request = createMatrixRequest.editMessage({
+			roomId,
+			timelineEventItemId: eventId,
+			editedContent: {
+				msgtype: 'm.text',
+				body: newMessage
+			}
+		});
+		submitAsyncRequest(request);
+	};
+
+	const handleRedactMessage = () => {
+		let request = createMatrixRequest.redactMessage({
+			roomId,
+			timelineEventId: eventId,
+			reason: undefined
+		});
+		submitAsyncRequest(request);
 	};
 
 	const handleShare = async () => {
@@ -270,9 +298,17 @@
 							</div>
 						{/if}
 						{#if data.kind === 'text'}
-							<p class="mt-1 text-sm">
-								{data.body.body}
-							</p>
+							{#if isEditing}
+								<EditTextMessage
+									bind:isEditing
+									message={data.body.body}
+									onEdit={onSubmitEditMessage}
+								/>
+							{:else}
+								<p class="mt-1 text-sm">
+									{data.body.body}
+								</p>
+							{/if}
 						{:else if data.kind === 'emote'}
 							<p class="mt-1 text-sm">
 								<b>{data.sender}:</b>{data.body.body}
@@ -309,17 +345,32 @@
 					{handleReply}
 					reactions={data.reactions}
 					{handleShowdropdown}
+					{abilities}
 				/>
 			{/if}
 			<DropdownMenuContent
 				customAnchor={reactionsPopoverAnchor}
-				align="end"
+				align="start"
 				side={isOwn ? 'left' : 'right'}
 			>
-				<DropdownMenuItem onclick={handleReply} class="text-md">
-					<ReplyIcon class="h-4 w-4" />
-					Reply</DropdownMenuItem
-				>
+				{#if abilities.includes('canReplyTo')}
+					<DropdownMenuItem onclick={handleReply} class="text-md">
+						<ReplyIcon class="h-4 w-4" />
+						Reply</DropdownMenuItem
+					>
+				{/if}
+				{#if abilities.includes('canEdit')}
+					<DropdownMenuItem onclick={() => (isEditing = true)} class="text-md">
+						<SquarePenIcon class="h-4 w-4" />
+						Edit</DropdownMenuItem
+					>
+				{/if}
+				{#if abilities.includes('canDelete')}
+					<DropdownMenuItem onclick={handleRedactMessage} class="text-md">
+						<Trash2Icon class="h-4 w-4" />
+						Delete</DropdownMenuItem
+					>
+				{/if}
 				{#if (currentPlatform === 'android' || currentPlatform === 'ios') && data.kind === 'text'}
 					<DropdownMenuItem onclick={handleShare} class="text-md">
 						<Share2Icon class="h-4 w-4" />
