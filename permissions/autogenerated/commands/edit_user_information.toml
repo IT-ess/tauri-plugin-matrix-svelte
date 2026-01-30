@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-edit-user-information"
+description = "Enables the edit_user_information command without any pre-configured scope."
+commands.allow = ["edit_user_information"]
+
+[[permission]]
+identifier = "deny-edit-user-information"
+description = "Denies the edit_user_information command without any pre-configured scope."
+commands.deny = ["edit_user_information"]

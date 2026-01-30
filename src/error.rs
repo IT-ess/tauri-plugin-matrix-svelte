@@ -13,7 +13,7 @@ pub enum Error {
     #[error(transparent)]
     MatrixLib(#[from] matrix_ui_serializable::Error),
     #[error(transparent)]
-    Keyring(#[from] tauri_plugin_keyring::Error),
+    Keyring(#[from] keyring_core::Error),
     #[cfg(mobile)]
     #[error(transparent)]
     PluginInvoke(#[from] tauri::plugin::mobile::PluginInvokeError),

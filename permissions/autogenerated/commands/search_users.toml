@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-search-users"
+description = "Enables the search_users command without any pre-configured scope."
+commands.allow = ["search_users"]
+
+[[permission]]
+identifier = "deny-search-users"
+description = "Denies the search_users command without any pre-configured scope."
+commands.deny = ["search_users"]

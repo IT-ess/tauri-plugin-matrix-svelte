@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-submit-matrix-login-request"
+description = "Enables the submit_matrix_login_request command without any pre-configured scope."
+commands.allow = ["submit_matrix_login_request"]
+
+[[permission]]
+identifier = "deny-submit-matrix-login-request"
+description = "Denies the submit_matrix_login_request command without any pre-configured scope."
+commands.deny = ["submit_matrix_login_request"]

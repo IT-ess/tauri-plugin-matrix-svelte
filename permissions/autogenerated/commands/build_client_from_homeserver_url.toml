@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-build-client-from-homeserver-url"
+description = "Enables the build_client_from_homeserver_url command without any pre-configured scope."
+commands.allow = ["build_client_from_homeserver_url"]
+
+[[permission]]
+identifier = "deny-build-client-from-homeserver-url"
+description = "Denies the build_client_from_homeserver_url command without any pre-configured scope."
+commands.deny = ["build_client_from_homeserver_url"]

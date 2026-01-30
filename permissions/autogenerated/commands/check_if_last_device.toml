@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-check-if-last-device"
+description = "Enables the check_if_last_device command without any pre-configured scope."
+commands.allow = ["check_if_last_device"]
+
+[[permission]]
+identifier = "deny-check-if-last-device"
+description = "Denies the check_if_last_device command without any pre-configured scope."
+commands.deny = ["check_if_last_device"]
