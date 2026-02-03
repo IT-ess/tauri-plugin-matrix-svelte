@@ -1,17 +1,15 @@
 <script lang="ts">
 	import { CircleX, LoaderCircle, WifiOff } from '@lucide/svelte';
-	import type { LoginStore } from 'tauri-plugin-matrix-svelte-api';
-
-	let { loginStore }: { loginStore: LoginStore } = $props();
+	import { loginStore } from '../../../hooks.client';
 </script>
 
 {#if loginStore.state.syncServiceState === 'running'}
-	<LoaderCircle class="text-primary h-6 w-6 animate-spin" />
+	<LoaderCircle class="h-6 w-6 animate-spin text-primary" />
 {:else if loginStore.state.syncServiceState === 'error'}
-	<CircleX class="text-destructive h-6 w-6" />
+	<CircleX class="h-6 w-6 text-destructive" />
 {:else if loginStore.state.syncServiceState === 'offline'}
 	<WifiOff class="h-6 w-6 text-orange-400" />
 {:else if loginStore.state.syncServiceState === 'idle'}
-	<p class="text-muted text-sm">Messages synced ✔️</p>
+	<p class="text-sm text-muted">Messages synced ✔️</p>
 	<!-- We ignore the terminated variant. -->
 {/if}

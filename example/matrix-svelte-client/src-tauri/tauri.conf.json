@@ -19,7 +19,7 @@
 		],
 		"security": {
 			"csp": null,
-			"capabilities": ["default", "svelte", "mobile"]
+			"capabilities": ["default", "svelte", "mobile", "ios"]
 		}
 	},
 	"plugins": {

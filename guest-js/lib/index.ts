@@ -6,8 +6,12 @@ import type { EditRoomInformationPayload } from './bindings/EditRoomInformationP
 import type { MatrixLoginPayload } from './bindings/MatrixLoginPayload.js';
 import type { ProfileModel } from './bindings/ProfileModel.js';
 import type { VerifyDeviceEvent } from './bindings/VerifyDeviceEvent.js';
-import type { MatrixRequest } from './matrix-requests/requests.js';
+import { createMatrixRequest, type MatrixRequest } from './matrix-requests/requests.js';
 import type { RoomModel } from './bindings/RoomModel.js';
+import { LoginStore } from './stores/login-store.svelte.js';
+import { ProfileStore } from './stores/profiles-store.svelte.js';
+import { RoomStore } from './stores/room-store.svelte.js';
+import { RoomsCollection } from './stores/rooms-collection.svelte.js';
 
 export function submitMatrixLoginRequest(request: MatrixLoginPayload): Promise<null> {
 	return invoke('plugin:matrix-svelte|submit_matrix_login_request', {
@@ -159,3 +163,68 @@ export function defineRoomInformations(payload: EditRoomInformationPayload): Pro
 export function registerNotifications(token: string, userLanguage: string): Promise<null> {
 	return invoke('plugin:matrix-svelte|register_notifications', { token, userLanguage });
 }
+
+export { LoginStore, ProfileStore, RoomStore, RoomsCollection, createMatrixRequest };
+
+export * from './bindings/AudioInfo.js';
+export * from './bindings/AudioMessageEventContent.js';
+export * from './bindings/DeviceGuessedType.js';
+export * from './bindings/EditRoomInformationPayload.js';
+export * from './bindings/EditUserInformationPayload.js';
+export * from './bindings/EmoteMessageEventContent.js';
+export * from './bindings/EncryptedFile.js';
+export * from './bindings/FileInfo.js';
+export * from './bindings/FileMessageEventContent.js';
+export * from './bindings/FrontendDevice.js';
+export * from './bindings/FrontendRoomMember.js';
+export * from './bindings/ImageInfo.js';
+export * from './bindings/ImageMessageEventContent.js';
+export * from './bindings/InReplyTo.js';
+export * from './bindings/InvitedRoomInfo.js';
+export * from './bindings/InviterInfo.js';
+export * from './bindings/InviteState.js';
+export * from './bindings/JoinedRoomInfo.js';
+export * from './bindings/JsonWebKey.js';
+export * from './bindings/LocationMessageEventContent.js';
+export * from './bindings/LoginState.js';
+export * from './bindings/MatrixLoginPayload.js';
+export * from './bindings/MediaSource.js';
+export * from './bindings/Mentions.js';
+export * from './bindings/MilliSecondsSinceUnixEpoch.js';
+export * from './bindings/MsgLikeContent.js';
+export * from './bindings/NoticeMessageEventContent.js';
+export * from './bindings/OGTagsModel.js';
+export * from './bindings/ProfileModel.js';
+export * from './bindings/ReactionInfo.js';
+export * from './bindings/ReactionsByKeyBySender.js';
+export * from './bindings/RedactMessagePayload.js';
+export * from './bindings/Relation.js';
+export * from './bindings/Replacement.js';
+export * from './bindings/RoomDisplayName.js';
+export * from './bindings/RoomHero.js';
+export * from './bindings/RoomMessageEventContent.js';
+export * from './bindings/RoomMessageEventContentWithoutRelation.js';
+export * from './bindings/RoomModel.js';
+export * from './bindings/RoomsCollectionStatus.js';
+export * from './bindings/RoomScreen.js';
+export * from './bindings/RoomsList.js';
+export * from './bindings/SendMessagePayload.js';
+export * from './bindings/ServerNoticeMessageEventContent.js';
+export * from './bindings/TagInfo.js';
+export * from './bindings/TagName.js';
+export * from './bindings/TextMessageEventContent.js';
+export * from './bindings/Thread.js';
+export * from './bindings/ThreadSummary.js';
+export * from './bindings/ThumbnailInfo.js';
+export * from './bindings/TimelineItem.js';
+export * from './bindings/TimelineUiState.js';
+export * from './bindings/UnstableAmplitude.js';
+export * from './bindings/UnstableAudioDetailsContentBlock.js';
+export * from './bindings/UnstableVoiceContentBlock.js';
+export * from './bindings/VerifyDeviceEvent.js';
+export * from './bindings/VideoInfo.js';
+export * from './bindings/VideoMessageEventContent.js';
+export * from './bindings/VirtualTimelineItem.js';
+export * from './tauri-events.js';
+export * from './type-guards.js';
+export * from './media-cache.svelte.js';

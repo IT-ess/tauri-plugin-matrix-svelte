@@ -5,7 +5,8 @@ import { loginFormSchema } from '$lib/schemas/login';
 import { hostname } from '@tauri-apps/plugin-os';
 
 export const load: PageLoad = async () => {
-	const host = (await hostname()) ?? 'Matrix client';
+	const rawHost = await hostname();
+	const host = rawHost === 'localhost' || rawHost === null ? 'Refs' : rawHost;
 	return {
 		form: await superValidate(zod4(loginFormSchema)),
 		host

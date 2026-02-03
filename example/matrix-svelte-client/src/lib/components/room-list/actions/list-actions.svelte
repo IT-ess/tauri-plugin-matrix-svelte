@@ -6,32 +6,39 @@
 		DropdownMenuTrigger
 	} from '$lib/components/ui/dropdown-menu';
 	import { Button } from '$lib/components/ui/button';
-	import { PlusIcon, UserPen } from '@lucide/svelte';
+	import { Plus, UserPen, Users } from '@lucide/svelte';
+	import CreateDmRoom from './create-dm-room.svelte';
+	import { m } from '$lib/paraglide/messages';
 	import CreateRoom from './create-room.svelte';
 
 	// Track button rotation state
 	let isActionButtonOpen = $state(false);
 
+	let actionCreateDMRoomOpen = $state(false);
 	let actionCreateRoomOpen = $state(false);
 </script>
 
-<div class="bottom-safe-or-4 absolute right-4">
+<div class="absolute right-6 bottom-safe-offset-28 z-50">
 	<DropdownMenu bind:open={isActionButtonOpen}>
 		<DropdownMenuTrigger>
 			{#snippet child({ props: triggerProps })}
-				<Button {...triggerProps} size="icon" variant="secondary" class="h-10 w-10">
+				<Button {...triggerProps} size="icon" variant="secondary" class="h-12 w-12">
 					<div style:transform={isActionButtonOpen ? 'rotate(45deg)' : 'rotate(0deg)'}>
-						<PlusIcon class="h-6 w-6 transition-transform duration-200" />
+						<Plus class="h-8 w-8 transition-transform duration-200" />
 					</div>
 				</Button>
 			{/snippet}
 		</DropdownMenuTrigger>
 		<DropdownMenuContent align="end" side="top">
+			<DropdownMenuItem class="text-md" onSelect={() => (actionCreateDMRoomOpen = true)}
+				><UserPen />{m.create_dm_room()}</DropdownMenuItem
+			>
 			<DropdownMenuItem class="text-md" onSelect={() => (actionCreateRoomOpen = true)}
-				><UserPen />Create DM Room</DropdownMenuItem
+				><Users />{m.create_room()}</DropdownMenuItem
 			>
 		</DropdownMenuContent>
 	</DropdownMenu>
 </div>
 
-<CreateRoom {actionCreateRoomOpen} {isActionButtonOpen} />
+<CreateDmRoom {actionCreateDMRoomOpen} />
+<CreateRoom {actionCreateRoomOpen} />

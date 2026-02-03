@@ -4,6 +4,3 @@ packages:
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - esbuild
-
-patchedDependencies:
-  sveltekit-superforms@2.27.1: patches/sveltekit-superforms@2.27.1.patch

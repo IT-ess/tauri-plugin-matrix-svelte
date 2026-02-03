@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { ProfileStore, TimelineItem } from 'tauri-plugin-matrix-svelte-api';
+	import type { TimelineItem } from 'tauri-plugin-matrix-svelte-api';
+	import { roomsCollection } from '../../../../hooks.client';
 	import MessageLike from './message-like.svelte';
 	import Virtual from './virtual.svelte';
 
@@ -7,41 +8,62 @@
 		item: TimelineItem;
 		roomId: string;
 		currentUserId: string;
-		profileStore: ProfileStore;
 		repliedToMessage?: TimelineItem;
 		onReply?: (eventId: string, senderName: string, content: string) => void;
 		onScrollToMessage?: (eventId: string) => void;
+		handleOpenMediaViewMode: (
+			type: 'image' | 'video',
+			src: string,
+			info: {
+				filename?: string;
+				body?: string;
+				size: number;
+			}
+		) => void;
+		isInThread?: boolean;
+		roomAvatar: string | null;
 	};
 
 	let {
 		item,
 		roomId,
 		currentUserId,
-		profileStore,
 		onReply,
 		repliedToMessage,
-		onScrollToMessage
+		onScrollToMessage,
+		handleOpenMediaViewMode,
+		isInThread,
+		roomAvatar
 	}: Props = $props();
 </script>
 
 {#if item.kind === 'msgLike'}
-	<div data-event-id={item.eventId}>
+	<!-- msg like always have event ids -->
+	<div data-event-id={item.eventId as string}>
 		<MessageLike
 			data={item.data}
 			timestamp={item.timestamp ?? 0}
 			isOwn={item.isOwn}
 			{roomId}
 			eventId={item.eventId ?? ''}
+			timelineItemId={item.timelineItemId}
+			isLocal={item.isLocal}
 			{currentUserId}
-			{profileStore}
 			{onReply}
 			{onScrollToMessage}
 			repliedToMessage={repliedToMessage?.kind === 'msgLike' ? repliedToMessage.data : undefined}
 			abilities={item.abilities}
+			{handleOpenMediaViewMode}
+			{isInThread}
+			{roomAvatar}
 		/>
 	</div>
 {:else if item.kind === 'virtual'}
-	<Virtual timestamp={item.timestamp} data={item.data} />
+	<Virtual
+		timestamp={item.timestamp ?? undefined}
+		data={item.data}
+		roomHasUnreadMessages={roomsCollection.state.allJoinedRooms[roomId].numUnreadMessages > 0}
+	/>
 {:else if item.kind === 'call'}
 	{@render stateMessage('Someone started a call')}
 {:else if item.kind === 'stateChange'}

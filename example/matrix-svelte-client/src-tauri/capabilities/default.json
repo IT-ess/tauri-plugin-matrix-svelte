@@ -7,14 +7,17 @@
 		"core:default",
 		"opener:default",
 		"matrix-svelte:default",
-		"matrix-svelte:allow-ping",
 		"os:default",
 		"os:allow-hostname",
 		"fs:default",
 		"fs:allow-applocaldata-write-recursive",
 		{
 			"identifier": "fs:allow-exists",
-			"allow": [{ "path": "$APPLOCALDATA/download/*" }]
+			"allow": [
+				{
+					"path": "$APPLOCALDATA/download/*"
+				}
+			]
 		},
 		{
 			"identifier": "opener:allow-open-path",
@@ -24,6 +27,11 @@
 				}
 			]
 		},
-		"notification:default"
+		"notifications:default",
+		"clipboard-manager:allow-read-text",
+		"clipboard-manager:allow-write-text",
+		"deep-link:default",
+		"safe-area-insets-css:default",
+		"dialog:default"
 	]
 }

@@ -1,27 +1,36 @@
 <script lang="ts">
 	import '../app.css';
-	import { goto } from '$app/navigation';
+	import { setupViewTransition } from 'sveltekit-view-transition';
 	import { onDestroy, onMount } from 'svelte';
 	import { emit, listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { events } from 'tauri-plugin-matrix-svelte-api';
-	import Button from '$lib/components/ui/button/button.svelte';
+	import { Button } from '$lib/components/ui/button/';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Toaster, toast } from 'svelte-sonner';
 	import { MediaQuery } from 'svelte/reactivity';
+	import type { LayoutProps } from './$types';
 	import { page } from '$app/state';
-	import { ChevronLeft } from '@lucide/svelte';
+	import { goto } from '$app/navigation';
+	import { loginState } from '$lib/login-state.svelte';
+	import { m } from '$lib/paraglide/messages';
+	import '@saurl/tauri-plugin-safe-area-insets-css-api';
+	import { loginStore } from '../hooks.client';
+	import { platform } from '@tauri-apps/plugin-os';
+	import {
+		isLoggedIn,
+		MatrixSvelteEmitEvent,
+		MatrixSvelteListenEvent,
+		type ToastNotificationEventType,
+		type VerificationEmojisEventType
+	} from 'tauri-plugin-matrix-svelte-api';
 
-	let { children, data } = $props();
+	let { children }: LayoutProps = $props();
 
-	$effect(() => {
-		if (data.loginStore.state.state == 'awaitingForLogin') {
-			goto('/login');
-		} else {
-			data.loginStore.state.state = 'loggedIn';
-		}
-	});
+	if (platform() !== 'linux') {
+		setupViewTransition();
+	}
 
 	let displayEmojiVerificationModal = $state(false);
+
 	let verificationEmojis = $state('');
 	const isDesktop = new MediaQuery('(min-width: 768px)');
 
@@ -29,9 +38,26 @@
 	let toastUnlistener: UnlistenFn;
 
 	onMount(async () => {
-		// Do not register if already verified ?
-		emojisUnlistener = await listen<events.VerificationEmojisEventType>(
-			events.MatrixSvelteListenEvent.VerificationStart,
+		// Necessary for first init
+		if (!loginState.isLoggedIn && page.route.id !== '/login') {
+			while (!(await isLoggedIn())) {
+				if (loginStore.state.state == 'awaitingForHomeserver') {
+					await goto('/login');
+					break;
+				}
+				const sleep = () => {
+					return new Promise((resolve) => setTimeout(resolve, 300));
+				};
+				console.log('awaiting for login state');
+				await sleep();
+			}
+			// If the client is active we set the context to loggedIn
+			// (by calling the function again to avoid breaking the loop and setting true)
+			loginState.isLoggedIn = await isLoggedIn();
+		}
+
+		emojisUnlistener = await listen<VerificationEmojisEventType>(
+			MatrixSvelteListenEvent.VerificationStart,
 			(event) => {
 				console.log(
 					'Matrix verification event received. Beginning verification. Emojis:',
@@ -42,8 +68,8 @@
 			}
 		);
 
-		toastUnlistener = await listen<events.ToastNotificationEventType>(
-			events.MatrixSvelteListenEvent.ToastNotification,
+		toastUnlistener = await listen<ToastNotificationEventType>(
+			MatrixSvelteListenEvent.ToastNotification,
 			(event) => {
 				switch (event.payload.variant) {
 					case 'success':
@@ -71,18 +97,12 @@
 	});
 </script>
 
-<header class="pt-safe-offset-2 flex items-center gap-2 pl-2">
-	{#if page.route.id !== '/'}
-		<Button onclick={() => goto('/')} size="icon" variant="outline"><ChevronLeft /></Button>
-	{/if}
-	<p class="text-lg font-semibold">Matrix Svelte Client</p>
-</header>
-<main class="pb-safe container">
+<main class="h-screen w-screen">
 	{@render children()}
 </main>
 
 <Toaster
-	class="mt-safe"
+	toastOptions={{ class: 'mt-safe' }}
 	richColors
 	expand={isDesktop.current}
 	position={isDesktop.current ? 'top-right' : 'top-center'}
@@ -90,11 +110,11 @@
 />
 
 <Dialog.Root bind:open={displayEmojiVerificationModal}>
-	<Dialog.Content class="max-w-[80%] rounded-md">
+	<Dialog.Content class="z-60 max-w-[80%] rounded-md">
 		<Dialog.Header>
-			<Dialog.Title>Please verify this device</Dialog.Title>
+			<Dialog.Title>{m.popup_verification_please_verify()}</Dialog.Title>
 			<Dialog.Description>
-				Check if the emojis match between the devices:
+				{m.popup_verification_instructions()}
 				<br />
 				<span class="text-3xl">{verificationEmojis}</span>
 			</Dialog.Description>
@@ -104,29 +124,22 @@
 				variant="default"
 				type="submit"
 				onclick={() => {
-					emit<events.VerificationResultEventType>(
-						events.MatrixSvelteEmitEvent.VerificationResult,
-						{ confirmed: true }
-					);
+					emit(MatrixSvelteEmitEvent.VerificationResult, {
+						confirmed: true
+					});
 					displayEmojiVerificationModal = false;
-				}}>Confirm</Button
+				}}>{m.button_confirm()}</Button
 			>
 			<Button
 				variant="destructive"
 				type="submit"
 				onclick={() => {
-					emit<events.VerificationResultEventType>(
-						events.MatrixSvelteEmitEvent.VerificationResult,
-						{ confirmed: false }
-					);
+					emit(MatrixSvelteEmitEvent.VerificationResult, {
+						confirmed: false
+					});
 					displayEmojiVerificationModal = false;
-				}}>Cancel</Button
+				}}>{m.button_cancel()}</Button
 			>
 		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>
-
-<p>
-	Current status: {data.roomsCollection.state.status.status}. Message: {data.roomsCollection.state
-		.status.message}
-</p>

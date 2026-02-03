@@ -1,32 +1,40 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { ScrollArea } from 'bits-ui';
-	import { Input } from '$lib/components/ui/input';
-	import { SendIcon, LoaderIcon, ArrowDownIcon, XIcon, ReplyIcon } from '@lucide/svelte';
+	import { LoaderIcon, ArrowDownIcon } from '@lucide/svelte';
 	import { fade } from 'svelte/transition';
 	import './room.css';
-	import {
-		createMatrixRequest,
-		ProfileStore,
-		submitAsyncRequest,
-		type RoomStore
-	} from 'tauri-plugin-matrix-svelte-api';
 	import Item from './items/item.svelte';
 	import { ScrollState } from 'runed';
 	import { useDebounce } from 'runed';
+	import RoomHeader from './room-header.svelte';
+	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import { tick } from 'svelte';
-	import SearchBar from './search-bar.svelte';
+	import { cn } from '$lib/utils.svelte';
+	import { loginStore, roomsCollection } from '../../../hooks.client';
+	import RoomInput from './room-input.svelte';
+	import MediaViewer from '../common/media-viewer.svelte';
+	import type { MediaViewerInfo } from '../media/utils';
+	import {
+		RoomStore,
+		createMatrixRequest,
+		submitAsyncRequest,
+		type RoomMessageEventContent,
+		type AudioInfo,
+		type VideoInfo,
+		type ImageInfo,
+		type FileInfo,
+		isVideoOrImageInfo,
+		uploadMedia
+	} from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
 		roomStore: RoomStore;
-		profileStore: ProfileStore;
-		currentUserId: string;
+		roomAvatarUrl: string | null;
 	};
-	let { roomStore, profileStore, currentUserId }: Props = $props();
+	let { roomStore, roomAvatarUrl }: Props = $props();
 
 	let isLoadingMore = $state(false);
 	let prevScrollHeight = $state(0);
-	let newMessage: string = $state('');
 
 	// Reply state
 	let replyingTo = $state<{
@@ -49,14 +57,11 @@
 			if (
 				scroll.arrived.bottom &&
 				roomStore.state.tlState &&
-				!roomStore.state.tlState?.scrolledPastReadMarker
+				roomsCollection.state.allJoinedRooms[roomStore.id].numUnreadMessages > 0
 			) {
-				const request = createMatrixRequest.fullyReadReceipt({
-					roomId: roomStore.id,
-					eventId:
-						roomStore.state.tlState.items[roomStore.state.tlState.items.length - 1].eventId ?? ''
+				const request = createMatrixRequest.markRoomAsRead({
+					roomId: roomStore.id
 				});
-				roomStore.state.tlState.scrolledPastReadMarker = true;
 				submitAsyncRequest(request);
 			}
 		}
@@ -81,7 +86,7 @@
 		try {
 			const request = createMatrixRequest.paginateRoomTimeline({
 				roomId: roomStore.id,
-				numEvents: 50,
+				numEvents: 20,
 				direction: 'backwards'
 			});
 			await submitAsyncRequest(request);
@@ -101,42 +106,6 @@
 			senderName,
 			content: content.length > 100 ? content.substring(0, 100) + '...' : content
 		};
-	};
-
-	// Cancel reply
-	const cancelReply = () => {
-		replyingTo = null;
-	};
-
-	// Handle sending new message
-	const handleSendMessage = async () => {
-		if (!newMessage.trim()) return;
-
-		let request;
-		if (replyingTo) {
-			// Send reply message
-			request = createMatrixRequest.sendTextMessage(roomStore.id, newMessage, {
-				replyToEventId: replyingTo.eventId
-			});
-		} else {
-			// Send regular message
-			request = createMatrixRequest.sendTextMessage(roomStore.id, newMessage, {});
-		}
-
-		await submitAsyncRequest(request);
-		newMessage = '';
-		replyingTo = null; // Clear reply state after sending
-	};
-
-	// Handle enter key press
-	const handleKeyDown = (e: KeyboardEvent) => {
-		if (e.key === 'Enter' && !e.shiftKey) {
-			e.preventDefault();
-			handleSendMessage();
-		} else if (e.key === 'Escape' && replyingTo) {
-			e.preventDefault();
-			cancelReply();
-		}
 	};
 
 	const scrollToMessage = async (eventId: string) => {
@@ -186,60 +155,186 @@
 			});
 		}
 	});
+
+	let roomItems = $derived.by(() => {
+		if (!roomStore.state.tlState) {
+			return null;
+		} else {
+			return roomStore.state.tlState.items.filter((i) => {
+				// Filter items with a thread root
+				if (i.kind === 'msgLike') {
+					return !i.data.threadRoot;
+				} else {
+					return true;
+				}
+			});
+		}
+	});
+
+	// Media viewer
+	let showMediaViewer = $state(false);
+	let mediaViewerSrc = $state<string | null>(null);
+	let mediaViewerMxcUri = $state<Promise<string> | undefined>();
+
+	let mediaViewerInfo = $state<MediaViewerInfo | undefined>();
+	let viewerMode: 'send' | 'view' = $state('send');
+	let viewedMediaType: 'image' | 'video' | 'file' = $state('image');
+	const handleOpenMediaSendMode = (
+		type: 'image' | 'video' | 'file',
+		src: string,
+		mxcUri: Promise<string>,
+		info: MediaViewerInfo
+	) => {
+		viewedMediaType = type;
+		mediaViewerSrc = src;
+		mediaViewerMxcUri = mxcUri;
+		mediaViewerInfo = info;
+		viewerMode = 'send';
+		showMediaViewer = true;
+	};
+
+	const handleOpenMediaViewMode = (
+		type: 'image' | 'video' | 'file',
+		src: string,
+		info: {
+			filename?: string;
+			body?: string;
+			size: number;
+		}
+	) => {
+		viewedMediaType = type;
+		mediaViewerSrc = src;
+
+		mediaViewerInfo = { ...info };
+		viewerMode = 'view';
+		showMediaViewer = true;
+	};
+
+	const handleSendMedia = async (
+		msgtype: RoomMessageEventContent['msgtype'],
+		mediaInfo?: AudioInfo | VideoInfo | ImageInfo | FileInfo,
+		additionalInfo?: { message?: string; waveform?: number[] }
+	) => {
+		let completeInfo = mediaInfo;
+		// Consolidate media info from the blob info
+		if (mediaViewerInfo && completeInfo) {
+			completeInfo.size = mediaViewerInfo.size;
+			completeInfo.mimetype = mediaViewerInfo.mimeType ?? null;
+			// If the media supports thumbnails and we successfully generated it,
+			// add them to the message
+			if (isVideoOrImageInfo(completeInfo) && mediaViewerInfo.thumbnailInfo) {
+				let thumbInfo = await mediaViewerInfo.thumbnailInfo;
+				if (thumbInfo.blob) {
+					completeInfo.thumbnail_info = {
+						h: thumbInfo.h,
+						w: thumbInfo.w,
+						mimetype: thumbInfo.blob.type,
+						size: thumbInfo.blob.size
+					};
+					completeInfo.thumbnail_url = await uploadMedia(
+						thumbInfo.blob.type,
+						await thumbInfo.blob.arrayBuffer()
+					);
+				}
+			}
+		}
+		if (!mediaViewerMxcUri) throw Error('Missing media URI');
+		let request = createMatrixRequest.sendMessage({
+			roomId: roomStore.id,
+			message: {
+				msgtype,
+				body: additionalInfo?.message ?? '', // The body must be defined for some reason.
+				// TODO: use those two fields ?
+				'm.mentions': null,
+				'm.relates_to': undefined,
+				filename: mediaViewerInfo?.filename ?? null,
+				info: completeInfo ?? null,
+				url: await mediaViewerMxcUri,
+				'org.matrix.msc1767.audio':
+					msgtype === 'm.audio'
+						? {
+								duration: (completeInfo as AudioInfo).duration ?? 1,
+								waveform: additionalInfo?.waveform
+							}
+						: null
+			} as RoomMessageEventContent, // TODO: Remove assertion
+			replyToId: replyingTo?.eventId ?? null,
+			threadRootId: null // We cannot send thread messages from here
+		});
+
+		await submitAsyncRequest(request);
+
+		replyingTo = null; // Clear reply state after sending
+		showMediaViewer = false;
+		mediaViewerSrc = null;
+		mediaViewerMxcUri = undefined;
+		mediaViewerInfo = undefined;
+	};
+
+	const handleSendAudioMessage = async (
+		blob: Blob,
+		duration: number,
+		waveform: number[] | null
+	) => {
+		mediaViewerMxcUri = uploadMedia(blob.type, await blob.arrayBuffer());
+		mediaViewerInfo = {
+			filename: 'audio-recording_' + new Date().toISOString() + '.' + blob.type.split('/').pop(),
+			size: blob.size,
+			mimeType: blob.type
+		};
+		const info: AudioInfo = {
+			mimetype: blob.type,
+			size: blob.size,
+			duration: Math.ceil(duration)
+		};
+		await handleSendMedia('m.audio', info, {
+			waveform: waveform?.map((f) => Math.floor(f * 1000))
+		});
+	};
+
+	const handleCloseMediaViewer = () => {
+		showMediaViewer = false;
+	};
 </script>
 
-<div class="bg-background relative flex h-[600px] flex-col rounded-lg border">
-	<SearchBar roomId={roomStore.id} />
-	<!-- Chat messages container -->
-	<div class="flex-1 overflow-hidden">
-		<ScrollArea.Root class="h-full bg-white">
-			<ScrollArea.Viewport bind:ref={viewportElement} class="h-full">
-				<div class="flex flex-col gap-4 p-4 pb-0">
-					<!-- Loading indicator -->
-					{#if isLoadingMore}
-						<div class="flex justify-center py-2" transition:fade|local>
-							<LoaderIcon class="text-muted-foreground h-6 w-6 animate-spin" />
+<div class="bg-background pb-tauri-bottom-safe relative flex h-full flex-col">
+	<RoomHeader {roomStore} initialAvatarUrl={roomAvatarUrl} />
+	<div class={cn('w-full flex-1 overflow-hidden')}>
+		<ScrollArea bind:viewportRef={viewportElement} class="h-full bg-white">
+			<div class="flex flex-col gap-4 p-4 pb-2">
+				{#if isLoadingMore}
+					<div class="flex justify-center py-2" transition:fade|local>
+						<LoaderIcon class="text-muted-foreground h-6 w-6 animate-spin" />
+					</div>
+				{/if}
+
+				{#if roomItems}
+					{#each roomItems as item (item.uniqueId)}
+						<div transition:fade|local>
+							<Item
+								{item}
+								roomId={roomStore.id}
+								currentUserId={loginStore.state.userId ?? 'shouldbedefined'}
+								onReply={handleReplyTo}
+								onScrollToMessage={scrollToMessage}
+								repliedToMessage={item.kind === 'msgLike' && item.data.inReplyToId !== null
+									? roomStore.state.tlState?.items.find((i) => i.eventId === item.data.inReplyToId)
+									: undefined}
+								{handleOpenMediaViewMode}
+								roomAvatar={roomAvatarUrl}
+							/>
 						</div>
-					{/if}
-
-					<!-- Messages list -->
-					{#if roomStore.state.tlState?.items}
-						{#each roomStore.state.tlState?.items as item (item.eventId ?? crypto.randomUUID())}
-							<div transition:fade|local>
-								<Item
-									{item}
-									{profileStore}
-									roomId={roomStore.id}
-									{currentUserId}
-									onReply={handleReplyTo}
-									onScrollToMessage={scrollToMessage}
-									repliedToMessage={item.kind === 'msgLike' && item.data.threadRoot !== null
-										? roomStore.state.tlState?.items.find((i) => i.eventId === item.data.threadRoot)
-										: undefined}
-								/>
-							</div>
-						{/each}
-					{:else}
-						<b>Error: timeline state should be defined</b>
-					{/if}
-
-					<!-- Spacer to ensure last message isn't hidden behind input -->
-					<div class="h-2"></div>
-				</div>
-			</ScrollArea.Viewport>
-			<ScrollArea.Scrollbar
-				class="flex h-full w-2.5 touch-none border-l border-l-transparent p-px transition-colors select-none"
-				orientation="vertical"
-			>
-				<ScrollArea.Thumb class="bg-border relative flex-1 rounded-full" />
-			</ScrollArea.Scrollbar>
-
-			<ScrollArea.Corner />
-		</ScrollArea.Root>
+					{/each}
+				{:else}
+					<b>Error: timeline state should be defined</b>
+				{/if}
+				<div id="bottomscroll"></div>
+			</div>
+		</ScrollArea>
 	</div>
 
 	{#if showScrollButton && !replyingTo}
-		<div transition:fade class="absolute right-4 bottom-20 z-10">
+		<div transition:fade class="absolute right-4 bottom-32 z-10">
 			<Button
 				size="icon"
 				variant="secondary"
@@ -251,44 +346,17 @@
 		</div>
 	{/if}
 
-	<!-- Message input - fixed at bottom -->
-	<div class="bg-background border-t">
-		<!-- Reply preview -->
-		{#if replyingTo}
-			<div class="bg-muted/50 border-b p-3" transition:fade>
-				<div class="flex items-start justify-between gap-2">
-					<div class="flex min-w-0 flex-1 items-start gap-2">
-						<ReplyIcon class="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
-						<div class="min-w-0 flex-1">
-							<div class="text-foreground text-sm font-medium">
-								Replying to {replyingTo.senderName}
-							</div>
-							<div class="text-muted-foreground truncate text-sm">
-								{replyingTo.content}
-							</div>
-						</div>
-					</div>
-					<Button size="icon" variant="ghost" onclick={cancelReply} class="h-6 w-6 flex-shrink-0">
-						<XIcon class="h-3 w-3" />
-						<span class="sr-only">Cancel reply</span>
-					</Button>
-				</div>
-			</div>
-		{/if}
-
-		<div class="p-4">
-			<div class="flex gap-2">
-				<Input
-					bind:value={newMessage}
-					onkeydown={handleKeyDown}
-					placeholder={replyingTo ? `Reply to ${replyingTo.senderName}...` : 'Type a message...'}
-					class="flex-1"
-				/>
-				<Button onclick={handleSendMessage} disabled={!newMessage.trim()}>
-					<SendIcon class="h-4 w-4" />
-					<span class="sr-only">Send message</span>
-				</Button>
-			</div>
-		</div>
-	</div>
+	<RoomInput {roomStore} bind:replyingTo {handleOpenMediaSendMode} {handleSendAudioMessage} />
 </div>
+
+{#if showMediaViewer && mediaViewerSrc}
+	<MediaViewer
+		src={mediaViewerSrc}
+		text={mediaViewerInfo?.body}
+		mediaType={viewedMediaType}
+		mode={viewerMode}
+		onClose={handleCloseMediaViewer}
+		onSend={handleSendMedia}
+		filename={mediaViewerInfo?.filename}
+	/>
+{/if}

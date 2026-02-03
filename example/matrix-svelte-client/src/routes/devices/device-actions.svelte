@@ -2,8 +2,9 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
 	import { Separator } from '$lib/components/ui/separator';
-	import { MoreVerticalIcon, ShieldCheckIcon, TrashIcon, InfoIcon } from '@lucide/svelte';
-	import type { Device } from 'tauri-plugin-matrix-svelte-api';
+	import { m } from '$lib/paraglide/messages';
+	import { MoreVerticalIcon, ShieldCheckIcon } from '@lucide/svelte';
+	import type { FrontendDevice as Device } from 'tauri-plugin-matrix-svelte-api';
 
 	interface Props {
 		device: Device;
@@ -18,17 +19,17 @@
 		isOpen = false;
 	}
 
-	function handleViewDetails() {
-		console.log('View device details:', device.deviceId);
-		// TODO
-		isOpen = false;
-	}
+	// function handleViewDetails() {
+	// 	console.log('View device details:', device.deviceId);
+	// 	// TODO
+	// 	isOpen = false;
+	// }
 
-	function handleRemoveDevice() {
-		console.log('Remove device:', device.deviceId);
-		// TODO
-		isOpen = false;
-	}
+	// function handleRemoveDevice() {
+	// 	console.log('Remove device:', device.deviceId);
+	// 	// TODO
+	// 	isOpen = false;
+	// }
 </script>
 
 <Popover bind:open={isOpen}>
@@ -49,14 +50,13 @@
 					onclick={handleVerify}
 				>
 					<ShieldCheckIcon class="h-4 w-4" />
-					Verify this device
+					{m.devices_verify_device()}
 				</button>
 				<Separator />
 			{/if}
 
-			<!-- View Details Action -->
-			<button
-				class="hover:bg-accent hover:text-accent-foreground flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
+			<!-- <button
+				class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
 				onclick={handleViewDetails}
 			>
 				<InfoIcon class="h-4 w-4" />
@@ -65,14 +65,13 @@
 
 			<Separator />
 
-			<!-- Remove Device Action -->
 			<button
-				class="text-destructive hover:bg-destructive hover:text-destructive-foreground flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
+				class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-destructive hover:bg-destructive hover:text-destructive-foreground"
 				onclick={handleRemoveDevice}
 			>
 				<TrashIcon class="h-4 w-4" />
 				Remove device
-			</button>
+			</button> -->
 		</div>
 	</PopoverContent>
 </Popover>

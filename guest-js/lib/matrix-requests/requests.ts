@@ -161,6 +161,13 @@ interface GetMatrixRoomLinkPillInfoRequest {
 	};
 }
 
+interface CreateDMRoomRequest {
+	event: 'createDMRoom';
+	payload: {
+		userId: UserId;
+	};
+}
+
 interface CreateRoomRequest {
 	event: 'createRoom';
 	payload: {
@@ -202,6 +209,7 @@ export type MatrixRequest =
 	| ToggleReactionRequest
 	| RedactMessageRequest
 	// | GetMatrixRoomLinkPillInfoRequest;
+	| CreateDMRoomRequest
 	| CreateRoomRequest
 	| InviteUsersInRoomRequest;
 
@@ -224,6 +232,7 @@ export type {
 	SubscribeToOwnUserReadReceiptsChangedRequest,
 	ReadReceiptRequest,
 	MarkRoomAsReadRequest,
+	CreateDMRoomRequest,
 	GetRoomPowerLevelsRequest,
 	ToggleReactionRequest,
 	RedactMessageRequest,
@@ -350,6 +359,11 @@ export const createMatrixRequest = {
 		payload: GetMatrixRoomLinkPillInfoRequest['payload']
 	): GetMatrixRoomLinkPillInfoRequest => ({
 		event: 'getMatrixRoomLinkPillInfo',
+		payload
+	}),
+
+	createDMRoom: (payload: CreateDMRoomRequest['payload']): CreateDMRoomRequest => ({
+		event: 'createDMRoom',
 		payload
 	}),
 
