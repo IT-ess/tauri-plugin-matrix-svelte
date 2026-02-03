@@ -4,25 +4,27 @@ A Tauri plugin that provides Matrix communication features through Svelte Rune s
 
 This plugin is an adapter for the [matrix-ui-serializable](https://github.com/IT-ess/matrix-ui-serializable) library, that provides high abstractions of the client state. Most of the state data is sent to frontend through Svelte Rune Stores directly, thanks to tauri-plugin-svelte, allowing instant reactivity.
 
-## Current supported features
-
-Check [here](https://github.com/IT-ess/matrix-ui-serializable?tab=readme-ov-file#Features).
-
-## Installation
-
-An example client is provided in this same repo to showcase the possibilities (under `/example/matrix-svelte-client`).
-
-### Example client screenshots
+## Showcase
 <div style="display: flex; justify-content: space-between; gap: 15px; margin: 0 -5px; max-width: 100%;">
   <img src="assets/room_list.png" alt="Room List" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
   <img src="assets/room.png" alt="Room" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
   <img src="assets/device_list.png" alt="Device list" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
 </div>
 
+You can try the example client by installing the binaries (in the Github release).
+
+## Current supported features
+
+Check [here](https://github.com/IT-ess/matrix-ui-serializable?tab=readme-ov-file#Features).
+
+## Installation
+
+TODO !
+
 ## Requirements
 
-- If you need to use OAuth authentication (that is the case for matrix.org), you'll need a callback URL that passes the OAuth state to your client.
-- A [Sygnal push notification gateway](https://github.com/matrix-org/sygnal) if you want to configure push notifications on mobile
+- If you need to use OAuth authentication (that is the case for matrix.org), you'll need a callback URL that passes the OAuth state to your client. You can use this preconfigured [project](https://github.com/IT-ess/oauth-redirect-deeplink), and replace with your environment variables.
+- A [Sygnal push notification gateway](https://github.com/matrix-org/sygnal) if you want to configure push notifications on mobile.
 
 ## Plugin configuration
 - `android_sygnal_gateway_url`: Push gateway url for android

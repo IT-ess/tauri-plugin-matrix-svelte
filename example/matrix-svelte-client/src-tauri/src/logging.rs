@@ -47,7 +47,6 @@ pub fn setup_logging(mut tauri_builder: Builder<Wry>) -> Builder<Wry> {
             .with_writer(writer);
         builder.init();
     }
-    // only enable devtools on linux in debug mode
     #[cfg(debug_assertions)]
     {
         tauri_builder = tauri_builder.plugin(tauri_plugin_devtools::init());

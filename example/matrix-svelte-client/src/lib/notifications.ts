@@ -5,8 +5,6 @@ import {
 	isPermissionGranted,
 	registerForPushNotifications,
 	requestPermission,
-	Schedule,
-	sendNotification,
 	Visibility
 } from '@choochmeque/tauri-plugin-notifications-api';
 import { m } from '$lib/paraglide/messages';
@@ -32,18 +30,6 @@ export async function requestPermissionsAndCreateChannel() {
 	if (currentPlatform === 'android') {
 		if (permissionGranted) {
 			await createChannel({
-				id: DAILY_NOTIFICATIONS_CHANNEL_ID,
-				name: m.notification_daily_recap(),
-				description: m.notification_daily_recap_description(),
-				importance: Importance.High,
-				visibility: Visibility.Public,
-				lights: true,
-				lightColor: '#ff0000',
-				vibration: true
-				//sound: 'notification_sound'
-			});
-
-			await createChannel({
 				id: MESSAGES_CHANNEL_ID,
 				name: m.notification_messages_channel(),
 				description: m.notification_messages_channel_desc(),
@@ -63,15 +49,6 @@ export async function enableDailyRecapAndPushNotifications(areNotificationsAllow
 		if (!areNotificationsAllowed) {
 			await requestPermissionsAndCreateChannel();
 		}
-
-		sendNotification({
-			title: m.notification_daily_recap(),
-			schedule: Schedule.interval({
-				day: 1
-			}),
-			channelId: DAILY_NOTIFICATIONS_CHANNEL_ID,
-			autoCancel: true
-		});
 
 		const currentPlatform = platform();
 		const token =

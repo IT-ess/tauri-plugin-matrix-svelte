@@ -26,18 +26,18 @@
 		"matrix-svelte": {
 			"android_sygnal_gateway_url": "https://sygnal.mydomain.com/_matrix/push/v1/notify",
 			"ios_sygnal_gateway_url": "https://sygnal.mydomain.com/_matrix/push/v1/notify",
-			"oauth_client_uri": "https://refs.rs",
-			"oauth_redirect_uri": "https://refs.rs/auth-callback"
+			"oauth_client_uri": "https://mxsvelte.aloiseau.com",
+			"oauth_redirect_uri": "https://mxsvelte.aloiseau.com/auth-callback"
 		},
 		"deep-link": {
 			"mobile": [
 				{
-					"scheme": ["refs"],
+					"scheme": ["mxsvelte"],
 					"appLink": false
 				}
 			],
 			"desktop": {
-				"schemes": ["refs"]
+				"schemes": ["mxsvelte"]
 			}
 		}
 	},
