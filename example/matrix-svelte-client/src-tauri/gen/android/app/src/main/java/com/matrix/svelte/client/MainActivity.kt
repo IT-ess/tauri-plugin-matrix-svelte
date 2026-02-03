@@ -1,4 +1,4 @@
-package com.matrix_svelte.client
+package com.matrix.svelte.client
 
 import android.os.Bundle
 import android.view.View
