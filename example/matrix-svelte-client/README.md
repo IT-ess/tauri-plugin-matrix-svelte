@@ -8,4 +8,5 @@ An example frontend implementation over the [matrix-ui-serializable](https://git
 
 - Check out if you meet Tauri [prerequisites](https://tauri.app/start/prerequisites/)
 - `pnpm install` (the plugin JS bindings must be built)
+- [android] : add a keystore.properties file with your keystore data (see [here](https://tauri.app/distribute/sign/android/))
 - `pnpm tauri dev` for desktop or `pnpm tauri [android|ios] dev` for mobile

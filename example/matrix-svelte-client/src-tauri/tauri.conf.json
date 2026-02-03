@@ -19,18 +19,29 @@
 		],
 		"security": {
 			"csp": null,
-			"capabilities": ["default", "svelte", "mobile", "ios"]
+			"capabilities": ["default", "svelte", "ios"]
 		}
 	},
 	"plugins": {
 		"matrix-svelte": {
-			"sygnal_gateway_url": "https://sygnal.lucide.space"
+			"android_sygnal_gateway_url": "https://sygnal.mydomain.com/_matrix/push/v1/notify",
+			"ios_sygnal_gateway_url": "https://sygnal.mydomain.com/_matrix/push/v1/notify",
+			"oauth_client_uri": "https://refs.rs",
+			"oauth_redirect_uri": "https://refs.rs/auth-callback"
+		},
+		"deep-link": {
+			"mobile": [
+				{
+					"scheme": ["refs"],
+					"appLink": false
+				}
+			],
+			"desktop": {
+				"schemes": ["refs"]
+			}
 		}
 	},
 	"bundle": {
-		"iOS": {
-			"developmentTeam": "9A6YPCKFPC"
-		},
 		"active": true,
 		"targets": "all",
 		"icon": [

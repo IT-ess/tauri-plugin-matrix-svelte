@@ -25,11 +25,13 @@ pub use error::{Error, Result};
 use desktop::MatrixSvelte;
 #[cfg(mobile)]
 use mobile::MatrixSvelte;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 use url::Url;
 
 use crate::{
-    events::handle_incoming_events, state_updaters::Updaters, utils::get_app_dir_or_create_it,
+    events::handle_incoming_events,
+    state_updaters::Updaters,
+    utils::{get_app_dir_or_create_it, get_plugin_config},
 };
 
 pub static LOGIN_SENDER: OnceLock<mpsc::Sender<MatrixLoginPayload>> = OnceLock::new();
@@ -37,10 +39,12 @@ pub static LOGIN_SENDER: OnceLock<mpsc::Sender<MatrixLoginPayload>> = OnceLock::
 pub static AUTH_DEEPLINK_SENDER: OnceLock<mpsc::Sender<Url>> = OnceLock::new();
 
 /// Plugin config to be set in tauri.conf.json
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct PluginConfig {
-    #[cfg(mobile)]
-    pub(crate) sygnal_gateway_url: String,
+    pub(crate) android_sygnal_gateway_url: Url,
+    pub(crate) ios_sygnal_gateway_url: Url,
+    pub(crate) oauth_client_uri: Url,
+    pub(crate) oauth_redirect_uri: Url,
 }
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the Matrix Svelte APIs.
@@ -119,11 +123,18 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
                 let updaters_handle = init_app_handle.clone();
                 let updaters = Updaters::new(updaters_handle);
 
+                let plugin_config = get_plugin_config(&init_app_handle)
+                    .expect("Some plugin configuration is missing");
+
+                warn!("{plugin_config:?}");
+
                 let config = LibConfig::new(
                     Box::new(updaters),
                     event_receivers,
                     session_option,
                     app_data_dir,
+                    plugin_config.oauth_client_uri,
+                    plugin_config.oauth_redirect_uri,
                 );
                 let receiver_handle = tauri::async_runtime::spawn(async move {
                     matrix_ui_serializable::init(config).await

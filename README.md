@@ -10,7 +10,7 @@ Check [here](https://github.com/IT-ess/matrix-ui-serializable?tab=readme-ov-file
 
 ## Installation
 
-An example client is provided in this same repo to showcase the possibilities : [matrix-svelte-client](github.com/IT-ess/tauri-plugin-matrix-svelte/tree/main/example/matrix-svelte-client).
+An example client is provided in this same repo to showcase the possibilities (under `/example/matrix-svelte-client`).
 
 ### Example client screenshots
 <div style="display: flex; justify-content: space-between; gap: 15px; margin: 0 -5px; max-width: 100%;">
@@ -18,6 +18,17 @@ An example client is provided in this same repo to showcase the possibilities : 
   <img src="assets/room.png" alt="Room" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
   <img src="assets/device_list.png" alt="Device list" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
 </div>
+
+## Requirements
+
+- If you need to use OAuth authentication (that is the case for matrix.org), you'll need a callback URL that passes the OAuth state to your client.
+- A [Sygnal push notification gateway](https://github.com/matrix-org/sygnal) if you want to configure push notifications on mobile
+
+## Plugin configuration
+- `android_sygnal_gateway_url`: Push gateway url for android
+-	`ios_sygnal_gateway_url`: Push gateway url for iOS
+-	`oauth_client_uri`: Client URI for OAuth 
+-	`oauth_redirect_uri`: Redirect URI once the OAuth process is validated (must be the same host as redirect)
 
 ## Building
 
@@ -34,12 +45,10 @@ An example client is provided in this same repo to showcase the possibilities : 
 
 - [tauri 2.0](https://tauri.app/) : allowing one codebase for 5 platforms
 - [matrix-ui-serializable](https://github.com/IT-ess/matrix-ui-serializable) : high level abstraction of a Matrix client in Rust
-- [tauri-plugin-keyring](https://github.com/charlesportwoodii/tauri-plugin-keyring): to store securely the matrix database passphrase into the native OS keyring store
 - [tauri-plugin-svelte](https://github.com/ferreira-tb/tauri-store/tree/main/packages/plugin-svelte): to communicate easily with Svelte frontend in a reactive way
 
 ## Special thanks to :
 
 - To [Andrew Ferreira](https://github.com/ferreira-tb) for its handy tauri-plugin-svelte plugin.
-- To [inKibra](https://github.com/inKibra/tauri-plugins/tree/main/packages/tauri-plugin-notifications) and [flapili](https://github.com/flapili/tauri-plugin-fcm) for their examples on how so setup push notifications with Tauri.
 - To the whole Tauri team for their awesome platform to build on.
 - And of course to the whole Matrix team and ecosystem !

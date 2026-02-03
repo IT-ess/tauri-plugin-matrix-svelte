@@ -117,7 +117,6 @@
 	<div class="mt-8 text-center">
 		<h1 class="text-primary text-4xl font-extrabold">{m.verification_page_title()}</h1>
 		<h2 class="text-muted-foreground mt-4">
-			<span class="font-semibold">{m.your_refs_are_protected()}</span>
 			{m.verification_page_subtitle()}
 		</h2>
 	</div>

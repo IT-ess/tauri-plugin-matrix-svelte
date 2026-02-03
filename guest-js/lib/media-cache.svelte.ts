@@ -218,7 +218,7 @@ export class MediaCache {
 			};
 
 			// Start the fetch
-			invoke('fetch_media', {
+			invoke('plugin:matrix-svelte|fetch_media', {
 				mediaRequest: request,
 				onEvent
 			}).catch(reject);

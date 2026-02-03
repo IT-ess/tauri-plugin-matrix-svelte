@@ -45,6 +45,8 @@
 		"@choochmeque/tauri-plugin-notifications-api": "^0.4.2",
 		"@eslint/compat": "^2.0.2",
 		"@eslint/js": "^9.39.2",
+		"@inlang/cli": "^3.1.4",
+		"@inlang/paraglide-js": "^2.10.0",
 		"@internationalized/date": "^3.10.1",
 		"@lucide/svelte": "^0.563.1",
 		"@saurl/tauri-plugin-safe-area-insets-css-api": "^0.1.0",

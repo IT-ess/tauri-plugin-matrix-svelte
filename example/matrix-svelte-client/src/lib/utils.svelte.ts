@@ -31,7 +31,7 @@ export const getInitials = (name: string) => {
 
 export const checkUserInProfileStore = async (userId: string) => {
 	if (!profileStore.state?.[userId]) {
-		await invoke('fetch_user_profile', {
+		await invoke('plugin:matrix-svelte|fetch_user_profile', {
 			userId: userId,
 			roomId: undefined
 		});

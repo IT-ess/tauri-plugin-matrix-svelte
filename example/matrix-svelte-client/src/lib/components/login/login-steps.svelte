@@ -31,6 +31,9 @@
 		type MatrixLoginPayload
 	} from 'tauri-plugin-matrix-svelte-api';
 	import { authenticate } from 'tauri-plugin-web-auth-api';
+	import matrix from '$lib/assets/matrix.png';
+	import svelte from '$lib/assets/svelte.png';
+	import tauri from '$lib/assets/tauri.webp';
 
 	let {
 		dataForm,
@@ -49,7 +52,7 @@
 	} = $props();
 
 	onMount(() => {
-		$formData.homeserver = 'refs.rs';
+		$formData.homeserver = 'matrix.org';
 		$formData.clientName = hostname;
 	});
 
@@ -136,69 +139,14 @@
 	};
 </script>
 
-<Dialog.Root>
-	<Dialog.Trigger
-		disabled={disableButtons}
-		class={buttonVariants({
-			variant: 'ghost',
-			size: 'icon-lg',
-			class: 'top-safe-offset-2 right-safe-offset-2 text-primary absolute'
-		})}><ServerCog class="size-7" /></Dialog.Trigger
-	>
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>{m.login_custom_homeserver()}</Dialog.Title>
-			<Dialog.Description
-				>{m.login_refs_works_with()}
-				<a class="text-blue-500 underline" href="https://matrix.org">Matrix</a>. {m.login_keep_the_default()}</Dialog.Description
-			>
-		</Dialog.Header>
-		<Tooltip.Provider>
-			<InputGroup.Root>
-				<InputGroup.Input bind:value={$formData.homeserver} />
-				<InputGroup.Addon>
-					<ServerIcon />
-				</InputGroup.Addon>
-				<InputGroup.Addon align="inline-end">
-					<Tooltip.Root>
-						<Tooltip.Trigger>
-							{#snippet child({ props })}
-								<InputGroup.Button {...props} class="rounded-full" size="icon-xs">
-									<InfoIcon />
-								</InputGroup.Button>
-							{/snippet}
-						</Tooltip.Trigger>
-						<Tooltip.Content
-							>{m.login_homeserver_tooltip()} (@alice:<mark>matrix.org</mark>)</Tooltip.Content
-						>
-					</Tooltip.Root>
-				</InputGroup.Addon>
-			</InputGroup.Root>
-		</Tooltip.Provider>
-		{#if customHomeserverError}
-			<p class="text-destructive">
-				The selected homeserver isn't valid or reachable. Error: {customHomeserverError}
-			</p>
-		{/if}
-		<Dialog.Footer>
-			<Button
-				disabled={disableButtons}
-				type="submit"
-				onclick={() => defineAndCheckHomeserver(false)}
-			>
-				{#if hasSubmittedLogin}
-					<LoaderCircle class="animate-spin" />
-				{/if}
-				{m.button_login()}</Button
-			>
-		</Dialog.Footer>
-	</Dialog.Content>
-</Dialog.Root>
-
 <div class="px-safe-offset-4 pb-safe-offset-4 flex h-full w-full flex-col justify-between">
 	{#if currentStep === 'homeserverSelection'}
-		<div transition:fade>
-			<h2 class="text-primary mt-8 text-center font-serif text-5xl">{m.login_refs_motto()}</h2>
+		<div class="m-auto flex w-full items-center justify-center gap-4 overflow-hidden p-4 text-4xl">
+			<img src={matrix} alt="matrix" class="size-20 object-contain" />
+			+
+			<img src={tauri} alt="tauri" class="size-20 object-contain" />
+			+
+			<img src={svelte} alt="svelte" class="size-20 object-contain" />
 		</div>
 		<div class="flex flex-col space-y-5 px-8 pb-6">
 			<Button
@@ -208,18 +156,77 @@
 				class="text-lg"
 				>{#if hasSubmittedLogin}
 					<LoaderCircle class="animate-spin" />
-				{/if}{m.button_login()}</Button
+				{/if}{m.button_login()} matrix.org</Button
 			>
 			<Button
 				size="lg"
-				variant="link"
+				variant="secondary"
 				class="text-lg"
 				disabled={disableButtons}
 				onclick={() => defineAndCheckHomeserver(true)}
 				>{#if hasSubmittedSignup}
 					<LoaderCircle class="animate-spin" />
-				{/if}{m.button_signup()}</Button
+				{/if}{m.button_signup()} matrix.org</Button
 			>
+			<Dialog.Root>
+				<Dialog.Trigger
+					disabled={disableButtons}
+					class={buttonVariants({
+						variant: 'link',
+						class: 'text-lg',
+						size: 'lg'
+					})}><ServerCog class="size-7" />Custom homeserver</Dialog.Trigger
+				>
+				<Dialog.Content>
+					<Dialog.Header>
+						<Dialog.Title>{m.login_custom_homeserver()}</Dialog.Title>
+						<Dialog.Description
+							>This client works with
+							<a class="text-blue-500 underline" href="https://matrix.org">Matrix</a>. {m.login_keep_the_default()}</Dialog.Description
+						>
+					</Dialog.Header>
+					<Tooltip.Provider>
+						<InputGroup.Root>
+							<InputGroup.Input bind:value={$formData.homeserver} />
+							<InputGroup.Addon>
+								<ServerIcon />
+							</InputGroup.Addon>
+							<InputGroup.Addon align="inline-end">
+								<Tooltip.Root>
+									<Tooltip.Trigger>
+										{#snippet child({ props })}
+											<InputGroup.Button {...props} class="rounded-full" size="icon-xs">
+												<InfoIcon />
+											</InputGroup.Button>
+										{/snippet}
+									</Tooltip.Trigger>
+									<Tooltip.Content
+										>{m.login_homeserver_tooltip()} (@alice:<mark>matrix.org</mark
+										>)</Tooltip.Content
+									>
+								</Tooltip.Root>
+							</InputGroup.Addon>
+						</InputGroup.Root>
+					</Tooltip.Provider>
+					{#if customHomeserverError}
+						<p class="text-destructive">
+							The selected homeserver isn't valid or reachable. Error: {customHomeserverError}
+						</p>
+					{/if}
+					<Dialog.Footer>
+						<Button
+							disabled={disableButtons}
+							type="submit"
+							onclick={() => defineAndCheckHomeserver(false)}
+						>
+							{#if hasSubmittedLogin}
+								<LoaderCircle class="animate-spin" />
+							{/if}
+							{m.button_login()}</Button
+						>
+					</Dialog.Footer>
+				</Dialog.Content>
+			</Dialog.Root>
 		</div>
 	{:else}
 		<div transition:fade>

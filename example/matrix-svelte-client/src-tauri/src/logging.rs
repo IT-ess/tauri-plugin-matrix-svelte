@@ -17,22 +17,12 @@ pub fn setup_logging(mut tauri_builder: Builder<Wry>) -> Builder<Wry> {
 
         let filter = EnvFilter::from_default_env()
             .add_directive(
-                "refs_app_lib"
+                "matrix_svelte_client_lib"
                     .parse()
                     .expect("couldn't parse the log filter"),
             )
             .add_directive(
-                "refs_matrix_sdk=debug"
-                    .parse()
-                    .expect("couldn't parse the log filter"),
-            )
-            .add_directive(
-                "matrix_sdk_refs=debug"
-                    .parse()
-                    .expect("couldn't parse the log filter"),
-            )
-            .add_directive(
-                "surrealdb=error"
+                "matrix_ui_serializable=debug"
                     .parse()
                     .expect("couldn't parse the log filter"),
             )

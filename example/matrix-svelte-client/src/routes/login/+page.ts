@@ -6,7 +6,7 @@ import { hostname } from '@tauri-apps/plugin-os';
 
 export const load: PageLoad = async () => {
 	const rawHost = await hostname();
-	const host = rawHost === 'localhost' || rawHost === null ? 'Refs' : rawHost;
+	const host = rawHost === 'localhost' || rawHost === null ? 'Matrix Svelte' : rawHost;
 	return {
 		form: await superValidate(zod4(loginFormSchema)),
 		host

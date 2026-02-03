@@ -1,20 +1,7 @@
-use anyhow::anyhow;
-use matrix_ui_serializable::{
-    MatrixClientConfig, MatrixRequest, MediaRequestParameters, OwnedDeviceId, OwnedRoomId,
-    OwnedUserId,
-    commands::{SearchBatch, SearchConfig},
-    models::events::{FrontendDevice, MediaStreamEvent},
-};
 use serde::de::DeserializeOwned;
 use tauri::{
     AppHandle, Runtime,
-    ipc::Channel,
     plugin::{PluginApi, PluginHandle},
-};
-
-use crate::{
-    models::mobile::{GetTokenRequest, GetTokenResponse, WatchNotificationResult},
-    utils::fs::get_app_dir_or_create_it,
 };
 
 #[cfg(target_os = "ios")]

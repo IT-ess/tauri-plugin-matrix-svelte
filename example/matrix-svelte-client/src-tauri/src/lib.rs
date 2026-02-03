@@ -10,13 +10,20 @@ pub fn run() {
     let mut builder = tauri::Builder::default();
     builder = logging::setup_logging(builder);
 
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+          debug!("a new app instance was opened with {argv:?} and the deep link event was already triggered");
+          // when defining deep link schemes at runtime, you must also check `argv` here
+
+          let _ = app.get_webview_window("main")
+                     .expect("no main window")
+                     .set_focus();
+        }));
+    }
+
     // Init deeplink plugin before tauri_plugin_mobile_sharetarget
     builder = builder.plugin(tauri_plugin_deep_link::init());
-
-    #[cfg(mobile)]
-    {
-        builder = builder.plugin(tauri_plugin_mobile_sharetarget::init());
-    }
 
     #[cfg(target_os = "ios")]
     {
@@ -73,7 +80,7 @@ pub fn run() {
                     .build(app)?;
             }
 
-            // Handle refs:// deeplink
+            // Handle scheme:// deeplink
 
             #[cfg(any(windows, target_os = "linux"))]
             {
@@ -82,38 +89,11 @@ pub fn run() {
                     .expect("couldn't register deeplink");
             }
 
-            #[cfg(target_os = "ios")]
-            {
-                use tauri_plugin_mobile_sharetarget::{IOS_DEEP_LINK_SCHEME, push_new_intent};
-                let start_urls = app.deep_link().get_current()?;
-                if let Some(urls) = start_urls {
-                    debug!("deep link URLs: {:?}", urls);
-                    if let Some(url) = urls.first() {
-                        if url.scheme().eq(IOS_DEEP_LINK_SCHEME.wait()) {
-                            push_new_intent(url.to_string());
-                        }
-                    }
-                }
-            }
-
             let deeplink_handle = app.app_handle().clone();
 
             app.deep_link().on_open_url(move |event| {
                 if let Some(url) = event.urls().first() {
-                    // Matches refs://share
-                    #[cfg(target_os = "ios")]
-                    {
-                        use tauri_plugin_mobile_sharetarget::{
-                            IOS_DEEP_LINK_SCHEME, push_new_intent,
-                        };
-                        if url.scheme().eq(IOS_DEEP_LINK_SCHEME.wait()) {
-                            // We can't rely on tauri://focus for iOS for some reason.
-                            deeplink_handle.emit("new-intent", ()).unwrap();
-                            push_new_intent(url.to_string());
-                        }
-                    }
-
-                    // Matches refs://auth-callback
+                    // Matches scheme://auth-callback
                     if url.host_str().is_some_and(|s| s.eq("auth-callback")) {
                         // Wake up the UI (for iOS only)
                         deeplink_handle.emit("new-intent", ()).unwrap();
@@ -124,17 +104,17 @@ pub fn run() {
                             .blocking_send(url.to_owned())
                             .expect("couldn't send deeplink payload to receiver");
                     }
-                    // Matches https://refs.rs/auth-callback
-                    if url.host_str().is_some_and(|s| s.eq("refs.rs"))
-                        & url.path().contains("auth-callback")
-                    {
-                        let sender = AUTH_DEEPLINK_SENDER
-                            .get()
-                            .expect("sender should be defined at this point");
-                        sender
-                            .blocking_send(url.to_owned())
-                            .expect("couldn't send deeplink payload to receiver");
-                    }
+                    // // Matches https://refs.rs/auth-callback
+                    // if url.host_str().is_some_and(|s| s.eq("refs.rs"))
+                    //     & url.path().contains("auth-callback")
+                    // {
+                    //     let sender = AUTH_DEEPLINK_SENDER
+                    //         .get()
+                    //         .expect("sender should be defined at this point");
+                    //     sender
+                    //         .blocking_send(url.to_owned())
+                    //         .expect("couldn't send deeplink payload to receiver");
+                    // }
                 }
             });
 

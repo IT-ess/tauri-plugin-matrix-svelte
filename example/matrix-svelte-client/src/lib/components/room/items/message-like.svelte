@@ -248,7 +248,7 @@
 
 	onMount(async () => {
 		if (profileStore.state[senderId] === undefined) {
-			await invoke('fetch_user_profile', {
+			await invoke('plugin:matrix-svelte|fetch_user_profile', {
 				userId: senderId,
 				roomId
 			});

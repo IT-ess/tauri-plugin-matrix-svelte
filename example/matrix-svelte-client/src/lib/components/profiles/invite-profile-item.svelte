@@ -44,7 +44,7 @@
 	const inviterUserId = invitedRoomInfo.inviterInfo ? invitedRoomInfo.inviterInfo.userId : null;
 	onMount(async () => {
 		if (inviterUserId && profileStore.state[inviterUserId] === undefined) {
-			await invoke('fetch_user_profile', {
+			await invoke('plugin:matrix-svelte|fetch_user_profile', {
 				userId: inviterUserId,
 				roomId: invitedRoomInfo.roomId
 			});

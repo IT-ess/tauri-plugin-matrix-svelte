@@ -20,7 +20,7 @@ use url::Url;
 
 use crate::keyring::clear_session_in_keyring;
 use crate::state_updaters::Updaters;
-use crate::utils::get_app_dir_or_create_it;
+use crate::utils::{get_app_dir_or_create_it, get_plugin_config};
 use crate::{AUTH_DEEPLINK_SENDER, Error};
 use crate::{LOGIN_SENDER, Result};
 
@@ -282,8 +282,20 @@ pub(crate) async fn define_room_informations(payload: EditRoomInformationPayload
 
 #[command]
 /// For mobile we require a token and the user language (i.e. en or en-EN)
-pub(crate) async fn register_notifications(token: String, user_language: String) -> Result<()> {
-    matrix_ui_serializable::commands::register_notifications(token, user_language)
-        .await
-        .map_err(|e| e.into())
+pub(crate) async fn register_notifications<R: Runtime>(
+    app_handle: AppHandle<R>,
+    token: String,
+    user_language: String,
+) -> Result<()> {
+    let app_id = app_handle.config().identifier.clone();
+    let plugin_config = get_plugin_config(&app_handle)?;
+    matrix_ui_serializable::commands::register_notifications(
+        token,
+        user_language,
+        plugin_config.android_sygnal_gateway_url,
+        plugin_config.ios_sygnal_gateway_url,
+        app_id,
+    )
+    .await
+    .map_err(|e| e.into())
 }

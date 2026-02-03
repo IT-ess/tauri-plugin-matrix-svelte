@@ -100,7 +100,7 @@
 				}
 			};
 			if (fileMessageSourceIsPlain(itemContent)) {
-				await invoke('fetch_media', {
+				await invoke('plugin:matrix-svelte|fetch_media', {
 					mediaRequest: {
 						format: 'File',
 						source: { url: itemContent.url }
@@ -108,7 +108,7 @@
 					onEvent
 				});
 			} else {
-				await invoke('fetch_media', {
+				await invoke('plugin:matrix-svelte|fetch_media', {
 					mediaRequest: {
 						format: 'File',
 						source: { file: itemContent.file }
