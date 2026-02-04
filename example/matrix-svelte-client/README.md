@@ -21,3 +21,5 @@ The mobile Push Notifications shouldn't work right now because I didn't bother c
 
 This client uses deeplinks to implement the OAuth login flow, with the [oauth-redirect-deeplink](https://github.com/IT-ess/oauth-redirect-deeplink) site to handle redirects. This can be done in another way, for example with the [tauri-plugin-oauth](https://github.com/FabianLars/tauri-plugin-oauth).
 I found out this method to be more reliable, especially on mobile devices.
+
+The UI is mostly adapted for mobile usage, using shadcn-svelte components and Tailwind. The theme can easily be customized (check `app.css`).
