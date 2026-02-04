@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-disconnect-and-clear-session"
+description = "Enables the disconnect_and_clear_session command without any pre-configured scope."
+commands.allow = ["disconnect_and_clear_session"]
+
+[[permission]]
+identifier = "deny-disconnect-and-clear-session"
+description = "Denies the disconnect_and_clear_session command without any pre-configured scope."
+commands.deny = ["disconnect_and_clear_session"]

@@ -1,58 +1,109 @@
-use std::{fs, path::PathBuf};
+use rand::Rng;
+use std::fs;
+use std::io::{self, Write};
+use std::path::PathBuf;
+use tracing::warn;
 
-use anyhow::anyhow;
-use tauri::{AppHandle, Runtime};
-use tauri_plugin_keyring::KeyringExt;
+use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
+use keyring_core::Entry;
 
-use crate::utils::fs::get_app_dir_or_create_it;
-
-static CURRENT_USERNAME_FILENAME: &str = "current_user.txt";
-
-pub async fn get_matrix_session_option<R: Runtime>(
-    app_handle: &AppHandle<R>,
-) -> anyhow::Result<Option<String>> {
-    let username = get_current_username(app_handle)?;
-    if username.is_none() {
-        return Ok(None);
-    }
-    match app_handle.keyring().get(
-        &username.unwrap(),
-        tauri_plugin_keyring::CredentialType::Secret,
-    ) {
-        Ok(tauri_plugin_keyring::CredentialValue::Secret(raw_session)) => {
-            let session_string = String::from_utf8_lossy(&raw_session).into_owned();
-            Ok(Some(session_string))
+pub fn get_matrix_session_option(app_data_path: PathBuf) -> Option<String> {
+    match get_session_from_keyring(app_data_path) {
+        Ok(session) => Some(session),
+        Err(e) => {
+            warn!("Couldn't get session from keyring. {e}");
+            None
         }
-        Err(e) => match e {
-            tauri_plugin_keyring::Error::EntryNotFound => Ok(None),
-            _e => Err(anyhow!(_e)),
-        },
-        _ => Err(anyhow!("Invalid credential type".to_string())),
     }
 }
 
-pub fn set_current_username(path: PathBuf, username: &str) -> anyhow::Result<()> {
-    let username_pathbuf = path.join(CURRENT_USERNAME_FILENAME);
-    fs::write(username_pathbuf, username)?;
+fn create_entry(salt: &str) -> crate::Result<Entry> {
+    let entry_username = format!("{}/{}/{}", "service.name", "current_user", salt);
+    Entry::new("service.name", &entry_username).map_err(Into::into)
+}
+
+fn get_salt_or_create_it(app_data_path: PathBuf) -> io::Result<String> {
+    let salt_path = app_data_path.join("salt");
+
+    if salt_path.exists() {
+        fs::read_to_string(&salt_path)
+    } else {
+        let salt: String = rand::rng()
+            .sample_iter(&rand::distr::Alphanumeric)
+            .take(8)
+            .map(char::from)
+            .collect();
+
+        let mut file = fs::File::create(&salt_path)?;
+        file.write_all(salt.as_bytes())?;
+
+        Ok(salt)
+    }
+}
+
+fn get_session_from_keyring(app_data_path: PathBuf) -> crate::Result<String> {
+    let salt = get_salt_or_create_it(app_data_path)?;
+    let entry = create_entry(&salt)?;
+    let encoded_bytes = entry.get_secret()?;
+    let encoded_str = String::from_utf8(encoded_bytes).map_err(anyhow::Error::from)?;
+    let decoded = BASE64.decode(encoded_str).map_err(anyhow::Error::from)?;
+    let session_string = String::from_utf8_lossy(&decoded).into_owned();
+    Ok(session_string)
+}
+
+pub(crate) fn set_session_in_keyring(
+    session: Vec<u8>,
+    app_data_path: PathBuf,
+) -> crate::Result<()> {
+    let salt = get_salt_or_create_it(app_data_path)?;
+    let entry = create_entry(&salt)?;
+    let encoded = BASE64.encode(&session);
+    entry.set_secret(encoded.as_bytes()).map_err(Into::into)
+}
+
+pub(crate) fn clear_session_in_keyring(app_data_path: PathBuf) -> crate::Result<()> {
+    let salt = get_salt_or_create_it(app_data_path.clone())?;
+    let entry = create_entry(&salt)?;
+    entry.delete_credential()?;
+    // Remove salt so we do not use the previous DB.
+    fs::remove_file(app_data_path.join("salt")).map_err(|e| e.into())
+}
+
+pub(crate) fn init_keyring_store() -> anyhow::Result<()> {
+    #[cfg(target_os = "android")]
+    {
+        use android_native_keyring_store::credential::AndroidStore;
+        let store = AndroidStore::from_ndk_context().map_err(anyhow::Error::from)?;
+        keyring_core::set_default_store(store);
+    }
+
+    #[cfg(target_os = "ios")]
+    {
+        use apple_native_keyring_store::protected::Store as IOSStore;
+        let store = IOSStore::new().map_err(anyhow::Error::from)?;
+        keyring_core::set_default_store(store);
+    }
+
+    // Initialize platform-specific store
+    #[cfg(target_os = "windows")]
+    {
+        use windows_native_keyring_store::Store as WindowsStore;
+        let store = WindowsStore::new().map_err(anyhow::Error::from)?;
+        keyring_core::set_default_store(store);
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        use apple_native_keyring_store::protected::Store as MacOSStore;
+        let store = MacOSStore::new().map_err(anyhow::Error::from)?;
+        keyring_core::set_default_store(store);
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        use dbus_secret_service_keyring_store::Store as LinuxStore;
+        let store = LinuxStore::new().map_err(anyhow::Error::from)?;
+        keyring_core::set_default_store(store);
+    }
     Ok(())
-}
-
-fn get_current_username<R: Runtime>(app_handle: &AppHandle<R>) -> anyhow::Result<Option<String>> {
-    let app_data_dir = get_app_dir_or_create_it(app_handle)?;
-
-    let username_pathbuf = app_data_dir.join(CURRENT_USERNAME_FILENAME);
-
-    let raw_username = fs::read(username_pathbuf);
-    match raw_username {
-        Ok(name) => {
-            if name.is_empty() {
-                return Ok(None);
-            };
-            Ok(Some(String::from_utf8_lossy(&name).into_owned()))
-        }
-        Err(e) => match e.kind() {
-            std::io::ErrorKind::NotFound => Ok(None),
-            _ => Err(anyhow!(e)),
-        },
-    }
 }

@@ -4,7 +4,8 @@
 	import { Tooltip, TooltipContent, TooltipProvider } from '$lib/components/ui/tooltip';
 	import { Button } from '$lib/components/ui/button';
 	import { Menu, ReplyIcon, SmilePlusIcon } from '@lucide/svelte';
-	import type { MessageAbilities, ReactionsByKeyBySender } from 'tauri-plugin-matrix-svelte-api';
+	import { m } from '$lib/paraglide/messages';
+	import type { MessageAbility, ReactionsByKeyBySender } from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
 		isOwn: boolean;
@@ -15,7 +16,7 @@
 		reactions: ReactionsByKeyBySender;
 		currentUserId: string;
 		handleShowdropdown: () => void;
-		abilities: MessageAbilities;
+		abilities: MessageAbility[];
 	};
 
 	let isReactionPopoverOpen = $state(false);
@@ -53,7 +54,7 @@
 					<Button variant="ghost" size="icon" class="h-6 w-6" onclick={handleReply}>
 						<ReplyIcon class="h-4 w-4" />
 					</Button>
-					<TooltipContent>Reply</TooltipContent>
+					<TooltipContent>{m.button_reply()}</TooltipContent>
 				</Tooltip>
 			</TooltipProvider>
 		{/if}

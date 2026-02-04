@@ -4,3 +4,9 @@ pnpm-lock.yaml
 yarn.lock
 bun.lock
 bun.lockb
+
+# Miscellaneous
+/static/
+/src-tauri/gen
+
+src/lib/paraglide

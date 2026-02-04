@@ -3,14 +3,19 @@ import {
 	type StoreHooks,
 	type TauriPluginSvelteRuneStoreOptions
 } from '@tauri-store/svelte';
+import type { LoginState } from '../bindings/LoginState.js';
 
 export const LOGIN_STATE_STORE_ID = 'login-state';
 
 export type LoginStateType = {
-	state: 'initiating' | 'restored' | 'awaitingForLogin' | 'loggedIn';
+	state: LoginState;
 	userId: string | null;
 	verificationState: 'unknown' | 'verified' | 'unverified';
 	syncServiceState: 'idle' | 'error' | 'terminated' | 'running' | 'offline';
+	recoveryState: 'unknown' | 'enabled' | 'disabled' | 'incomplete';
+	userAvatar: string | null;
+	userDisplayName: string | null;
+	deviceDisplayName: string | null;
 };
 
 export class LoginStore extends RuneStore<LoginStateType> {
@@ -19,12 +24,13 @@ export class LoginStore extends RuneStore<LoginStateType> {
 	 */
 	constructor() {
 		const hooks: StoreHooks = {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			error: (err: any) => console.error(err)
 		};
 		const options: TauriPluginSvelteRuneStoreOptions<LoginStateType> = {
 			hooks,
 			syncStrategy: 'debounce',
-			syncInterval: 1000
+			syncInterval: 50
 		};
 
 		super(
@@ -33,7 +39,11 @@ export class LoginStore extends RuneStore<LoginStateType> {
 				state: 'initiating',
 				userId: null,
 				verificationState: 'unknown',
-				syncServiceState: 'offline'
+				syncServiceState: 'offline',
+				deviceDisplayName: null,
+				recoveryState: 'unknown',
+				userAvatar: null,
+				userDisplayName: null
 			},
 			options
 		);

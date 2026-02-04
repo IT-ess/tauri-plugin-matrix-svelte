@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
+	import { Avatar } from '$lib/components/ui/avatar';
 	import { Badge } from '$lib/components/ui/badge';
-	import { getInitials } from '$lib/utils';
-	import { fetchMedia, type JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
+	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
+	import { roomNameToPlainString } from '$lib/utils.svelte';
+	import type { JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
 		room: JoinedRoomInfo;
-		onRoomClick: (id: string) => undefined;
 		disabled: boolean;
 	};
 
-	let { room, onRoomClick, disabled }: Props = $props();
+	let { room, disabled }: Props = $props();
 
 	const getLocalTimeAsFormattedString = (timestamp: number) => {
 		const date = new Date(timestamp);
@@ -22,6 +22,14 @@
 	};
 
 	let latestEvent = $derived(room.latest ? room.latest[1] : 'Placeholder for last message');
+
+	let avatarUri = $derived.by(() => {
+		if (room.directUserId && room.heroes.length > 0) {
+			return room.heroes[0].avatar_url;
+		} else {
+			return room.avatar;
+		}
+	});
 </script>
 
 <div
@@ -33,27 +41,19 @@
 	role="button"
 	tabindex={disabled ? -1 : 0}
 >
-	<!-- onclick={onClick}
-  onkeydown={(e) => {
-    if (e.key === "Enter" || e.key === "Space") {
-      onClick?.();
-    }}} -->
 	<Avatar>
-		{#if room.avatar !== null}
-			{#await fetchMedia({ format: 'File', source: { url: room.avatar } })}
-				{@render avatarFallback(room.roomName)}
-			{:then url}
-				<AvatarImage src={url} alt={room.roomName} />
-			{:catch}
-				{@render avatarFallback(room.roomName)}
-			{/await}
-		{:else}
-			{@render avatarFallback(room.roomName)}
+		{#if avatarUri}
+			{@render fetchAvatar(avatarUri, roomNameToPlainString(room.roomName))}
 		{/if}
+		{@render avatarFallback(roomNameToPlainString(room.roomName))}
 	</Avatar>
-	<button {disabled} class="flex-1 space-y-1" onclick={() => onRoomClick(room.roomId)}>
+	<a
+		class="flex-1 space-y-1"
+		data-sveltekit-preload-data="tap"
+		href={`/room?id=${encodeURIComponent(room.roomId)}${avatarUri ? '&avatar=' + encodeURIComponent(avatarUri) : ''}#bottomscroll`}
+	>
 		<div class="flex items-center justify-between">
-			<h4 class="font-semibold">{room.roomName}</h4>
+			<h4 class="font-semibold">{roomNameToPlainString(room.roomName)}</h4>
 			<span class="text-muted-foreground text-sm"
 				>{getLocalTimeAsFormattedString(room.latest ? room.latest[0] : 0)}</span
 			>
@@ -68,9 +68,5 @@
 				<Badge variant="default" class="ml-2">{room.numUnreadMessages}</Badge>
 			{/if}
 		</div>
-	</button>
+	</a>
 </div>
-
-{#snippet avatarFallback(roomName: string)}
-	<AvatarFallback>{getInitials(roomName)}</AvatarFallback>
-{/snippet}

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-check-homeserver-auth-type"
+description = "Enables the check_homeserver_auth_type command without any pre-configured scope."
+commands.allow = ["check_homeserver_auth_type"]
+
+[[permission]]
+identifier = "deny-check-homeserver-auth-type"
+description = "Denies the check_homeserver_auth_type command without any pre-configured scope."
+commands.deny = ["check_homeserver_auth_type"]

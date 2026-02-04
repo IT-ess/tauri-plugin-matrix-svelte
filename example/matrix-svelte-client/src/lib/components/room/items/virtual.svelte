@@ -1,18 +1,21 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages';
+	import { SvelteDate } from 'svelte/reactivity';
 	import type { VirtualTimelineItem } from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
 		timestamp?: number;
 		data: VirtualTimelineItem;
+		roomHasUnreadMessages: boolean;
 	};
 
-	let { timestamp, data }: Props = $props();
+	let { timestamp, data, roomHasUnreadMessages }: Props = $props();
 
 	// Format the date for the separator
 	const formatDate = (timestamp: number) => {
 		const date = new Date(timestamp);
 		const now = new Date();
-		const yesterday = new Date(now);
+		const yesterday = new SvelteDate(now);
 		yesterday.setDate(yesterday.getDate() - 1);
 
 		// If it's today
@@ -60,12 +63,14 @@
 		</div>
 		<div class="relative flex justify-center">
 			<div class="bg-background text-muted-foreground px-2 text-xs">
-				{formatDate(timestamp ?? 0)} at {formatTime(timestamp ?? 0)}
+				{formatDate(timestamp ?? 0)}
+				{m.at()}
+				{formatTime(timestamp ?? 0)}
 			</div>
 		</div>
 	</div>
 {:else if data.kind === 'timelineStart'}
-	<p class="text-muted-foreground text-center text-sm">No more messages</p>
-{:else if data.kind === 'readMarker'}
-	<p>Read</p>
+	<p class="text-muted-foreground text-center text-sm">{m.room_no_more_messages()}</p>
+{:else if data.kind === 'readMarker' && roomHasUnreadMessages}
+	<div class="border-primary/80 w-full border-t"></div>
 {/if}

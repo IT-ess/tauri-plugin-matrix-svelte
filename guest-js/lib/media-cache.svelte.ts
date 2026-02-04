@@ -3,6 +3,7 @@ import { Channel } from '@tauri-apps/api/core';
 import { fileTypeFromBuffer } from 'file-type';
 import type { MediaStreamEvent } from './tauri-events.js';
 import { isPlainMediaSource, type MediaRequestParameters } from './matrix-requests/media.js';
+import { SvelteMap } from 'svelte/reactivity';
 
 const CACHE_NAME = 'matrix-media-cache';
 const CACHE_VERSION = 'v1';
@@ -59,7 +60,7 @@ export async function fetchMedia(
 
 export class MediaCache {
 	private cache: Cache | null = null;
-	private pendingRequests: Map<string, Promise<string>> = new Map();
+	private pendingRequests: SvelteMap<string, Promise<string>> = new SvelteMap();
 
 	/**
 	 * Initialize the cache
@@ -89,7 +90,6 @@ export class MediaCache {
 		// Check if media is already cached
 		const cachedImage = await this.getCachedMedia(mxcUri);
 		if (cachedImage) {
-			console.log(`Avatar loaded from cache: ${mxcUri}`);
 			if (loadingState) {
 				loadingState.isLoaded = true;
 			}
@@ -162,7 +162,7 @@ export class MediaCache {
 			const onEvent = new Channel<MediaStreamEvent>();
 
 			let bytesReceived = $state(0);
-			let localProgress = $derived(bytesReceived / (loadingState?.totalSize ?? 1));
+			const localProgress = $derived(bytesReceived / (loadingState?.totalSize ?? 1));
 
 			onEvent.onmessage = async (message) => {
 				try {
@@ -192,7 +192,7 @@ export class MediaCache {
 						}
 
 						// Store in cache
-						await this.cacheMedia(mxcUri, combined);
+						await this.cacheMedia(mxcUri, combined.buffer);
 
 						// Create blob URL for display
 						const blob = new Blob([combined]);
@@ -228,7 +228,7 @@ export class MediaCache {
 	/**
 	 * Store image data in cache (private method)
 	 */
-	private async cacheMedia(mxcUri: string, mediaData: Uint8Array): Promise<void> {
+	private async cacheMedia(mxcUri: string, mediaData: ArrayBuffer): Promise<void> {
 		if (!this.cache) return;
 
 		try {

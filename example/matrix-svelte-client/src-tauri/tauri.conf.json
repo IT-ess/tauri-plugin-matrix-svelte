@@ -1,8 +1,8 @@
 {
 	"$schema": "https://schema.tauri.app/config/2",
 	"productName": "matrix-svelte-client",
-	"version": "0.1.0",
-	"identifier": "com.matrix-svelte.client",
+	"version": "0.2.0",
+	"identifier": "com.matrix.svelte.client",
 	"build": {
 		"beforeDevCommand": "pnpm dev",
 		"devUrl": "http://localhost:1420",
@@ -19,18 +19,29 @@
 		],
 		"security": {
 			"csp": null,
-			"capabilities": ["default", "svelte", "mobile"]
+			"capabilities": ["default", "svelte", "ios"]
 		}
 	},
 	"plugins": {
 		"matrix-svelte": {
-			"sygnal_gateway_url": "https://sygnal.lucide.space"
+			"android_sygnal_gateway_url": "https://sygnal.mydomain.com/_matrix/push/v1/notify",
+			"ios_sygnal_gateway_url": "https://sygnal.mydomain.com/_matrix/push/v1/notify",
+			"oauth_client_uri": "https://mxsvelte.aloiseau.com",
+			"oauth_redirect_uri": "https://mxsvelte.aloiseau.com/auth-callback"
+		},
+		"deep-link": {
+			"mobile": [
+				{
+					"scheme": ["mxsvelte"],
+					"appLink": false
+				}
+			],
+			"desktop": {
+				"schemes": ["mxsvelte"]
+			}
 		}
 	},
 	"bundle": {
-		"iOS": {
-			"developmentTeam": "9A6YPCKFPC"
-		},
 		"active": true,
 		"targets": "all",
 		"icon": [

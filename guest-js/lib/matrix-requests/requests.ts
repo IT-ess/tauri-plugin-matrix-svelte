@@ -1,3 +1,5 @@
+import type { RedactMessagePayload } from '../bindings/RedactMessagePayload.js';
+import type { RoomMessageEventContentWithoutRelation } from '../bindings/RoomMessageEventContentWithoutRelation.js';
 import type {
 	MatrixId,
 	EventId,
@@ -5,36 +7,13 @@ import type {
 	RoomId,
 	ServerName,
 	UserId,
-	TimelineEventItemId
+	TimelineEventItemId,
+	MxcUri
 } from './common.js';
-import {
-	type RoomMessageEventContent,
-	sendMessage,
-	type SendMessageRequest,
-	sendTextMessage
-} from './message-text.js';
+import { sendMessage, type SendMessageRequest, sendTextMessage } from './message-text.js';
 
 // Enums and other types
 type PaginationDirection = 'backwards' | 'forwards';
-
-interface RoomMemberships {
-	// Define based on your Rust RoomMemberships type
-	[key: string]: any;
-}
-
-export interface RoomMessageEventContentWithoutRelation {
-	msgtype: 'm.text'; // we only support editing text for the moment
-	body: string; // the new message
-	// "m.mentions"?: Mentions // Not supported for the moment
-}
-
-interface RoomMember {
-	// Define based on your Rust RoomMember type
-	userId: string;
-	displayName?: string;
-	avatarUrl?: string;
-	// Add other fields as needed
-}
 
 // Individual request types matching the Rust enum variants
 interface PaginateRoomTimelineRequest {
@@ -50,7 +29,7 @@ interface EditMessageRequest {
 	event: 'editMessage';
 	payload: {
 		roomId: RoomId;
-		timelineEventItemId: EventId; // Only remote event ids for now
+		timelineEventItemId: { timelineItemId: string; isLocal: boolean };
 		editedContent: RoomMessageEventContentWithoutRelation;
 	};
 }
@@ -84,15 +63,6 @@ interface LeaveRoomRequest {
 	};
 }
 
-interface GetRoomMembersRequest {
-	event: 'getRoomMembers';
-	payload: {
-		roomId: RoomId;
-		memberships: RoomMemberships;
-		localOnly: boolean;
-	};
-}
-
 interface GetUserProfileRequest {
 	event: 'getUserProfile';
 	payload: {
@@ -109,14 +79,14 @@ interface GetNumberUnreadMessagesRequest {
 	};
 }
 
-interface IgnoreUserRequest {
-	event: 'ignoreUser';
-	payload: {
-		ignore: boolean;
-		roomMember: RoomMember;
-		roomId: RoomId;
-	};
-}
+// interface IgnoreUserRequest {
+// 	event: 'ignoreUser';
+// 	payload: {
+// 		ignore: boolean;
+// 		roomMember: Member;
+// 		roomId: RoomId;
+// 	};
+// }
 
 interface ResolveRoomAliasRequest {
 	event: 'resolveRoomAlias';
@@ -155,11 +125,10 @@ interface ReadReceiptRequest {
 	};
 }
 
-interface FullyReadReceiptRequest {
-	event: 'fullyReadReceipt';
+interface MarkRoomAsReadRequest {
+	event: 'markRoomAsRead';
 	payload: {
 		roomId: RoomId;
-		eventId: EventId;
 	};
 }
 
@@ -181,11 +150,7 @@ interface ToggleReactionRequest {
 
 interface RedactMessageRequest {
 	event: 'redactMessage';
-	payload: {
-		roomId: RoomId;
-		timelineEventId: TimelineEventItemId;
-		reason?: string;
-	};
+	payload: RedactMessagePayload;
 }
 
 interface GetMatrixRoomLinkPillInfoRequest {
@@ -200,6 +165,24 @@ interface CreateDMRoomRequest {
 	event: 'createDMRoom';
 	payload: {
 		userId: UserId;
+	};
+}
+
+interface CreateRoomRequest {
+	event: 'createRoom';
+	payload: {
+		roomName: string;
+		roomAvatar: MxcUri | null;
+		invitedUserIds: UserId[];
+		topic: string | null;
+	};
+}
+
+interface InviteUsersInRoomRequest {
+	event: 'inviteUsersInRoom';
+	payload: {
+		roomId: RoomId;
+		invitedUserIds: UserId[];
 	};
 }
 
@@ -221,12 +204,14 @@ export type MatrixRequest =
 	| SubscribeToTypingNoticesRequest
 	| SubscribeToOwnUserReadReceiptsChangedRequest
 	| ReadReceiptRequest
-	| FullyReadReceiptRequest
+	| MarkRoomAsReadRequest
 	| GetRoomPowerLevelsRequest
 	| ToggleReactionRequest
 	| RedactMessageRequest
 	// | GetMatrixRoomLinkPillInfoRequest;
-	| CreateDMRoomRequest;
+	| CreateDMRoomRequest
+	| CreateRoomRequest
+	| InviteUsersInRoomRequest;
 
 // Export individual types as well for convenience
 export type {
@@ -246,17 +231,15 @@ export type {
 	SubscribeToTypingNoticesRequest,
 	SubscribeToOwnUserReadReceiptsChangedRequest,
 	ReadReceiptRequest,
-	FullyReadReceiptRequest,
+	MarkRoomAsReadRequest,
+	CreateDMRoomRequest,
 	GetRoomPowerLevelsRequest,
 	ToggleReactionRequest,
 	RedactMessageRequest,
 	// GetMatrixRoomLinkPillInfoRequest,
-	CreateDMRoomRequest,
 	// Base types
-	PaginationDirection,
-	RoomMemberships,
-	RoomMember,
-	RoomMessageEventContent
+	PaginationDirection
+	// RoomMember,
 };
 
 // Helper function to create type-safe requests
@@ -297,11 +280,6 @@ export const createMatrixRequest = {
 		payload
 	}),
 
-	getRoomMembers: (payload: GetRoomMembersRequest['payload']): GetRoomMembersRequest => ({
-		event: 'getRoomMembers',
-		payload
-	}),
-
 	getUserProfile: (payload: GetUserProfileRequest['payload']): GetUserProfileRequest => ({
 		event: 'getUserProfile',
 		payload
@@ -314,10 +292,10 @@ export const createMatrixRequest = {
 		payload
 	}),
 
-	ignoreUser: (payload: IgnoreUserRequest['payload']): IgnoreUserRequest => ({
-		event: 'ignoreUser',
-		payload
-	}),
+	// ignoreUser: (payload: IgnoreUserRequest['payload']): IgnoreUserRequest => ({
+	// 	event: 'ignoreUser',
+	// 	payload
+	// }),
 
 	resolveRoomAlias: (payload: ResolveRoomAliasRequest['payload']): ResolveRoomAliasRequest => ({
 		event: 'resolveRoomAlias',
@@ -355,8 +333,8 @@ export const createMatrixRequest = {
 		payload
 	}),
 
-	fullyReadReceipt: (payload: FullyReadReceiptRequest['payload']): FullyReadReceiptRequest => ({
-		event: 'fullyReadReceipt',
+	markRoomAsRead: (payload: MarkRoomAsReadRequest['payload']): MarkRoomAsReadRequest => ({
+		event: 'markRoomAsRead',
 		payload
 	}),
 
@@ -386,6 +364,16 @@ export const createMatrixRequest = {
 
 	createDMRoom: (payload: CreateDMRoomRequest['payload']): CreateDMRoomRequest => ({
 		event: 'createDMRoom',
+		payload
+	}),
+
+	createRoom: (payload: CreateRoomRequest['payload']): CreateRoomRequest => ({
+		event: 'createRoom',
+		payload
+	}),
+
+	inviteUsersInRoom: (payload: InviteUsersInRoomRequest['payload']): InviteUsersInRoomRequest => ({
+		event: 'inviteUsersInRoom',
 		payload
 	})
 };

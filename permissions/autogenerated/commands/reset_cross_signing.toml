@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-reset-cross-signing"
+description = "Enables the reset_cross_signing command without any pre-configured scope."
+commands.allow = ["reset_cross_signing"]
+
+[[permission]]
+identifier = "deny-reset-cross-signing"
+description = "Denies the reset_cross_signing command without any pre-configured scope."
+commands.deny = ["reset_cross_signing"]

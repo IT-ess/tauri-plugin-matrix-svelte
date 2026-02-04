@@ -295,6 +295,90 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "Enables the build_client_from_homeserver_url command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-build-client-from-homeserver-url",
+          "markdownDescription": "Enables the build_client_from_homeserver_url command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the build_client_from_homeserver_url command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-build-client-from-homeserver-url",
+          "markdownDescription": "Denies the build_client_from_homeserver_url command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the check_device_verification command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-check-device-verification",
+          "markdownDescription": "Enables the check_device_verification command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the check_device_verification command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-check-device-verification",
+          "markdownDescription": "Denies the check_device_verification command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the check_homeserver_auth_type command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-check-homeserver-auth-type",
+          "markdownDescription": "Enables the check_homeserver_auth_type command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the check_homeserver_auth_type command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-check-homeserver-auth-type",
+          "markdownDescription": "Denies the check_homeserver_auth_type command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the check_if_last_device command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-check-if-last-device",
+          "markdownDescription": "Enables the check_if_last_device command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the check_if_last_device command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-check-if-last-device",
+          "markdownDescription": "Denies the check_if_last_device command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the define_room_informations command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-define-room-informations",
+          "markdownDescription": "Enables the define_room_informations command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the define_room_informations command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-define-room-informations",
+          "markdownDescription": "Denies the define_room_informations command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the disconnect_and_clear_session command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-disconnect-and-clear-session",
+          "markdownDescription": "Enables the disconnect_and_clear_session command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the disconnect_and_clear_session command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-disconnect-and-clear-session",
+          "markdownDescription": "Denies the disconnect_and_clear_session command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the edit_user_information command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-edit-user-information",
+          "markdownDescription": "Enables the edit_user_information command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the edit_user_information command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-edit-user-information",
+          "markdownDescription": "Denies the edit_user_information command without any pre-configured scope."
+        },
+        {
           "description": "Enables the fetch_media command without any pre-configured scope.",
           "type": "string",
           "const": "allow-fetch-media",
@@ -319,6 +403,30 @@
           "markdownDescription": "Denies the fetch_user_profile command without any pre-configured scope."
         },
         {
+          "description": "Enables the filter_room_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-filter-room-list",
+          "markdownDescription": "Enables the filter_room_list command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the filter_room_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-filter-room-list",
+          "markdownDescription": "Denies the filter_room_list command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the forward_oauth_login_deeplink command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-forward-oauth-login-deeplink",
+          "markdownDescription": "Enables the forward_oauth_login_deeplink command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the forward_oauth_login_deeplink command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-forward-oauth-login-deeplink",
+          "markdownDescription": "Denies the forward_oauth_login_deeplink command without any pre-configured scope."
+        },
+        {
           "description": "Enables the get_devices command without any pre-configured scope.",
           "type": "string",
           "const": "allow-get-devices",
@@ -329,6 +437,42 @@
           "type": "string",
           "const": "deny-get-devices",
           "markdownDescription": "Denies the get_devices command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_dm_room_from_user_id command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-dm-room-from-user-id",
+          "markdownDescription": "Enables the get_dm_room_from_user_id command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_dm_room_from_user_id command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-dm-room-from-user-id",
+          "markdownDescription": "Denies the get_dm_room_from_user_id command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the has_backup_setup command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-has-backup-setup",
+          "markdownDescription": "Enables the has_backup_setup command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the has_backup_setup command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-has-backup-setup",
+          "markdownDescription": "Denies the has_backup_setup command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the is_logged_in command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-is-logged-in",
+          "markdownDescription": "Enables the is_logged_in command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the is_logged_in command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-is-logged-in",
+          "markdownDescription": "Denies the is_logged_in command without any pre-configured scope."
         },
         {
           "description": "Enables the login_and_create_new_session command without any pre-configured scope.",
@@ -355,6 +499,42 @@
           "markdownDescription": "Denies the ping command without any pre-configured scope."
         },
         {
+          "description": "Enables the register_notifications command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-register-notifications",
+          "markdownDescription": "Enables the register_notifications command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the register_notifications command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-register-notifications",
+          "markdownDescription": "Denies the register_notifications command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the reset_cross_signing command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-reset-cross-signing",
+          "markdownDescription": "Enables the reset_cross_signing command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the reset_cross_signing command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-reset-cross-signing",
+          "markdownDescription": "Denies the reset_cross_signing command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the restore_backup_with_passphrase command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-restore-backup-with-passphrase",
+          "markdownDescription": "Enables the restore_backup_with_passphrase command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the restore_backup_with_passphrase command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-restore-backup-with-passphrase",
+          "markdownDescription": "Denies the restore_backup_with_passphrase command without any pre-configured scope."
+        },
+        {
           "description": "Enables the search_messages command without any pre-configured scope.",
           "type": "string",
           "const": "allow-search-messages",
@@ -367,6 +547,30 @@
           "markdownDescription": "Denies the search_messages command without any pre-configured scope."
         },
         {
+          "description": "Enables the search_users command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-search-users",
+          "markdownDescription": "Enables the search_users command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the search_users command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-search-users",
+          "markdownDescription": "Denies the search_users command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the setup_new_backup command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-setup-new-backup",
+          "markdownDescription": "Enables the setup_new_backup command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the setup_new_backup command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-setup-new-backup",
+          "markdownDescription": "Denies the setup_new_backup command without any pre-configured scope."
+        },
+        {
           "description": "Enables the submit_async_request command without any pre-configured scope.",
           "type": "string",
           "const": "allow-submit-async-request",
@@ -377,6 +581,30 @@
           "type": "string",
           "const": "deny-submit-async-request",
           "markdownDescription": "Denies the submit_async_request command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the submit_matrix_login_request command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-submit-matrix-login-request",
+          "markdownDescription": "Enables the submit_matrix_login_request command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the submit_matrix_login_request command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-submit-matrix-login-request",
+          "markdownDescription": "Denies the submit_matrix_login_request command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the upload_media command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-upload-media",
+          "markdownDescription": "Enables the upload_media command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the upload_media command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-upload-media",
+          "markdownDescription": "Denies the upload_media command without any pre-configured scope."
         },
         {
           "description": "Enables the verify_device command without any pre-configured scope.",
@@ -403,10 +631,10 @@
           "markdownDescription": "Denies the watch_notifications command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`\n- `allow-login-and-create-new-session`\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-watch-notifications`\n- `allow-get-devices`\n- `allow-verify-device`\n- `allow-search-messages`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-get-devices`\n- `allow-verify-device`\n- `allow-submit-matrix-login-request`\n- `allow-forward-oauth-login-deeplink`\n- `allow-build-client-from-homeserver-url`\n- `allow-check-homeserver-auth-type`\n- `allow-get-dm-room-from-user-id`\n- `allow-check-device-verification`\n- `allow-has-backup-setup`\n- `allow-restore-backup-with-passphrase`\n- `allow-setup-new-backup`\n- `allow-search-users`\n- `allow-disconnect-and-clear-session`\n- `allow-check-if-last-device`\n- `allow-is-logged-in`\n- `allow-reset-cross-signing`\n- `allow-edit-user-information`\n- `allow-upload-media`\n- `allow-filter-room-list`\n- `allow-define-room-informations`\n- `allow-register-notifications`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`\n- `allow-login-and-create-new-session`\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-watch-notifications`\n- `allow-get-devices`\n- `allow-verify-device`\n- `allow-search-messages`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-get-devices`\n- `allow-verify-device`\n- `allow-submit-matrix-login-request`\n- `allow-forward-oauth-login-deeplink`\n- `allow-build-client-from-homeserver-url`\n- `allow-check-homeserver-auth-type`\n- `allow-get-dm-room-from-user-id`\n- `allow-check-device-verification`\n- `allow-has-backup-setup`\n- `allow-restore-backup-with-passphrase`\n- `allow-setup-new-backup`\n- `allow-search-users`\n- `allow-disconnect-and-clear-session`\n- `allow-check-if-last-device`\n- `allow-is-logged-in`\n- `allow-reset-cross-signing`\n- `allow-edit-user-information`\n- `allow-upload-media`\n- `allow-filter-room-list`\n- `allow-define-room-informations`\n- `allow-register-notifications`"
         }
       ]
     }

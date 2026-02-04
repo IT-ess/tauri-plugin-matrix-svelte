@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-filter-room-list"
+description = "Enables the filter_room_list command without any pre-configured scope."
+commands.allow = ["filter_room_list"]
+
+[[permission]]
+identifier = "deny-filter-room-list"
+description = "Denies the filter_room_list command without any pre-configured scope."
+commands.deny = ["filter_room_list"]

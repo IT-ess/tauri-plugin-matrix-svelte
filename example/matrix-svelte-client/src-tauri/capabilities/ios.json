@@ -1,0 +1,8 @@
+{
+	"$schema": "../gen/schemas/mobile-schema.json",
+	"identifier": "ios",
+	"description": "Capability for the main mobile window on iOS",
+	"windows": ["main"],
+	"permissions": ["web-auth:default", "web-auth:allow-authenticate"],
+	"platforms": ["iOS"]
+}

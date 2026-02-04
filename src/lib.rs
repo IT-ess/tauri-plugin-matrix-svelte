@@ -1,7 +1,9 @@
-use matrix_ui_serializable::{LibConfig, MobilePushNotificationConfig};
+use std::sync::OnceLock;
+
+use matrix_ui_serializable::{LibConfig, models::events::MatrixLoginPayload, mpsc};
 use serde::Deserialize;
 use tauri::{
-    AppHandle, Manager, Runtime,
+    Manager, Runtime,
     plugin::{Builder, TauriPlugin},
 };
 
@@ -14,7 +16,6 @@ mod commands;
 mod error;
 mod events;
 mod keyring;
-mod models;
 mod state_updaters;
 mod utils;
 
@@ -24,19 +25,30 @@ pub use error::{Error, Result};
 use desktop::MatrixSvelte;
 #[cfg(mobile)]
 use mobile::MatrixSvelte;
+use tracing::{debug, error, info};
+use url::Url;
 
 use crate::{
-    events::{event_forwarder, handle_incoming_events},
-    keyring::get_matrix_session_option,
+    events::handle_incoming_events,
     state_updaters::Updaters,
-    utils::fs::get_app_dir_or_create_it,
+    utils::{get_app_dir_or_create_it, get_plugin_config},
 };
 
+pub static LOGIN_SENDER: OnceLock<mpsc::Sender<MatrixLoginPayload>> = OnceLock::new();
+
+pub static AUTH_DEEPLINK_SENDER: OnceLock<mpsc::Sender<Url>> = OnceLock::new();
+
 /// Plugin config to be set in tauri.conf.json
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct PluginConfig {
-    #[cfg(mobile)]
-    pub(crate) sygnal_gateway_url: String,
+    /// The Sygnal Push Notification gateway URL (android)
+    pub android_sygnal_gateway_url: Url,
+    /// The Sygnal Push Notification gateway URL (iOS)
+    pub ios_sygnal_gateway_url: Url,
+    /// The client URL for the OAuth flow
+    pub oauth_client_uri: Url,
+    /// The redirect URI called at the end of the OAuth flow.
+    pub oauth_redirect_uri: Url,
 }
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the Matrix Svelte APIs.
@@ -54,52 +66,85 @@ impl<R: Runtime, T: Manager<R>> crate::MatrixSvelteExt<R> for T {
 pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
     Builder::<R, PluginConfig>::new("matrix-svelte")
         .invoke_handler(tauri::generate_handler![
-            commands::login_and_create_new_session,
             commands::submit_async_request,
             commands::fetch_media,
             commands::fetch_user_profile,
-            commands::watch_notifications,
             commands::get_devices,
             commands::verify_device,
-            commands::search_messages
+            commands::submit_matrix_login_request,
+            commands::forward_oauth_login_deeplink,
+            commands::build_client_from_homeserver_url,
+            commands::check_homeserver_auth_type,
+            commands::get_dm_room_from_user_id,
+            commands::check_device_verification,
+            commands::has_backup_setup,
+            commands::restore_backup_with_passphrase,
+            commands::setup_new_backup,
+            commands::search_users,
+            commands::disconnect_and_clear_session,
+            commands::check_if_last_device,
+            commands::is_logged_in,
+            commands::reset_cross_signing,
+            commands::edit_user_information,
+            commands::upload_media,
+            commands::filter_room_list,
+            commands::define_room_informations,
+            commands::register_notifications
         ])
         .setup(|app, api| {
             let init_app_handle = app.app_handle().clone();
 
             let app_data_dir = get_app_dir_or_create_it(&init_app_handle)?;
 
-            use tauri_plugin_keyring::KeyringExt;
+            // keyring
+            keyring::init_keyring_store().expect("couldn't init keyring store");
 
-            // Init the keyring store
-            app.keyring()
-                .initialize_service(app.config().identifier.clone())
-                .map_err(|e| e.to_string())?;
+            // Create download dir for files
+            let path = init_app_handle
+                .path()
+                .app_local_data_dir()
+                .expect("Couldn't get app local data dir");
+            let path = path.join("download");
+            match std::fs::create_dir(&path) {
+                Ok(_) => info!("Download directory created"),
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+                    // Do nothing if the directory already exists
+                    debug!("Download directory already exists.")
+                }
+                Err(e) => {
+                    // Handle other errors
+                    error!("Error creating directory: {}", e);
+                }
+            }
+
+            let forwarder_handle = app.app_handle().clone();
 
             let _monitor = tauri::async_runtime::spawn(async move {
-                let session_option = get_matrix_session_option(&init_app_handle)
-                    .await
-                    .expect("Couldn't get session option");
+                let session_option = keyring::get_matrix_session_option(app_data_dir.clone());
 
                 let event_receivers = handle_incoming_events(&init_app_handle);
-
-                let push_config = get_push_config(&init_app_handle);
 
                 let updaters_handle = init_app_handle.clone();
                 let updaters = Updaters::new(updaters_handle);
 
+                let plugin_config = get_plugin_config(&init_app_handle)
+                    .expect("Some plugin configuration is missing");
+
                 let config = LibConfig::new(
                     Box::new(updaters),
-                    push_config,
                     event_receivers,
                     session_option,
                     app_data_dir,
+                    plugin_config.oauth_client_uri,
+                    plugin_config.oauth_redirect_uri,
                 );
-                let receiver = matrix_ui_serializable::init(config);
-
-                let inner_app_handle = init_app_handle.clone();
+                let receiver_handle = tauri::async_runtime::spawn(async move {
+                    matrix_ui_serializable::init(config).await
+                });
                 tauri::async_runtime::spawn(async move {
-                    futures::executor::block_on(event_forwarder(inner_app_handle, receiver))
-                })
+                    let receiver = receiver_handle.await.expect("couldn't do basic setup");
+                    events::event_forwarder(forwarder_handle, receiver).await
+                });
             });
 
             #[cfg(mobile)]
@@ -110,32 +155,6 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
             Ok(())
         })
         .build()
-}
-
-fn get_push_config<R: Runtime>(_app_handle: &AppHandle<R>) -> Option<MobilePushNotificationConfig> {
-    #[cfg(desktop)]
-    return None;
-    #[cfg(mobile)]
-    {
-        use crate::MatrixSvelteExt;
-        use crate::models::mobile::GetTokenRequest;
-        use crate::utils::config::_get_plugin_config;
-        if let Ok(push_token) = _app_handle.matrix_svelte().get_token(GetTokenRequest {}) {
-            let plugin_config =
-                _get_plugin_config(_app_handle).expect("The plugin config is not defined !");
-            let identifier = _app_handle.config().identifier.clone();
-            #[cfg(target_os = "android")]
-            let identifier = identifier.replace("-", "_"); // On android, - are replaced by _ in bundle names
-
-            return Some(MobilePushNotificationConfig::new(
-                push_token.token,
-                plugin_config.sygnal_gateway_url,
-                identifier,
-            ));
-        } else {
-            return None;
-        }
-    }
 }
 
 // Re-export for app

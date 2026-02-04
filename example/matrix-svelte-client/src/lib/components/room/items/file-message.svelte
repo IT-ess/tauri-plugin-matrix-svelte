@@ -1,12 +1,17 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { type events, type FileMessageEventContent } from 'tauri-plugin-matrix-svelte-api';
 	import { Channel, invoke } from '@tauri-apps/api/core';
 	import { Download, Paperclip } from '@lucide/svelte';
 	import { writeFile, BaseDirectory, exists } from '@tauri-apps/plugin-fs';
 	import { onMount } from 'svelte';
 	import { openPath } from '@tauri-apps/plugin-opener';
 	import { appLocalDataDir } from '@tauri-apps/api/path';
+	import { m } from '$lib/paraglide/messages';
+	import {
+		fileMessageSourceIsPlain,
+		type FileMessageEventContent,
+		type MediaStreamEvent
+	} from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
 		itemContent: FileMessageEventContent;
@@ -14,7 +19,7 @@
 
 	let { itemContent }: Props = $props();
 
-	let alt = itemContent.filename ?? itemContent.body;
+	let alt = $derived(itemContent.filename ?? itemContent.body);
 
 	// State variables
 	let isLoaded = $state(false);
@@ -52,7 +57,7 @@
 
 		const chunks: Uint8Array[] = [];
 		try {
-			const onEvent = new Channel<events.MediaStreamEvent>();
+			const onEvent = new Channel<MediaStreamEvent>();
 
 			onEvent.onmessage = (message) => {
 				if (message.event === 'started') {
@@ -94,14 +99,23 @@
 					return;
 				}
 			};
-
-			await invoke('plugin:matrix-svelte|fetch_media', {
-				mediaRequest: {
-					format: 'File',
-					source: { file: itemContent.file }
-				},
-				onEvent
-			});
+			if (fileMessageSourceIsPlain(itemContent)) {
+				await invoke('plugin:matrix-svelte|fetch_media', {
+					mediaRequest: {
+						format: 'File',
+						source: { url: itemContent.url }
+					},
+					onEvent
+				});
+			} else {
+				await invoke('plugin:matrix-svelte|fetch_media', {
+					mediaRequest: {
+						format: 'File',
+						source: { file: itemContent.file }
+					},
+					onEvent
+				});
+			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Unknown error occurred';
 			isLoading = false;
@@ -136,8 +150,10 @@
 			{#if error}
 				<div class="bg-destructive/80 inset-0 flex items-center justify-center">
 					<div class="text-center text-white">
-						<p class="mb-2 text-sm">Failed to load</p>
-						<Button variant="secondary" size="sm" onclick={() => loadFile()}>Retry</Button>
+						<p class="mb-2 text-sm">{m.failed_to_load()}</p>
+						<Button variant="secondary" size="sm" onclick={() => loadFile()}
+							>{m.button_retry()}</Button
+						>
 					</div>
 				</div>
 			{/if}

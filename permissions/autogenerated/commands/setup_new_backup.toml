@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-setup-new-backup"
+description = "Enables the setup_new_backup command without any pre-configured scope."
+commands.allow = ["setup_new_backup"]
+
+[[permission]]
+identifier = "deny-setup-new-backup"
+description = "Denies the setup_new_backup command without any pre-configured scope."
+commands.deny = ["setup_new_backup"]

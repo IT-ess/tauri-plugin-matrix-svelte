@@ -3,13 +3,16 @@ use matrix_ui_serializable::{
     models::{
         event_bridge::broadcast,
         events::{
-            EmitEvent, MatrixRoomStoreCreatedRequest, MatrixUpdateCurrentActiveRoom,
-            MatrixVerificationResponse,
+            EmitEvent, MatrixLoginPayload, MatrixRoomStoreCreatedRequest,
+            MatrixUpdateCurrentActiveRoom, MatrixVerificationResponse,
         },
     },
 };
 use tauri::{AppHandle, Emitter, Listener, Runtime};
-use tauri_plugin_notification::NotificationExt;
+use tauri_plugin_notifications::NotificationsExt;
+use url::Url;
+
+use crate::{AUTH_DEEPLINK_SENDER, LOGIN_SENDER};
 
 // Outgoing events (lib -> tauri -> frontend)
 
@@ -29,20 +32,33 @@ pub async fn event_forwarder<R: Runtime>(
                 app_handle.emit("matrix-svelte://toast-notification", e)?;
             }
             EmitEvent::OsNotification(e) => match e.body {
-                Some(body) => app_handle
-                    .notification()
-                    .builder()
-                    .title(e.summary)
-                    .body(body)
-                    .show()
-                    .unwrap(),
-                None => app_handle
-                    .notification()
-                    .builder()
-                    .title(e.summary)
-                    .show()
-                    .unwrap(),
+                Some(body) => {
+                    app_handle
+                        .notifications()
+                        .builder()
+                        .title(e.summary)
+                        .body(body)
+                        .show()
+                        .await?
+                }
+                None => {
+                    app_handle
+                        .notifications()
+                        .builder()
+                        .title(e.summary)
+                        .show()
+                        .await?
+                }
             },
+            EmitEvent::OAuthUrl(e) => {
+                app_handle.emit("matrix-svelte://oauth-url", e)?;
+            }
+            EmitEvent::ResetCrossSigngingUrl(url) => {
+                app_handle.emit("matrix-svelte://reset-cross-signing-url", url)?;
+            }
+            EmitEvent::NewlyCreatedRoomId(room_id) => {
+                app_handle.emit("matrix-svelte://newly-created-room-id", room_id)?;
+            }
         }
     }
     Ok(())
@@ -53,6 +69,7 @@ pub async fn event_forwarder<R: Runtime>(
 const DEFAULT_BUFFER_SIZE: usize = 20;
 
 pub fn handle_incoming_events<R: Runtime>(app_handle: &AppHandle<R>) -> EventReceivers {
+    // Event based
     let (tx_room_created, rx_room_created) =
         tauri::async_runtime::channel::<MatrixRoomStoreCreatedRequest>(DEFAULT_BUFFER_SIZE);
     let (tx_verif, rx_verif) =
@@ -81,5 +98,23 @@ pub fn handle_incoming_events<R: Runtime>(app_handle: &AppHandle<R>) -> EventRec
         }
     });
 
-    EventReceivers::new(rx_room_created, rx_verif, rx_update_room)
+    // Command based
+    let (tx_matrix_login, rx_matrix_login) = tauri::async_runtime::channel::<MatrixLoginPayload>(1);
+    let (tx_oauth_deeplink, rx_oauth_deeplink) = tauri::async_runtime::channel::<Url>(1);
+
+    LOGIN_SENDER
+        .set(tx_matrix_login)
+        .expect("login sender already set");
+
+    AUTH_DEEPLINK_SENDER
+        .set(tx_oauth_deeplink)
+        .expect("oauth deeplink sender already set");
+
+    EventReceivers::new(
+        rx_room_created,
+        rx_verif,
+        rx_update_room,
+        rx_matrix_login,
+        rx_oauth_deeplink,
+    )
 }

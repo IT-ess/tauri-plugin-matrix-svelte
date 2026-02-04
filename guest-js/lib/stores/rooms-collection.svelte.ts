@@ -5,23 +5,24 @@ import {
 	type TauriPluginSvelteRuneStoreOptions
 } from '@tauri-store/svelte';
 import { MatrixSvelteEmitEvent } from '../tauri-events.js';
-import { type RoomsCollectionType } from '../types.js';
+import type { RoomsList } from '../bindings/RoomsList.js';
 
 export const ROOMS_COLLECTION_STORE_ID = 'rooms-collection';
 
-export class RoomsCollection extends RuneStore<RoomsCollectionType> {
+export class RoomsCollection extends RuneStore<RoomsList> {
 	/**
 	 * Creates a new RoomsCollections instance
 	 */
 
 	constructor() {
 		const hooks: StoreHooks = {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			error: (err: any) => console.error(err)
 		};
-		const options: TauriPluginSvelteRuneStoreOptions<RoomsCollectionType> = {
+		const options: TauriPluginSvelteRuneStoreOptions<RoomsList> = {
 			hooks,
 			syncStrategy: 'debounce',
-			syncInterval: 1000
+			syncInterval: 300
 		};
 
 		super(
@@ -30,10 +31,12 @@ export class RoomsCollection extends RuneStore<RoomsCollectionType> {
 				invitedRooms: {},
 				allJoinedRooms: {},
 				displayedInvitedRooms: [],
-				displayedJoinedRooms: [],
+				displayedDirectRooms: [],
+				displayedRegularRooms: [],
 				status: { status: 'notLoaded', message: 'Initiating' },
 				currentActiveRoom: null,
-				maxKnownRooms: undefined
+				maxKnownRooms: null,
+				filterKeywords: ''
 			},
 			options
 		);
@@ -49,29 +52,20 @@ export class RoomsCollection extends RuneStore<RoomsCollectionType> {
 	}
 
 	/**
-	 * Gets the current joined rooms ids
-	 * @returns An array of joined rooms
+	 * Gets the current joined regular rooms ids
+	 * @returns An array of joined rooms ids
 	 */
-	getDisplayedJoinedRoomsIds(): string[] {
-		const ids = this.state.displayedJoinedRooms; // pass by value
+	getDisplayedRegularRoomsIds(): string[] {
+		const ids = this.state.displayedRegularRooms; // pass by value
 		return ids;
 	}
 
 	/**
-	 * Adds a room id to the joined rooms list
-	 * @returns The added id
+	 * Gets the current joined DM rooms ids
+	 * @returns An array of joined rooms ids
 	 */
-	addDisplayedJoinedRoomId(id: string): string {
-		if (!this.isDisplayedRoomRunning(id)) {
-			this.state.displayedJoinedRooms.push(id);
-		}
-		return id;
-	}
-
-	/**
-	 * Checks from a room id if its store is running already
-	 */
-	isDisplayedRoomRunning(id: string): boolean {
-		return this.state.displayedJoinedRooms.includes(id);
+	getDisplayedDMRoomsIds(): string[] {
+		const ids = this.state.displayedDirectRooms; // pass by value
+		return ids;
 	}
 }

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-check-device-verification"
+description = "Enables the check_device_verification command without any pre-configured scope."
+commands.allow = ["check_device_verification"]
+
+[[permission]]
+identifier = "deny-check-device-verification"
+description = "Denies the check_device_verification command without any pre-configured scope."
+commands.deny = ["check_device_verification"]

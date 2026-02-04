@@ -15,7 +15,6 @@ export type ProfileType =
 				userId: string;
 				username: string;
 				avatarUrl?: string;
-				avatarDataUrl?: string;
 				rooms: string[];
 			};
 	  };
@@ -29,12 +28,13 @@ export class ProfileStore extends RuneStore<ProfileRecord> {
 
 	constructor() {
 		const hooks: StoreHooks<ProfileRecord> = {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			error: (err: any) => console.error(err)
 		};
 		const options: TauriPluginSvelteRuneStoreOptions<ProfileRecord> = {
 			hooks,
 			syncStrategy: 'debounce',
-			syncInterval: 1000
+			syncInterval: 100
 		};
 		super(PROFILES_STORE_ID, {}, options);
 	}

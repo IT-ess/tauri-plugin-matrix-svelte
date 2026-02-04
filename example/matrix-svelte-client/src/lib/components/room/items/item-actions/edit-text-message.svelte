@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
 	import { CheckIcon, XIcon } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
-	import { cn } from '$lib/utils';
+	import { cn } from '$lib/utils.svelte';
 	import { onMount } from 'svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	interface Props {
 		message: string;
@@ -14,11 +14,11 @@
 
 	let { message, onEdit, isEditing = $bindable(true) }: Props = $props();
 
+	// svelte-ignore state_referenced_locally
 	let editedMessage = $state(message);
-	let inputRef: HTMLInputElement | null = $state(null);
+	let inputRef: HTMLTextAreaElement | null = $state(null);
 
 	onMount(() => {
-		editedMessage = message;
 		// Focus input after DOM update
 		setTimeout(() => {
 			if (inputRef === null) return;
@@ -61,13 +61,14 @@
 </script>
 
 <div class="flex flex-col gap-2">
-	<Input
-		bind:ref={inputRef}
+	<textarea
+		bind:this={inputRef}
 		bind:value={editedMessage}
 		onkeydown={handleKeydown}
-		class="resize-none border-0 bg-transparent p-0 text-sm focus-visible:ring-0"
-		placeholder="Type your message..."
-	/>
+		placeholder={m.message_input_placeholder()}
+		rows="1"
+		class="field-sizing-content max-h-24 flex-1 resize-none overflow-y-auto rounded-md border p-2"
+	></textarea>
 	<div class="flex justify-end gap-1">
 		<Button size="sm" variant="ghost" onclick={saveEdit} class={cn('size-6 p-0')}>
 			<CheckIcon class="size-3" />

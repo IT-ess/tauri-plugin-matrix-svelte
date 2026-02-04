@@ -1,17 +1,16 @@
 <script lang="ts">
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
+	import { Avatar } from '$lib/components/ui/avatar';
 	import {
-		createMatrixRequest,
-		ProfileStore,
-		submitAsyncRequest,
-		type MessageAbilities,
-		type MsgLikeContent
-	} from 'tauri-plugin-matrix-svelte-api';
-	import { MessagesSquare, ReplyIcon, Share2Icon, SquarePenIcon, Trash2Icon } from '@lucide/svelte';
+		MessageSquareReply,
+		MessagesSquare,
+		ReplyIcon,
+		SquarePenIcon,
+		Trash2Icon
+	} from '@lucide/svelte';
 	import ImageMessage from './image-message.svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { onMount } from 'svelte';
-	import { cn, getInitials } from '$lib/utils';
+	import { cn, gotoThread } from '$lib/utils.svelte';
 	import AudioMessage from './audio-message.svelte';
 	import VideoMessage from './video-message.svelte';
 	import FileMessage from './file-message.svelte';
@@ -30,8 +29,20 @@
 	import PopoverTrigger from '$lib/components/ui/popover/popover-trigger.svelte';
 	import { Tween } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
-	import { shareText } from '@buildyourwebapp/tauri-plugin-sharesheet';
+	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
 	import EditTextMessage from './item-actions/edit-text-message.svelte';
+	import Reactions from './item-actions/reactions.svelte';
+	import { getLocale } from '$lib/paraglide/runtime';
+	import { profileStore } from '../../../../hooks.client';
+	import TextMessage from './text-message.svelte';
+	import { m } from '$lib/paraglide/messages';
+	import ThreadPreview from '../thread/thread-preview.svelte';
+	import {
+		createMatrixRequest,
+		submitAsyncRequest,
+		type MessageAbility,
+		type MsgLikeContent
+	} from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
 		data: MsgLikeContent;
@@ -39,12 +50,24 @@
 		isOwn: boolean;
 		roomId: string;
 		eventId: string;
+		timelineItemId: string;
+		isLocal: boolean;
 		currentUserId: string;
-		profileStore: ProfileStore;
 		repliedToMessage?: MsgLikeContent;
 		onReply?: (eventId: string, senderName: string, content: string) => void;
 		onScrollToMessage?: (eventId: string) => void;
-		abilities: MessageAbilities;
+		abilities: MessageAbility[];
+		handleOpenMediaViewMode: (
+			type: 'image' | 'video',
+			src: string,
+			info: {
+				filename?: string;
+				body?: string;
+				size: number;
+			}
+		) => void;
+		isInThread?: boolean;
+		roomAvatar: string | null;
 	};
 
 	let {
@@ -53,15 +76,20 @@
 		isOwn,
 		roomId,
 		eventId,
+		timelineItemId,
+		isLocal,
 		currentUserId,
-		profileStore,
 		onReply,
 		repliedToMessage,
 		onScrollToMessage,
-		abilities
+		abilities,
+		handleOpenMediaViewMode,
+		isInThread,
+		roomAvatar
 	}: Props = $props();
 
-	const { senderId, sender } = data;
+	let senderId = $derived(data.senderId);
+	let sender = $derived(data.sender);
 	let reactionsArray = $derived(Object.keys(data.reactions));
 
 	let showActions = $state(false);
@@ -71,7 +99,7 @@
 
 	// Format timestamp
 	const formatTime = (timestamp: number) => {
-		return new Date(timestamp).toLocaleTimeString([], {
+		return new Date(timestamp).toLocaleTimeString(getLocale(), {
 			hour: '2-digit',
 			minute: '2-digit'
 		});
@@ -105,28 +133,23 @@
 		if (data.kind !== 'text') return;
 		let request = createMatrixRequest.editMessage({
 			roomId,
-			timelineEventItemId: eventId,
+			timelineEventItemId: { timelineItemId, isLocal },
 			editedContent: {
 				msgtype: 'm.text',
-				body: newMessage
+				body: newMessage,
+				'm.mentions': null
 			}
 		});
 		submitAsyncRequest(request);
 	};
 
 	const handleRedactMessage = () => {
-		let request = createMatrixRequest.redactMessage({
+		const request = createMatrixRequest.redactMessage({
 			roomId,
 			timelineEventId: eventId,
-			reason: undefined
+			reason: null
 		});
 		submitAsyncRequest(request);
-	};
-
-	const handleShare = async () => {
-		if (data.kind === 'text') {
-			await shareText(data.body.body, { mimeType: 'plain/text' });
-		}
 	};
 
 	const handleShowdropdown = () => {
@@ -218,8 +241,8 @@
 	const currentPlatform = platform();
 
 	const handleReplyClick = () => {
-		if (onScrollToMessage && data.threadRoot) {
-			onScrollToMessage(data.threadRoot);
+		if (onScrollToMessage && data.inReplyToId) {
+			onScrollToMessage(data.inReplyToId);
 		}
 	};
 
@@ -247,7 +270,7 @@
 		onswipemove={handleSwipeMove}
 		onswipeup={handleSwipeEnd}
 		class={cn(
-			'group flex gap-2 transition-transform duration-200',
+			'group flex gap-1 transition-transform duration-200',
 			isOwn && 'flex-row-reverse',
 			`translate-[${swipeOffset.current}]px`
 		)}
@@ -256,26 +279,28 @@
 		aria-label="Swipe right to reply"
 	>
 		<PopoverTrigger />
-		<Avatar>
+		<Avatar class="border-primary border">
 			<!-- Reactive store, once the profile is loaded we load the image -->
-			{#if profileStore.state[senderId]?.state === 'loaded' && profileStore.state[senderId].data.avatarDataUrl}
-				<AvatarImage src={profileStore.state[senderId].data.avatarDataUrl} alt={sender} />
-			{:else}
-				{@render avatarFallback(sender)}
+			{#if profileStore.state[senderId]?.state === 'loaded' && profileStore.state[senderId].data.avatarUrl}
+				{@render fetchAvatar(
+					profileStore.state[senderId].data.avatarUrl,
+					profileStore.state[senderId]?.data.username
+				)}
 			{/if}
+			{@render avatarFallback(sender)}
 		</Avatar>
 		<DropdownMenu bind:open={showDropdown}>
 			<DropdownMenuTrigger />
 			{#if data.kind === 'sticker'}
 				<!-- Render sticker outside the block -->
 				<div class={cn('relative max-w-[30%] p-3', isSwipeActive ? 'ring-2 ring-blue-300' : '')}>
-					<ImageMessage itemContent={data.body} isSticker />
+					<ImageMessage itemContent={data.body} isSticker {handleOpenMediaViewMode} />
 				</div>
 			{:else}
-				<div bind:this={reactionsPopoverAnchor} class="relative max-w-[60%]">
+				<div bind:this={reactionsPopoverAnchor} class="relative max-w-[70%]">
 					<div
 						class={[
-							'relative  rounded-lg p-3',
+							'relative w-full rounded-lg p-3',
 							isOwn ? 'bg-primary text-primary-foreground' : 'bg-muted',
 							isSwipeActive ? 'ring-2 ring-blue-300' : ''
 						]}
@@ -292,7 +317,7 @@
 								tabindex="0"
 								onkeydown={(e) => e.key === 'Enter' && handleReplyClick()}
 							>
-								<MessagesSquare class="absolute top-1 right-1" />
+								<MessageSquareReply class="absolute top-1 right-1" />
 								<p class="mr-8 text-sm font-medium">{repliedToMessage.sender}</p>
 								<p class="text-sm">{extractContentFromMsg(repliedToMessage)}</p>
 							</div>
@@ -305,9 +330,7 @@
 									onEdit={onSubmitEditMessage}
 								/>
 							{:else}
-								<p class="mt-1 text-sm">
-									{data.body.body}
-								</p>
+								<TextMessage body={data.body.body} />
 							{/if}
 						{:else if data.kind === 'emote'}
 							<p class="mt-1 text-sm">
@@ -315,23 +338,40 @@
 								<!-- same as a text message, but with sender name in front -->
 							</p>
 						{:else if data.kind === 'image'}
-							<ImageMessage itemContent={data.body} isSticker={false} />
+							<ImageMessage itemContent={data.body} isSticker={false} {handleOpenMediaViewMode} />
+							{#if data.body.body}
+								<TextMessage body={data.body.body} />
+							{/if}
 						{:else if data.kind === 'audio'}
-							<AudioMessage itemContent={data.body} />
+							<AudioMessage itemContent={data.body} {isOwn} />
 						{:else if data.kind === 'video'}
-							<VideoMessage itemContent={data.body} />
+							<VideoMessage itemContent={data.body} {handleOpenMediaViewMode} />
+							{#if data.body.body}
+								<TextMessage body={data.body.body} />
+							{/if}
 						{:else if data.kind === 'file'}
 							<FileMessage itemContent={data.body} />
+							{#if data.body.body}
+								<TextMessage body={data.body.body} />
+							{/if}
 						{:else if data.kind === 'redacted'}
-							<Badge variant="destructive">This message has been deleted</Badge>
+							<Badge variant="destructive">{m.message_has_been_deleted()}</Badge>
 						{:else if data.kind === 'unableToDecrypt'}
-							<Badge variant={isOwn ? 'secondary' : 'default'}>Encrypted message</Badge>
+							<Badge variant={isOwn ? 'secondary' : 'default'}>{m.message_encrypted()}</Badge>
 						{:else}
 							<p class="text-muted text-sm">
 								The message type: {data.kind} is not supported yet
 							</p>
 						{/if}
 					</div>
+					{#if data.threadSummary && !isInThread}
+						<ThreadPreview
+							threadSummary={data.threadSummary}
+							{roomId}
+							rootId={eventId}
+							{roomAvatar}
+						/>
+					{/if}
 				</div>
 			{/if}
 
@@ -347,34 +387,39 @@
 					{handleShowdropdown}
 					{abilities}
 				/>
+			{:else}
+				<div class={['flex items-center gap-1', isOwn && 'flex-row-reverse']}>
+					<Reactions reactions={data.reactions} />
+				</div>
 			{/if}
 			<DropdownMenuContent
 				customAnchor={reactionsPopoverAnchor}
-				align="start"
-				side={isOwn ? 'left' : 'right'}
+				align={isOwn ? 'start' : 'end'}
+				side="bottom"
 			>
 				{#if abilities.includes('canReplyTo')}
 					<DropdownMenuItem onclick={handleReply} class="text-md">
-						<ReplyIcon class="h-4 w-4" />
-						Reply</DropdownMenuItem
+						<ReplyIcon class="size-4" />
+						{m.button_reply()}</DropdownMenuItem
 					>
+					{#if !isInThread}
+						<DropdownMenuItem
+							class="text-md"
+							onclick={() => gotoThread(roomId, eventId, roomAvatar)}
+							><MessagesSquare class="size-4" />{m.button_reply_in_thread()}</DropdownMenuItem
+						>
+					{/if}
 				{/if}
 				{#if abilities.includes('canEdit')}
 					<DropdownMenuItem onclick={() => (isEditing = true)} class="text-md">
-						<SquarePenIcon class="h-4 w-4" />
-						Edit</DropdownMenuItem
+						<SquarePenIcon class="size-4" />
+						{m.button_edit()}</DropdownMenuItem
 					>
 				{/if}
 				{#if abilities.includes('canDelete')}
 					<DropdownMenuItem onclick={handleRedactMessage} class="text-md">
-						<Trash2Icon class="h-4 w-4" />
-						Delete</DropdownMenuItem
-					>
-				{/if}
-				{#if (currentPlatform === 'android' || currentPlatform === 'ios') && data.kind === 'text'}
-					<DropdownMenuItem onclick={handleShare} class="text-md">
-						<Share2Icon class="h-4 w-4" />
-						Share</DropdownMenuItem
+						<Trash2Icon class="size-4" />
+						{m.button_delete()}</DropdownMenuItem
 					>
 				{/if}
 			</DropdownMenuContent>
@@ -406,7 +451,3 @@
 		</div>
 	</PopoverContent>
 </Popover>
-
-{#snippet avatarFallback(sender?: string)}
-	<AvatarFallback>{getInitials(sender ?? 'John Doe')}</AvatarFallback>
-{/snippet}
