@@ -17,7 +17,7 @@
 	"logout": "Logout",
 	"logout_are_you_sure": "Are you sure ?",
 	"logout_are_you_sure_desc": "You are about to be logged out.",
-	"logout_are_you_sure_last_device_warn": "This device is your last one you're connected to, and you didn't setup backup. You will lose all your Refs history.",
+	"logout_are_you_sure_last_device_warn": "This device is your last one you're connected to, and you didn't setup backup.",
 	"logout_please_setup_backup_before": "Please setup the backup before logging out.",
 	"logout_anyway": "Logout anyway",
 	"button_share": "Share",

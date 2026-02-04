@@ -25,7 +25,7 @@ pub use error::{Error, Result};
 use desktop::MatrixSvelte;
 #[cfg(mobile)]
 use mobile::MatrixSvelte;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, info};
 use url::Url;
 
 use crate::{
@@ -41,9 +41,13 @@ pub static AUTH_DEEPLINK_SENDER: OnceLock<mpsc::Sender<Url>> = OnceLock::new();
 /// Plugin config to be set in tauri.conf.json
 #[derive(Debug, Deserialize)]
 pub struct PluginConfig {
+    /// The Sygnal Push Notification gateway URL (android)
     pub android_sygnal_gateway_url: Url,
+    /// The Sygnal Push Notification gateway URL (iOS)
     pub ios_sygnal_gateway_url: Url,
+    /// The client URL for the OAuth flow
     pub oauth_client_uri: Url,
+    /// The redirect URI called at the end of the OAuth flow.
     pub oauth_redirect_uri: Url,
 }
 
@@ -126,8 +130,6 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
                 let plugin_config = get_plugin_config(&init_app_handle)
                     .expect("Some plugin configuration is missing");
 
-                warn!("{plugin_config:?}");
-
                 let config = LibConfig::new(
                     Box::new(updaters),
                     event_receivers,
@@ -143,11 +145,6 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
                     let receiver = receiver_handle.await.expect("couldn't do basic setup");
                     events::event_forwarder(forwarder_handle, receiver).await
                 });
-
-                // let inner_app_handle = init_app_handle.clone();
-                // tauri::async_runtime::spawn(async move {
-                //     futures::executor::block_on(event_forwarder(inner_app_handle, receiver))
-                // })
             });
 
             #[cfg(mobile)]

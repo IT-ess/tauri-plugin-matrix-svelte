@@ -1,5 +1,5 @@
 import type { ClientInit } from '@sveltejs/kit';
-import { emit, type UnlistenFn } from '@tauri-apps/api/event';
+import { type UnlistenFn } from '@tauri-apps/api/event';
 import { roomStoresMap } from '$lib/stores/rooms.map.svelte';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import {
