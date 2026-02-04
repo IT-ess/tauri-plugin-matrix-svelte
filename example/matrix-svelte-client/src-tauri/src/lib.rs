@@ -104,17 +104,29 @@ pub fn run() {
                             .blocking_send(url.to_owned())
                             .expect("couldn't send deeplink payload to receiver");
                     }
-                    // // Matches https://refs.rs/auth-callback
-                    // if url.host_str().is_some_and(|s| s.eq("refs.rs"))
-                    //     & url.path().contains("auth-callback")
-                    // {
-                    //     let sender = AUTH_DEEPLINK_SENDER
-                    //         .get()
-                    //         .expect("sender should be defined at this point");
-                    //     sender
-                    //         .blocking_send(url.to_owned())
-                    //         .expect("couldn't send deeplink payload to receiver");
-                    // }
+
+                    // Matches https://oauth-client-uri-domain/auth-callback
+                    let plugin_config = deeplink_handle.config().plugins.0.clone();
+                    let raw_matrix_config = plugin_config
+                        .get("matrix-svelte")
+                        .expect("Plugin 'matrix-svelte' configuration not found");
+                    let matrix_plugin_config: tauri_plugin_matrix_svelte::PluginConfig =
+                        serde_json::from_value(raw_matrix_config.clone())
+                            .expect("Missing fields in plugin configuration");
+                    if url.host_str().is_some_and(|s| {
+                        s.eq(matrix_plugin_config
+                            .oauth_client_uri
+                            .domain()
+                            .expect("this url should have a domain"))
+                    }) & url.path().contains("auth-callback")
+                    {
+                        let sender = AUTH_DEEPLINK_SENDER
+                            .get()
+                            .expect("sender should be defined at this point");
+                        sender
+                            .blocking_send(url.to_owned())
+                            .expect("couldn't send deeplink payload to receiver");
+                    }
                 }
             });
 

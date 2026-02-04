@@ -35,8 +35,9 @@ tauri-plugin-svelte = "3.1.0"
 tauri-plugin-single-instance = { version = "2.3.7", features = ["deep-link"] }
 tauri-plugin-web-auth = "1.0.0"
 tauri-plugin-devtools = "2.0.0"
+time = "0.3.44"
 tracing = "0.1.43"
-tracing-subscriber = "0.3.22"
+tracing-subscriber = { version = "0.3.22", features = ["time", "env-filter"] }
 
 
 [profile.dev]
@@ -45,6 +46,6 @@ incremental = true # Compile your binary in smaller steps.
 [profile.release]
 codegen-units = 1 # Allows LLVM to perform better optimization.
 lto = true        # Enables link-time-optimizations.
-opt-level = "s"   # Prioritizes small binary size. Use `3` if you prefer speed.
+opt-level = 3   # Prioritizes small binary size. Use `3` if you prefer speed.
 panic = "abort"   # Higher performance by disabling panic handlers.
 strip = true      # Ensures debug symbols are removed.

@@ -41,10 +41,10 @@ pub static AUTH_DEEPLINK_SENDER: OnceLock<mpsc::Sender<Url>> = OnceLock::new();
 /// Plugin config to be set in tauri.conf.json
 #[derive(Debug, Deserialize)]
 pub struct PluginConfig {
-    pub(crate) android_sygnal_gateway_url: Url,
-    pub(crate) ios_sygnal_gateway_url: Url,
-    pub(crate) oauth_client_uri: Url,
-    pub(crate) oauth_redirect_uri: Url,
+    pub android_sygnal_gateway_url: Url,
+    pub ios_sygnal_gateway_url: Url,
+    pub oauth_client_uri: Url,
+    pub oauth_redirect_uri: Url,
 }
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the Matrix Svelte APIs.

@@ -185,7 +185,7 @@
 	};
 </script>
 
-<div class="bg-background border-t">
+<div class="bg-background pb-safe border-t">
 	{#if replyingTo}
 		<div class="bg-muted/50 border-b p-3" transition:fade>
 			<div class="flex items-start justify-between gap-2">
