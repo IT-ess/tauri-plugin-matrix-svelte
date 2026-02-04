@@ -185,7 +185,7 @@ impl<R: Runtime> StateUpdaterFunctions for Updaters<R> {
         ))?;
         let mut session = serde_json::from_str::<FullMatrixSession>(&serialized_session)?;
 
-        session.user_session = refreshed_session;
+        session.user_session = refreshed_session.into();
 
         let serialized_session = serde_json::to_string(&session)?;
 
