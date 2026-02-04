@@ -1,8 +1,8 @@
 name: matrix-svelte-client
 options:
-  bundleIdPrefix: com.matrix-svelte.client
+  bundleIdPrefix: com.matrix.svelte.client
   deploymentTarget:
-    iOS: 13.0
+    iOS: 14.0
 fileGroups: [../../src]
 configs:
   debug: debug
@@ -11,8 +11,7 @@ settingGroups:
   app:
     base:
       PRODUCT_NAME: matrix-svelte-client
-      PRODUCT_BUNDLE_IDENTIFIER: com.matrix-svelte.client
-      DEVELOPMENT_TEAM: 9A6YPCKFPC
+      PRODUCT_BUNDLE_IDENTIFIER: com.matrix.svelte.client
 targetTemplates:
   app:
     type: application
@@ -52,8 +51,8 @@ targets:
           - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
-        CFBundleShortVersionString: 0.1.0
-        CFBundleVersion: "0.1.0"
+        CFBundleShortVersionString: 0.2.0
+        CFBundleVersion: "0.2.0"
     entitlements:
       path: matrix-svelte-client_iOS/matrix-svelte-client_iOS.entitlements
     scheme:
@@ -81,7 +80,7 @@ targets:
       - sdk: UIKit.framework
       - sdk: WebKit.framework
     preBuildScripts:
-      - script: cargo tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths "${FRAMEWORK_SEARCH_PATHS:?}" --header-search-paths "${HEADER_SEARCH_PATHS:?}" --gcc-preprocessor-definitions "${GCC_PREPROCESSOR_DEFINITIONS:-}" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}
+      - script: pnpm tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths "${FRAMEWORK_SEARCH_PATHS:?}" --header-search-paths "${HEADER_SEARCH_PATHS:?}" --gcc-preprocessor-definitions "${GCC_PREPROCESSOR_DEFINITIONS:-}" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}
         name: Build Rust Code
         basedOnDependencyAnalysis: false
         outputFiles:
