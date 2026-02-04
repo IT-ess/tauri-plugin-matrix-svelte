@@ -15,7 +15,8 @@ Build locally, or check Github releases to download the binaries.
 
 ## Caveats
 
-The mobile Push Notifications shouldn't work right now because I didn't bother configuring a dedicated Sygnal Push gateway.
+- The mobile Push Notifications shouldn't work right now because I didn't bother configuring a dedicated Sygnal Push gateway.
+- Recording audio messages isn't possible on Linux, since WebKit2GTK doesn't implement this feature yet.
 
 # Implementation details
 

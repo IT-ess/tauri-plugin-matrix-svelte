@@ -10,7 +10,7 @@ Most of the state data (Rooms list, Room data) is accessible to the frontend thr
 <div style="display: flex; justify-content: space-between; gap: 15px; margin: 0 -5px; max-width: 100%;">
   <img src="assets/room_list.png" alt="Room List" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
   <img src="assets/room.png" alt="Room" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
-  <img src="assets/device_list.png" alt="Device list" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
+  <img src="assets/media_message.png" alt="Media message" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
 </div>
 
 You can try the [example client](https://github.com/IT-ess/tauri-plugin-matrix-svelte/tree/main/example/matrix-svelte-client) by installing the binaries (in the Github release), or by compiling the project locally.
