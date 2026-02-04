@@ -17,6 +17,7 @@ Build locally, or check Github releases to download the binaries.
 
 - The mobile Push Notifications shouldn't work right now because I didn't bother configuring a dedicated Sygnal Push gateway.
 - Recording audio messages isn't possible on Linux, since WebKit2GTK doesn't implement this feature yet.
+- On Linux with Nvidia drivers, Tauri apps fail to start unless you use this env variable `WEBKIT_DISABLE_DMABUF_RENDERER=1`
 
 # Implementation details
 
