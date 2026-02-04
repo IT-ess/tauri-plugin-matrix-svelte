@@ -79,6 +79,7 @@ This project is opened to all kinds of contributions. I'm aware that the [docume
 ## Possible improvements
 
 As mentionned in [matrix-ui-serializable's README](https://github.com/IT-ess/matrix-ui-serializable?tab=readme-ov-file#possible-improvements), the main flaw of this plugin is the full serialization of the stores whenever the state_updaters are called. To avoid serialization, passing data directly to the frontend through Tauri's raw IPC API may be possible, but that would require extra work that is perfectly done by tauri-plugin-svelte right now.
+The current implementation is a memory hog, especially with accounts with a lot of rooms. This could be improved with better room / room list pagination. 
 
 ## Chat about this project
 
