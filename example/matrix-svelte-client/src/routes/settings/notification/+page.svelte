@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { m } from '$lib/paraglide/messages';
 	import type { PageData } from './$types';
 	import { ChevronLeft } from '@lucide/svelte';
 	import NotificationsSwitch from '$lib/components/settings/notifications-switch.svelte';
@@ -18,10 +17,7 @@
 			<ChevronLeft class="text-foreground h-6 w-6" />
 		</button>
 
-		<h1 class="mb-2 font-serif text-2xl text-balance">{m.notification_daily_recap()}</h1>
-		<p class="text-muted-foreground leading-relaxed">
-			{m.notification_daily_recap_description()}
-		</p>
+		<h1 class="mb-2 font-serif text-2xl text-balance">Enable push notifications</h1>
 	</header>
 	<NotificationsSwitch hasPending={data.hasPending} />
 </div>

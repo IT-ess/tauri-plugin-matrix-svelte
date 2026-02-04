@@ -37,10 +37,10 @@
 </script>
 
 <div class="flex shrink flex-col">
-	<div class="mb-4 flex items-center justify-between border-b border-border pb-6">
+	<div class="border-border mb-4 flex items-center justify-between border-b pb-6">
 		<div>
 			<p class="mb-1 font-medium">{m.notification_enable_notifications()}</p>
-			<p class="text-sm text-muted-foreground">{m.notification_receive_daily_recaps()}</p>
+			<p class="text-muted-foreground text-sm">{m.notification_enable_desc()}</p>
 		</div>
 		<Switch onclick={changeRecapState} bind:checked={isActivated} />
 	</div>

@@ -62,9 +62,11 @@ pub(crate) fn set_session_in_keyring(
 }
 
 pub(crate) fn clear_session_in_keyring(app_data_path: PathBuf) -> crate::Result<()> {
-    let salt = get_salt_or_create_it(app_data_path)?;
+    let salt = get_salt_or_create_it(app_data_path.clone())?;
     let entry = create_entry(&salt)?;
-    entry.delete_credential().map_err(|e| e.into())
+    entry.delete_credential()?;
+    // Remove salt so we do not use the previous DB.
+    fs::remove_file(app_data_path.join("salt")).map_err(|e| e.into())
 }
 
 pub(crate) fn init_keyring_store() -> anyhow::Result<()> {

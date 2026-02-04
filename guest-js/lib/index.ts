@@ -7,7 +7,7 @@ import type { MatrixLoginPayload } from './bindings/MatrixLoginPayload.js';
 import type { ProfileModel } from './bindings/ProfileModel.js';
 import type { VerifyDeviceEvent } from './bindings/VerifyDeviceEvent.js';
 import { createMatrixRequest, type MatrixRequest } from './matrix-requests/requests.js';
-import type { RoomModel } from './bindings/RoomModel.js';
+
 import { LoginStore } from './stores/login-store.svelte.js';
 import { ProfileStore } from './stores/profiles-store.svelte.js';
 import { RoomStore } from './stores/room-store.svelte.js';
@@ -84,10 +84,6 @@ export async function searchUsers(searchTerm: string, limit: number): Promise<Pr
 
 export async function getAllUserProfiles(): Promise<ProfileModel[]> {
 	return invoke<ProfileModel[]>('plugin:matrix-svelte|get_all_user_profiles', {});
-}
-
-export async function getAllDMRooms(): Promise<RoomModel[]> {
-	return invoke<RoomModel[]>('plugin:matrix-svelte|get_all_dm_rooms', {});
 }
 
 /**

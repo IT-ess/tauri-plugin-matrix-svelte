@@ -108,7 +108,7 @@
 	"notification_messages_channel": "Nouveaux messages",
 	"notification_messages_channel_desc": "Recevez une notification push à chaque nouveau message",
 	"notification_enable_notifications": "Activer les notifications",
-	"notification_receive_daily_recaps": "Recevoir des notifications de nouveaux messages et des récaps quotidiens",
+	"notification_enable_desc": "Recevoir des notifications de nouveaux messages",
 	"notification_set_success": "Notifications activées !",
 	"popup_verification_please_verify": "Vérifier un appareil",
 	"popup_verification_instructions": "Vérifiez que les émojis correspondent entre les appareils:",

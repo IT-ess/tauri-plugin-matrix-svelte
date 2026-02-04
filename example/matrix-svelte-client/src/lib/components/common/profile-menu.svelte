@@ -8,7 +8,6 @@
 		ShieldAlert,
 		ShieldQuestion,
 		User,
-		ListRestart,
 		ShieldCheck,
 		DatabaseBackup,
 		LogOut,
@@ -80,9 +79,6 @@
 				>
 				<Button class="w-full" size="lg" variant="outline" href="/settings/notification"
 					><BellRing />{m.profile_menu_notifications()}</Button
-				>
-				<Button class="w-full" size="lg" variant="outline" href="/onboarding"
-					><ListRestart />{m.profile_menu_replay_tutorial()}</Button
 				>
 				<AlertDialog.Root>
 					<AlertDialog.Trigger

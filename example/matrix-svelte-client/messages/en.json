@@ -106,7 +106,7 @@
 	"notification_messages_channel": "New messages",
 	"notification_messages_channel_desc": "Receive a push notification when receiving new messages",
 	"notification_enable_notifications": "Enable notifications",
-	"notification_receive_daily_recaps": "Receive notifications for new messages and daily recaps",
+	"notification_enable_desc": "Receive notifications for new messages",
 	"notification_set_success": "Notifications enabled !",
 	"popup_verification_please_verify": "Please verify this device",
 	"popup_verification_instructions": "Check if the emojis match between the devices:",
