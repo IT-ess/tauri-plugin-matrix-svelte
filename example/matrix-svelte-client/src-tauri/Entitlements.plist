@@ -10,5 +10,9 @@
     <string>9A6YPCKFPC.com.matrix.svelte.client</string>
     <key>com.apple.developer.team-identifier</key>
     <string>9A6YPCKFPC</string>
+    <key>com.apple.security.device.microphone</key>
+    <true/>
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
 </dict>
 </plist>
