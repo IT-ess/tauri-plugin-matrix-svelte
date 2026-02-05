@@ -138,11 +138,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
                     plugin_config.oauth_client_uri,
                     plugin_config.oauth_redirect_uri,
                 );
-                let receiver_handle = tauri::async_runtime::spawn(async move {
-                    matrix_ui_serializable::init(config).await
-                });
+                let receiver = matrix_ui_serializable::init(config);
                 tauri::async_runtime::spawn(async move {
-                    let receiver = receiver_handle.await.expect("couldn't do basic setup");
                     events::event_forwarder(forwarder_handle, receiver).await
                 });
             });
