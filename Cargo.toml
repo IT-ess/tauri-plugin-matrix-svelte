@@ -29,7 +29,7 @@ futures-util = "0.3.31"
 tauri-plugin-svelte = { version = "3.1.0", features = ["marshaler-cbor"] }
 tauri-plugin-notifications = { version = "0.4.2", features = ["push-notifications"] }
 tracing = "0.1.43"
-matrix-ui-serializable = { git = "https://github.com/IT-ess/matrix-ui-serializable" }
+matrix-ui-serializable = { git = "https://github.com/IT-ess/matrix-ui-serializable", branch = "optimizations" }
 
 [build-dependencies]
 tauri-plugin = { version = "2.5.3", features = ["build"] }
