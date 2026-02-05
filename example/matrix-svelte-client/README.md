@@ -1,9 +1,15 @@
 # matrix-svelte-client
 
-An example frontend implementation of the tauri-plugin-matrix-svelte. 
+An example frontend implementation of the tauri-plugin-matrix-svelte.
+**Supports both desktop and mobile devices**.
+
 Build locally, or check Github releases to download the binaries.
 
 # Usage
+
+## Trying out the app
+
+Check out the pre-built binaries in the [latest release](https://github.com/IT-ess/tauri-plugin-matrix-svelte/releases). 
 
 ## Running the app in dev mode
 
