@@ -1,6 +1,7 @@
 use tauri::{Emitter, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_matrix_svelte::AUTH_DEEPLINK_SENDER;
+use tauri_plugin_svelte::CborMarshaler;
 use tracing::debug;
 
 mod logging;
@@ -41,6 +42,7 @@ pub fn run() {
         .plugin(tauri_plugin_notifications::init())
         .plugin(
             tauri_plugin_svelte::Builder::new()
+                .marshaler(Box::new(CborMarshaler))
                 .on_load(|store| {
                     if store.id().to_string() == tauri_plugin_matrix_svelte::LOGIN_STATE_STORE_ID {
                         tauri_plugin_matrix_svelte::LOGIN_STORE_READY
