@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-matrix-svelte"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["IT-ess"]
 description = "A Tauri plugin that exposes high level Matrix data through Svelte Rune stores"
 edition = "2024"
