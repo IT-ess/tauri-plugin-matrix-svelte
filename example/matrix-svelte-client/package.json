@@ -13,7 +13,7 @@
 	"repository": {
 		"url": "https://github.com/IT-ess/tauri-plugin-matrix-svelte/tree/main/example/matrix-svelte-client"
 	},
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "A Matrix client using tauri-plugin-matrix-svelte",
 	"type": "module",
 	"scripts": {

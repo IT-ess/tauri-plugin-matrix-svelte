@@ -1,6 +1,6 @@
 [package]
 name = "matrix-svelte-client"
-version = "0.2.0"
+version = "0.3.0"
 description = "A Matrix client using tauri-plugin-matrix-svelte"
 authors = ["IT-ess"]
 edition = "2024"
