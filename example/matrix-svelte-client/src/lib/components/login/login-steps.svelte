@@ -15,7 +15,13 @@
 	import { fade } from 'svelte/transition';
 	import * as Form from '$lib/components/ui/form/index';
 
-	import { type SuperValidated, type Infer, superForm, setMessage } from 'sveltekit-superforms';
+	import {
+		type SuperValidated,
+		type Infer,
+		superForm,
+		setMessage,
+		type ValidationErrors
+	} from 'sveltekit-superforms';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { loginFormSchema, type LoginFormSchema } from '$lib/schemas/login';
 	import { onMount } from 'svelte';
@@ -56,6 +62,15 @@
 		$formData.clientName = hostname;
 	});
 
+	let formErrors = $state<
+		| ValidationErrors<{
+				username: string;
+				password: string;
+				homeserver: string;
+				clientName: string;
+		  }>
+		| undefined
+	>();
 	// svelte-ignore state_referenced_locally
 	const form = superForm(dataForm, {
 		SPA: true,
@@ -110,8 +125,11 @@
 			});
 			await awaitUntilLoggedIn();
 			unlisten();
+		} else {
+			// We replace by a full URL, otherwise the matrix API isn't happy
+			$formData.homeserver = 'https://' + $formData.homeserver;
+			customHomeserverDialogOpen = false;
 		}
-		// matrix login has its own flow
 	};
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -137,6 +155,8 @@
 			hasSubmittedSignup = false;
 		}
 	};
+
+	let customHomeserverDialogOpen = $state(false);
 </script>
 
 <div class="px-safe-offset-4 pb-safe-offset-4 flex h-full w-full flex-col justify-between">
@@ -168,7 +188,7 @@
 					<LoaderCircle class="animate-spin" />
 				{/if}{m.button_signup()} matrix.org</Button
 			>
-			<Dialog.Root>
+			<Dialog.Root bind:open={customHomeserverDialogOpen}>
 				<Dialog.Trigger
 					disabled={disableButtons}
 					class={buttonVariants({
@@ -258,6 +278,9 @@
 									<Form.FieldErrors />
 								</Form.Field>
 							</div>
+							{#if formErrors}
+								<p class="text-destructive">{JSON.stringify(formErrors)}</p>
+							{/if}
 
 							<Form.Button type="submit" class="flex-1" disabled={isLoading}>
 								{#if isLoading}
