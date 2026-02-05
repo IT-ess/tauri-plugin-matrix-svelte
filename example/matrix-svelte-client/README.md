@@ -5,6 +5,14 @@ An example frontend implementation of the tauri-plugin-matrix-svelte.
 
 Build locally, or check Github releases to download the binaries.
 
+# Screenshots
+
+<div style="display: flex; justify-content: space-between; gap: 15px; margin: 0 -5px; max-width: 100%;">
+  <img src="../../assets/room_list.png" alt="Room List" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
+  <img src="../../assets/room.png" alt="Room" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
+  <img src="../../assets/media_message.png" alt="Media message" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
+</div>
+
 # Usage
 
 ## Trying out the app
