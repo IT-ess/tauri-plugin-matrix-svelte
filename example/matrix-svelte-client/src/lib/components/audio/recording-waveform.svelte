@@ -71,5 +71,5 @@
 
 <canvas
 	bind:this={canvasRef}
-	class="h-8 min-w-0 flex-1 self-center rounded-lg border border-primary/10 bg-muted/30"
+	class="border-primary/10 bg-muted/30 h-8 min-w-0 flex-1 self-center rounded-lg border"
 ></canvas>

@@ -39,7 +39,7 @@
 </script>
 
 <div class="flex flex-col gap-2">
-	<label class="text-sm font-medium text-muted-foreground" for={label}>{label}</label>
+	<label class="text-muted-foreground text-sm font-medium" for={label}>{label}</label>
 
 	{#if isEditing}
 		<div class="flex gap-2">
@@ -78,9 +78,9 @@
 		</div>
 	{:else}
 		<div
-			class="flex items-center justify-between gap-3 rounded-lg bg-muted/50 p-3 transition-colors hover:bg-muted"
+			class="bg-muted/50 hover:bg-muted flex items-center justify-between gap-3 rounded-lg p-3 transition-colors"
 		>
-			<p class="font-medium text-foreground">{value}</p>
+			<p class="text-foreground font-medium">{value}</p>
 			<Button
 				size="icon"
 				variant="ghost"

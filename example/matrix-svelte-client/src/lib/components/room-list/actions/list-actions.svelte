@@ -18,7 +18,7 @@
 	let actionCreateRoomOpen = $state(false);
 </script>
 
-<div class="absolute right-6 bottom-safe-offset-28 z-50">
+<div class="bottom-safe-offset-28 absolute right-6 z-50">
 	<DropdownMenu bind:open={isActionButtonOpen}>
 		<DropdownMenuTrigger>
 			{#snippet child({ props: triggerProps })}

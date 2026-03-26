@@ -4,12 +4,12 @@
 </script>
 
 {#if loginStore.state.syncServiceState === 'running'}
-	<LoaderCircle class="h-6 w-6 animate-spin text-primary" />
+	<LoaderCircle class="text-primary h-6 w-6 animate-spin" />
 {:else if loginStore.state.syncServiceState === 'error'}
-	<CircleX class="h-6 w-6 text-destructive" />
+	<CircleX class="text-destructive h-6 w-6" />
 {:else if loginStore.state.syncServiceState === 'offline'}
 	<WifiOff class="h-6 w-6 text-orange-400" />
 {:else if loginStore.state.syncServiceState === 'idle'}
-	<p class="text-sm text-muted">Messages synced ✔️</p>
+	<p class="text-muted text-sm">Messages synced ✔️</p>
 	<!-- We ignore the terminated variant. -->
 {/if}

@@ -8,7 +8,7 @@
 
 <div class="relative">
 	<SearchIcon
-		class="absolute top-1/2 left-3 -translate-y-1/2 transform text-muted-foreground"
+		class="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2 transform"
 		size={20}
 	/>
 	<Input
@@ -19,7 +19,7 @@
 	{#if searchQuery}
 		<X
 			onclick={() => (searchQuery = '')}
-			class="absolute top-1/2 right-3 size-4 -translate-y-1/2 transform text-muted-foreground"
+			class="text-muted-foreground absolute top-1/2 right-3 size-4 -translate-y-1/2 transform"
 		/>
 	{/if}
 </div>
