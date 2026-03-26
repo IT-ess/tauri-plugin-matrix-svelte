@@ -55,6 +55,30 @@ pub fn run() {
         )
         .plugin(tauri_plugin_matrix_svelte::init())
         .setup(|app| {
+            #[cfg(target_os = "android")]
+            let _ = app
+                .get_webview_window("main")
+                .unwrap()
+                .with_webview(|webview| {
+                    webview.jni_handle().exec(|env, context, _webview| {
+                        use tauri::wry::prelude::JObject;
+                        let loader = env
+                            .call_method(
+                                context,
+                                "getClassLoader",
+                                "()Ljava/lang/ClassLoader;",
+                                &[],
+                            )
+                            .unwrap();
+
+                        rustls_platform_verifier::android::init_with_refs(
+                            env.get_java_vm().unwrap(),
+                            env.new_global_ref(context).unwrap(),
+                            env.new_global_ref(JObject::try_from(loader).unwrap())
+                                .unwrap(),
+                        );
+                    })
+                });
             // Tray icon stuff
             #[cfg(desktop)]
             {

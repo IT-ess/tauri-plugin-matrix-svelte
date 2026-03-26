@@ -18,6 +18,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.5.4", features = [] }
 
 [dependencies]
+rustls-platform-verifier = "0.6"
 tauri = { version = "2.10.1", features = ["tray-icon"] }
 tauri-plugin-matrix-svelte = { path = "../../../" }
 serde = { version = "1", features = ["derive"] }

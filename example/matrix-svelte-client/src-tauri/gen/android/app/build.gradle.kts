@@ -1,3 +1,4 @@
+import groovy.json.JsonSlurper
 import java.util.Properties
 import java.io.FileInputStream
 
@@ -5,6 +6,44 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("rust")
+}
+
+repositories {
+  rustlsPlatformVerifier()
+}
+
+
+fun RepositoryHandler.rustlsPlatformVerifier(): MavenArtifactRepository {
+  @Suppress("UnstableApiUsage")
+  val manifestPath = let {
+    val dependencyJson = providers.exec {
+      workingDir = File(project.rootDir, "../")
+      commandLine(
+        "cargo",
+        "metadata",
+        "--format-version", "1",
+        "--filter-platform", "aarch64-linux-android",
+        "--manifest-path", "../../../../Cargo.toml"
+      )
+    }.standardOutput.asText
+
+    val parsed = JsonSlurper().parseText(dependencyJson.get()) as Map<String, Any>
+    val packages = parsed["packages"] as List<Map<String, Any>>
+    val path = packages.first { it["name"] == "rustls-platform-verifier-android" }["manifest_path"] as String
+
+    File(path)
+  }
+
+  return maven {
+    url = uri(File(manifestPath.parentFile, "maven").path)
+    metadataSources.artifact()
+  }
+}
+
+
+dependencies {
+  // `rustls-platform-verifier` is a Rust crate, but it also has a Kotlin component.
+  implementation("rustls:rustls-platform-verifier:0.1.1")
 }
 
 val tauriProperties = Properties().apply {
@@ -78,6 +117,7 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("androidx.activity:activity-ktx:1.10.1")
     implementation("com.google.android.material:material:1.12.0")
+    implementation ("rustls:rustls-platform-verifier:0.1.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.4")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
