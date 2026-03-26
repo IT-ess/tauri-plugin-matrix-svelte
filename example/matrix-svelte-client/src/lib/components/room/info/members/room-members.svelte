@@ -3,18 +3,19 @@
 	import { m } from '$lib/paraglide/messages';
 	import { gotoRoomInfo } from '$lib/utils.svelte';
 	import { ChevronLeft, Search } from '@lucide/svelte';
-	import type { RoomStore } from 'tauri-plugin-matrix-svelte-api';
+	import type { FrontendRoomMember, RoomStore } from 'tauri-plugin-matrix-svelte-api';
 	import * as Item from '$lib/components/ui/item/index.js';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import Plus from '@lucide/svelte/icons/plus';
 	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
+	import MemberActions from './member-actions.svelte';
 
 	let { avatar, roomStore }: { avatar: string | null; roomStore: RoomStore } = $props();
 
 	let searchQuery = $state('');
 
-	let members = $derived(Object.entries(roomStore.state.members));
+	let members = $derived(
+		Object.entries(roomStore.state.members).filter((m) => m[1].membership == 'join')
+	);
 
 	let filteredMembers = $derived(
 		searchQuery.trim() == ''
@@ -25,6 +26,20 @@
 						info.name.toLowerCase().includes(searchQuery.toLowerCase())
 				)
 	);
+
+	type ClickedUser = {
+		id: string;
+		name: string;
+		avatar: string | null;
+		role: FrontendRoomMember['role'];
+	};
+	let openMemberActions = $state(false);
+	let clickedUser: ClickedUser | undefined = $state();
+
+	const handleClickOnItem = (user: ClickedUser) => {
+		clickedUser = user;
+		openMemberActions = true;
+	};
 </script>
 
 <div class="bg-background flex h-full w-full flex-col overflow-x-hidden">
@@ -37,7 +52,7 @@
 			>
 				<ChevronLeft class="text-foreground size-6" />
 			</button>
-			<h1 class="pl-2 text-lg font-semibold">People</h1>
+			<h1 class="pl-2 text-lg font-semibold">{m.members()}</h1>
 		</div>
 
 		<div class="relative mx-4 mt-2 p-1">
@@ -53,10 +68,14 @@
 		</div>
 	</header>
 	<div class="pb-safe-offset-4 mt-4 flex w-full max-w-md flex-col gap-4">
-		<p class="ps-3 font-medium">{filteredMembers.length} Members</p>
+		<p class="ps-3 font-medium">{filteredMembers.length} {m.members()}</p>
 		<Item.Group>
 			{#each filteredMembers as [id, info], index (id)}
-				<Item.Root size="sm">
+				<Item.Root
+					onclick={() =>
+						handleClickOnItem({ id, avatar: info.avatar, name: info.name, role: info.role })}
+					size="sm"
+				>
 					<Item.Media>
 						<Avatar.Root>
 							{#if info.avatar}
@@ -82,3 +101,9 @@
 		</Item.Group>
 	</div>
 </div>
+<MemberActions
+	bind:openMemberActions
+	clickedUser={clickedUser as ClickedUser}
+	roomId={roomStore.id}
+	userPower={roomStore.state.tlState?.userPower}
+/>

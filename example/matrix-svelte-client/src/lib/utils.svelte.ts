@@ -84,6 +84,10 @@ export async function gotoRoomMembers(roomId: string, avatarUri: string | null) 
 	);
 }
 
+export async function gotoProfile(matrixUserId: string) {
+	return await goto(`/profile?id=${encodeURIComponent(matrixUserId)}`);
+}
+
 export async function getImageThumbnailBlob(
 	blob: Blob,
 	width = 300

@@ -170,5 +170,13 @@
 	"room_thread_header": "Thread",
 	"creator": "Creator",
 	"administrator": "Admin",
-	"moderator": "Moderator"
+	"moderator": "Moderator",
+	"ban": "Ban",
+	"kick": "Kick",
+	"provide_reason_for_kick": "Why do you kick this user for ?",
+	"provide_reason_for_ban": "Why do you ban this user for ?",
+	"reason": "Reason",
+	"members": "Members",
+	"to_invite": "Invite",
+	"message": "Message"
 }

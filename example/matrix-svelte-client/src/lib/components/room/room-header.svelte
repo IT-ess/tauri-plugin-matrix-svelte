@@ -2,7 +2,6 @@
 	import { ChevronLeft } from '@lucide/svelte';
 	import { Avatar } from '../ui/avatar';
 	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
-	import ActionBurgerMenu from './actions/action-burger-menu.svelte';
 	import { gotoRoomInfo, gotoRoomsList, roomNameToPlainString } from '$lib/utils.svelte';
 	import { roomsCollection } from '../../../hooks.client';
 	import type { RoomStore } from 'tauri-plugin-matrix-svelte-api';
@@ -17,8 +16,6 @@
 
 	// svelte-ignore state_referenced_locally
 	const roomId = roomStore.id;
-
-	let actionRoomDetailsOpen = $state(false);
 
 	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomId].isDirect);
 	// It seems that DM rooms avatar behave differently that regular rooms, so we need to use
@@ -65,7 +62,5 @@
 				{roomsCollection.state.allJoinedRooms[roomId].topic}
 			</p>
 		</div>
-
-		<ActionBurgerMenu {roomStore} {avatarUrl} bind:actionRoomDetailsOpen />
 	</div>
 </header>

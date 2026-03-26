@@ -27,7 +27,9 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel>{m.button_cancel()}</AlertDialog.Cancel>
-			<AlertDialog.Action onclick={handleLeaveRoom}>{m.button_confirm()}</AlertDialog.Action>
+			<AlertDialog.Action variant="destructive" onclick={handleLeaveRoom}
+				>{m.button_confirm()}</AlertDialog.Action
+			>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>

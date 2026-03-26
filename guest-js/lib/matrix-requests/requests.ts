@@ -186,6 +186,16 @@ interface InviteUsersInRoomRequest {
 	};
 }
 
+interface KickOrBanUserFromRoomRequest {
+	event: 'kickOrBanUserFromRoom';
+	payload: {
+		roomId: RoomId;
+		userId: UserId;
+		reason: string | null;
+		isBan: boolean;
+	};
+}
+
 // Union type combining all request types
 export type MatrixRequest =
 	| PaginateRoomTimelineRequest
@@ -211,7 +221,8 @@ export type MatrixRequest =
 	// | GetMatrixRoomLinkPillInfoRequest;
 	| CreateDMRoomRequest
 	| CreateRoomRequest
-	| InviteUsersInRoomRequest;
+	| InviteUsersInRoomRequest
+	| KickOrBanUserFromRoomRequest;
 
 // Export individual types as well for convenience
 export type {
@@ -374,6 +385,13 @@ export const createMatrixRequest = {
 
 	inviteUsersInRoom: (payload: InviteUsersInRoomRequest['payload']): InviteUsersInRoomRequest => ({
 		event: 'inviteUsersInRoom',
+		payload
+	}),
+
+	kickOrBanUserFromRoom: (
+		payload: KickOrBanUserFromRoomRequest['payload']
+	): KickOrBanUserFromRoomRequest => ({
+		event: 'kickOrBanUserFromRoom',
 		payload
 	})
 };

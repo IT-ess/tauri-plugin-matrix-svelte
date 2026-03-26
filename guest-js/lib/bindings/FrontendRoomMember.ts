@@ -7,4 +7,5 @@ export type FrontendRoomMember = {
 	isIgnored: boolean;
 	avatar: string | null;
 	role: 'creator' | 'administrator' | 'moderator' | 'user';
+	membership: 'ban' | 'invite' | 'join' | 'knock' | 'leave';
 };

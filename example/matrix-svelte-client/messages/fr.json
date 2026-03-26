@@ -172,5 +172,13 @@
 	"room_thread_header": "Fil de discussion",
 	"creator": "Créateur",
 	"administrator": "Administrateur",
-	"moderator": "Modérateur"
+	"moderator": "Modérateur",
+	"ban": "Bannir",
+	"kick": "Exclure",
+	"provide_reason_for_kick": "Pourquoi excluez-vous ce membre ?",
+	"provide_reason_for_ban": "Pourquoi bannissez-vous ce membre ?",
+	"reason": "Raison",
+	"members": "Membres",
+	"to_invite": "Inviter",
+	"message": "Message"
 }
