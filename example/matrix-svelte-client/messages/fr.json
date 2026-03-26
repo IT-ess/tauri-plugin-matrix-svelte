@@ -169,5 +169,8 @@
 	"room_input_take_video": "Prendre une vidéo",
 	"room_input_gallery": "Galerie photo et vidéo",
 	"room_input_attached_file": "Pièce jointe",
-	"room_thread_header": "Fil de discussion"
+	"room_thread_header": "Fil de discussion",
+	"creator": "Créateur",
+	"administrator": "Administrateur",
+	"moderator": "Modérateur"
 }

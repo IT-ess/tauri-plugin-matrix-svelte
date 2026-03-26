@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
-	import { CameraIcon, LoaderIcon } from '@lucide/svelte';
+	import { ImageUp, LoaderIcon } from '@lucide/svelte';
 	import { Avatar } from '$lib/components/ui/avatar';
 	import { m } from '$lib/paraglide/messages';
 	import { cn } from '$lib/utils.svelte';
@@ -67,7 +67,7 @@
 				{#if isLoading}
 					<LoaderIcon class="size-4 animate-spin" />
 				{:else}
-					<CameraIcon class="size-4" />
+					<ImageUp class="size-4" />
 				{/if}
 			</button>
 		{/if}

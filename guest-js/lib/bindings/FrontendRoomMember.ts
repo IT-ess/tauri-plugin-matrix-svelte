@@ -5,4 +5,6 @@ export type FrontendRoomMember = {
 	maxPowerLevel: { userPowerLevel: boolean | number };
 	displayNameAmbiguous: boolean;
 	isIgnored: boolean;
+	avatar: string | null;
+	role: 'creator' | 'administrator' | 'moderator' | 'user';
 };

@@ -167,5 +167,8 @@
 	"room_input_take_video": "Record a video",
 	"room_input_gallery": "Picture and video gallery",
 	"room_input_attached_file": "Attachement",
-	"room_thread_header": "Thread"
+	"room_thread_header": "Thread",
+	"creator": "Creator",
+	"administrator": "Admin",
+	"moderator": "Moderator"
 }

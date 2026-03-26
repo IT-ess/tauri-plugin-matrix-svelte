@@ -4,8 +4,8 @@
 	import { m } from '$lib/paraglide/messages';
 	import { Spinner } from '$lib/components/ui/spinner';
 	import RoomSelector from '$lib/components/room-selector/room-selector.svelte';
-	import { roomsCollection } from '../../../../hooks.client';
 	import { createMatrixRequest, submitAsyncRequest } from 'tauri-plugin-matrix-svelte-api';
+	import { roomsCollection } from '../../../../../hooks.client';
 
 	type Props = {
 		actionInviteMembersOpen: boolean;

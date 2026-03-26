@@ -72,6 +72,18 @@ export async function gotoThread(roomId: string, threadRoot: string, avatarUri: 
 	);
 }
 
+export async function gotoRoomInfo(roomId: string, avatarUri: string | null) {
+	return await goto(
+		`/room/info?id=${encodeURIComponent(roomId)}${avatarUri ? '&avatar=' + encodeURIComponent(avatarUri) : ''}`
+	);
+}
+
+export async function gotoRoomMembers(roomId: string, avatarUri: string | null) {
+	return await goto(
+		`/room/info/members?id=${encodeURIComponent(roomId)}${avatarUri ? '&avatar=' + encodeURIComponent(avatarUri) : ''}`
+	);
+}
+
 export async function getImageThumbnailBlob(
 	blob: Blob,
 	width = 300

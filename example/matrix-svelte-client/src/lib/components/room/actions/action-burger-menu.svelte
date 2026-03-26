@@ -9,7 +9,6 @@
 	import { BookUser, EllipsisVertical, LogOut, UserPlus } from '@lucide/svelte';
 	import { m } from '$lib/paraglide/messages';
 	import LeaveRoom from './leave-room.svelte';
-	import InviteMembers from './invite-members.svelte';
 	import RoomDetails from './room-details.svelte';
 	import { roomsCollection } from '../../../../hooks.client';
 	import type { RoomStore } from 'tauri-plugin-matrix-svelte-api';
@@ -66,9 +65,9 @@
 	</DropdownMenu>
 </div>
 <LeaveRoom bind:open={actionLeaveRoomOpen} roomId={roomStore.id} {isDirect} />
-<InviteMembers
+<!-- <InviteMembers
 	bind:actionInviteMembersOpen
 	roomId={roomStore.id}
 	previousUsersIdsList={membersIds}
-/>
+/> -->
 <RoomDetails {roomStore} bind:actionRoomDetailsOpen {switchToAddUser} {avatarUrl} />

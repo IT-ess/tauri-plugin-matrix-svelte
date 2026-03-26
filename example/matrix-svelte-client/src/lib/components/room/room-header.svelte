@@ -3,7 +3,7 @@
 	import { Avatar } from '../ui/avatar';
 	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
 	import ActionBurgerMenu from './actions/action-burger-menu.svelte';
-	import { gotoRoomsList, roomNameToPlainString } from '$lib/utils.svelte';
+	import { gotoRoomInfo, gotoRoomsList, roomNameToPlainString } from '$lib/utils.svelte';
 	import { roomsCollection } from '../../../hooks.client';
 	import type { RoomStore } from 'tauri-plugin-matrix-svelte-api';
 
@@ -57,7 +57,7 @@
 
 		<!-- svelte-ignore a11y_interactive_supports_focus -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<div onclick={() => (actionRoomDetailsOpen = true)} role="button" class="min-w-0 flex-1">
+		<div onclick={() => gotoRoomInfo(roomId, avatarUrl)} role="button" class="min-w-0 flex-1">
 			<h1 class="text-foreground truncate text-base font-semibold">
 				{roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId].roomName)}
 			</h1>
