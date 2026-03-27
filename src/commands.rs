@@ -62,8 +62,8 @@ pub async fn check_homeserver_auth_type()
 }
 
 #[command]
-pub(crate) fn submit_async_request(request: MatrixRequest) -> Result<()> {
-    matrix_ui_serializable::commands::submit_async_request(request).map_err(Error::MatrixLib)
+pub(crate) fn submit_async_request(request: MatrixRequest) {
+    matrix_ui_serializable::commands::submit_async_request(request)
 }
 
 async fn fetch_media_helper(
@@ -74,7 +74,7 @@ async fn fetch_media_helper(
     matrix_ui_serializable::commands::submit_async_request(MatrixRequest::FetchMedia {
         media_request,
         content_sender: tx,
-    })?;
+    });
 
     let image_data: Vec<u8> = match rx.await {
         Ok(data) => match data {
@@ -213,7 +213,7 @@ pub(crate) async fn search_users(search_term: String, limit: u64) -> Result<Vec<
         search_term,
         limit,
         content_sender: tx,
-    })?;
+    });
 
     Ok(rx
         .await
@@ -278,6 +278,11 @@ pub(crate) async fn define_room_informations(payload: EditRoomInformationPayload
     matrix_ui_serializable::commands::define_room_informations(payload)
         .await
         .map_err(Error::MatrixLib)
+}
+
+#[command]
+pub(crate) fn get_dm_room_id_or_create_it(user_id: OwnedUserId) -> Option<OwnedRoomId> {
+    matrix_ui_serializable::commands::get_dm_room_id_or_create_it(user_id)
 }
 
 #[command]

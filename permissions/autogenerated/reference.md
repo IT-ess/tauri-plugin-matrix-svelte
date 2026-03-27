@@ -27,6 +27,7 @@ Default permissions for the plugin
 - `allow-upload-media`
 - `allow-filter-room-list`
 - `allow-define-room-informations`
+- `allow-get-dm-room-id-or-create-it`
 - `allow-register-notifications`
 
 ## Permission Table
@@ -372,6 +373,32 @@ Enables the get_dm_room_from_user_id command without any pre-configured scope.
 <td>
 
 Denies the get_dm_room_from_user_id command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-get-dm-room-id-or-create-it`
+
+</td>
+<td>
+
+Enables the get_dm_room_id_or_create_it command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-get-dm-room-id-or-create-it`
+
+</td>
+<td>
+
+Denies the get_dm_room_id_or_create_it command without any pre-configured scope.
 
 </td>
 </tr>

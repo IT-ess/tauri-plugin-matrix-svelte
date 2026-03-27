@@ -153,6 +153,16 @@ export function defineRoomInformations(payload: EditRoomInformationPayload): Pro
 }
 
 /**
+ * Quick command to get the DM room id of a user, or create the room.
+ * If this command returns "null", then a request to create the DM room
+ * has been sent. You should listen to `NewlyCreatedRoomId` events to
+ * get the id.
+ */
+export function getDmRoomIdOrCreateIt(userId: UserId): Promise<RoomId | null> {
+	return invoke('plugin:matrix-svelte|get_dm_room_id_or_create_it', { userId });
+}
+
+/**
  *
  * Register push notifications on mobile and OS notifications on desktop. On desktop just send empty strings.
  */

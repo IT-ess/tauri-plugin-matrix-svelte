@@ -22,6 +22,7 @@ const COMMANDS: &[&str] = &[
     "upload_media",
     "filter_room_list",
     "define_room_informations",
+    "get_dm_room_id_or_create_it",
     "register_notifications",
 ];
 

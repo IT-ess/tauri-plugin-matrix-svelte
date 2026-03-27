@@ -5,8 +5,34 @@
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { getDmRoomIdOrCreateIt, MatrixSvelteListenEvent } from 'tauri-plugin-matrix-svelte-api';
+	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+	import { gotoRoom } from '$lib/utils.svelte';
+	import { onDestroy } from 'svelte';
+	import { Spinner } from '../ui/spinner';
 
 	let { avatar, name, matrixId }: { avatar?: string; name: string; matrixId: string } = $props();
+
+	let unlistenCreateRoom: UnlistenFn;
+	let isCreatingRoom = $state(false);
+	const handleGotoMessage = async () => {
+		unlistenCreateRoom = await listen<string>(MatrixSvelteListenEvent.NewlyCreatedRoomId, (id) => {
+			gotoRoom(id.payload, null);
+		});
+		const maybeRoomId = await getDmRoomIdOrCreateIt(matrixId);
+
+		if (maybeRoomId) {
+			gotoRoom(maybeRoomId, null);
+		} else {
+			isCreatingRoom = true;
+		}
+	};
+
+	onDestroy(() => {
+		if (unlistenCreateRoom) {
+			unlistenCreateRoom();
+		}
+	});
 </script>
 
 <div class="bg-background flex h-full w-full flex-col">
@@ -35,12 +61,16 @@
 			</h2>
 			<div class="my-4 flex gap-4">
 				<Button
-					onclick={() => {}}
+					onclick={handleGotoMessage}
 					class="flex flex-col gap-2 text-base"
 					size="icon-lg"
 					variant="ghost"
 				>
-					<MessageCircle class="size-7 pl-px" />
+					{#if isCreatingRoom}
+						<Spinner class="size-7" />
+					{:else}
+						<MessageCircle class="size-7 pl-px" />
+					{/if}
 					{m.message()}
 				</Button>
 			</div>
