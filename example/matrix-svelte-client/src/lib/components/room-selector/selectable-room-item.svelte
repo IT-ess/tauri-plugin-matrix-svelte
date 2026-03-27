@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { Avatar } from '$lib/components/ui/avatar';
 	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
-	import { checkUserInProfileStore, cn, roomNameToPlainString } from '$lib/utils.svelte';
+	import { cn, roomNameToPlainString } from '$lib/utils.svelte';
 	import { onMount } from 'svelte';
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-	import { profileStore } from '../../../hooks.client';
-	import type { JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
+	import { fetchUserProfile, type JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
 		room: JoinedRoomInfo;
@@ -17,22 +16,11 @@
 	// svelte-ignore state_referenced_locally
 	const directUserId = room.directUserId;
 
-	let avatarUri = $derived.by(() => {
-		if (
-			directUserId &&
-			profileStore.state[directUserId] &&
-			profileStore.state[directUserId].state === 'loaded' &&
-			profileStore.state[directUserId].data.avatarUrl
-		) {
-			return profileStore.state[directUserId].data.avatarUrl;
+	let avatarUri = $derived.by(async () => {
+		if (directUserId) {
+			return fetchUserProfile(directUserId, room.roomId).then((p) => p.avatarUrl);
 		} else {
 			return room.avatar;
-		}
-	});
-
-	onMount(async () => {
-		if (directUserId) {
-			await checkUserInProfileStore(directUserId);
 		}
 	});
 
@@ -51,9 +39,11 @@
 	onclick={handleToggle}
 >
 	<Avatar>
-		{#if avatarUri}
-			{@render fetchAvatar(avatarUri, roomNameToPlainString(room.roomName))}
-		{/if}
+		{#await avatarUri then uri}
+			{#if uri}
+				{@render fetchAvatar(uri, roomNameToPlainString(room.roomName))}
+			{/if}
+		{/await}
 		{@render avatarFallback(roomNameToPlainString(room.roomName))}
 	</Avatar>
 	<div

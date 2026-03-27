@@ -17,7 +17,7 @@ Build locally, or check Github releases to download the binaries.
 
 ## Trying out the app
 
-Check out the pre-built binaries in the [latest release](https://github.com/IT-ess/tauri-plugin-matrix-svelte/releases). 
+Check out the pre-built binaries in the [latest release](https://github.com/IT-ess/tauri-plugin-matrix-svelte/releases).
 
 ## Running the app in dev mode
 

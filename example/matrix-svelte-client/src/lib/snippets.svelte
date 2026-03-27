@@ -11,7 +11,7 @@
 	<AvatarFallback>{getInitials(username ?? '?')}</AvatarFallback>
 {/snippet}
 
-{#snippet fetchAvatar(mxcUri: string, alt: string)}
+{#snippet fetchAvatar(mxcUri: string, alt: string | null)}
 	{#await fetchMedia({ source: { url: mxcUri }, format: 'File' }) then url}
 		<AvatarImage src={url} {alt} />
 	{/await}

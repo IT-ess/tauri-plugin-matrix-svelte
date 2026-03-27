@@ -24,5 +24,6 @@ permissions = [
     "allow-upload-media",
     "allow-filter-room-list",
     "allow-define-room-informations",
+    "allow-get-dm-room-id-or-create-it",
     "allow-register-notifications",
 ]

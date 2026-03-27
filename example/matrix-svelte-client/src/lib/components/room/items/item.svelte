@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { TimelineItem } from 'tauri-plugin-matrix-svelte-api';
+	import type { FrontendRoomMember, TimelineItem } from 'tauri-plugin-matrix-svelte-api';
 	import { roomsCollection } from '../../../../hooks.client';
 	import MessageLike from './message-like.svelte';
 	import Virtual from './virtual.svelte';
@@ -22,6 +22,7 @@
 		) => void;
 		isInThread?: boolean;
 		roomAvatar: string | null;
+		roomMembers: Record<string, FrontendRoomMember>;
 	};
 
 	let {
@@ -33,7 +34,8 @@
 		onScrollToMessage,
 		handleOpenMediaViewMode,
 		isInThread,
-		roomAvatar
+		roomAvatar,
+		roomMembers
 	}: Props = $props();
 </script>
 
@@ -56,6 +58,7 @@
 			{handleOpenMediaViewMode}
 			{isInThread}
 			{roomAvatar}
+			{roomMembers}
 		/>
 	</div>
 {:else if item.kind === 'virtual'}

@@ -89,6 +89,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
             commands::upload_media,
             commands::filter_room_list,
             commands::define_room_informations,
+            commands::get_dm_room_id_or_create_it,
             commands::register_notifications
         ])
         .setup(|app, api| {

@@ -4,7 +4,6 @@ import { twMerge } from 'tailwind-merge';
 import { m } from './paraglide/messages';
 import { goto } from '$app/navigation';
 import z from 'zod/v4';
-import { profileStore } from '../hooks.client';
 import { readFile } from '@tauri-apps/plugin-fs';
 import { fileTypeFromBlob } from 'file-type';
 import { type RoomDisplayName, uploadMedia } from 'tauri-plugin-matrix-svelte-api';
@@ -25,17 +24,9 @@ export const getInitials = (name: string) => {
 	return name
 		.split(' ')
 		.map((n) => n[0])
+		.splice(0, 2)
 		.join('')
 		.toUpperCase();
-};
-
-export const checkUserInProfileStore = async (userId: string) => {
-	if (!profileStore.state?.[userId]) {
-		await invoke('plugin:matrix-svelte|fetch_user_profile', {
-			userId: userId,
-			roomId: undefined
-		});
-	}
 };
 
 export function roomNameToPlainString(rawName: RoomDisplayName): string {
@@ -69,6 +60,22 @@ export async function gotoThread(roomId: string, threadRoot: string, avatarUri: 
 	return await goto(
 		`/room/thread?id=${encodeURIComponent(roomId)}&threadRoot=${encodeURIComponent(threadRoot)}${avatarUri ? '&avatar=' + encodeURIComponent(avatarUri) : ''}#bottomscroll`
 	);
+}
+
+export async function gotoRoomInfo(roomId: string, avatarUri: string | null) {
+	return await goto(
+		`/room/info?id=${encodeURIComponent(roomId)}${avatarUri ? '&avatar=' + encodeURIComponent(avatarUri) : ''}`
+	);
+}
+
+export async function gotoRoomMembers(roomId: string, avatarUri: string | null) {
+	return await goto(
+		`/room/info/members?id=${encodeURIComponent(roomId)}${avatarUri ? '&avatar=' + encodeURIComponent(avatarUri) : ''}`
+	);
+}
+
+export async function gotoProfile(matrixUserId: string) {
+	return await goto(`/profile?id=${encodeURIComponent(matrixUserId)}`);
 }
 
 export async function getImageThumbnailBlob(

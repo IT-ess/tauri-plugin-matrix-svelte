@@ -322,6 +322,7 @@
 									: undefined}
 								{handleOpenMediaViewMode}
 								roomAvatar={roomAvatarUrl}
+								roomMembers={roomStore.state.members}
 							/>
 						</div>
 					{/each}

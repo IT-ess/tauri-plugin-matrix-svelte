@@ -9,7 +9,6 @@ import type { VerifyDeviceEvent } from './bindings/VerifyDeviceEvent.js';
 import { createMatrixRequest, type MatrixRequest } from './matrix-requests/requests.js';
 
 import { LoginStore } from './stores/login-store.svelte.js';
-import { ProfileStore } from './stores/profiles-store.svelte.js';
 import { RoomStore } from './stores/room-store.svelte.js';
 import { RoomsCollection } from './stores/rooms-collection.svelte.js';
 
@@ -80,6 +79,21 @@ export async function searchUsers(searchTerm: string, limit: number): Promise<Pr
 		searchTerm,
 		limit
 	});
+}
+
+/**
+ * Fetch a user profile. This is cached on Rust side,
+ * so this should be quick. A request to fetch the profile
+ * is done if not available yet.
+ */
+export function fetchUserProfile(userId: UserId, roomId: RoomId | null): Promise<ProfileModel> {
+	return invoke<{ userId: string; username: string | null; avatar: string | null }>(
+		'plugin:matrix-svelte|fetch_user_profile',
+		{
+			userId,
+			roomId
+		}
+	).then((p) => ({ userId: p.userId, avatarUrl: p.avatar, displayName: p.username }));
 }
 
 export async function getAllUserProfiles(): Promise<ProfileModel[]> {
@@ -153,6 +167,16 @@ export function defineRoomInformations(payload: EditRoomInformationPayload): Pro
 }
 
 /**
+ * Quick command to get the DM room id of a user, or create the room.
+ * If this command returns "null", then a request to create the DM room
+ * has been sent. You should listen to `NewlyCreatedRoomId` events to
+ * get the id.
+ */
+export function getDmRoomIdOrCreateIt(userId: UserId): Promise<RoomId | null> {
+	return invoke('plugin:matrix-svelte|get_dm_room_id_or_create_it', { userId });
+}
+
+/**
  *
  * Register push notifications on mobile and OS notifications on desktop. On desktop just send empty strings.
  */
@@ -160,7 +184,7 @@ export function registerNotifications(token: string, userLanguage: string): Prom
 	return invoke('plugin:matrix-svelte|register_notifications', { token, userLanguage });
 }
 
-export { LoginStore, ProfileStore, RoomStore, RoomsCollection, createMatrixRequest };
+export { LoginStore, RoomStore, RoomsCollection, createMatrixRequest };
 
 export * from './bindings/AudioInfo.js';
 export * from './bindings/AudioMessageEventContent.js';

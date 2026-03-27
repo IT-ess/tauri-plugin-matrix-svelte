@@ -87,7 +87,7 @@
 		<Button
 			size="icon"
 			variant="ghost"
-			class="size-8 shrink-0 rounded-full transition-colors hover:bg-primary/10"
+			class="hover:bg-primary/10 size-8 shrink-0 rounded-full transition-colors"
 			onclick={togglePlayback}
 			title={currentState === 'playing' ? 'Pause' : 'Play'}
 		>

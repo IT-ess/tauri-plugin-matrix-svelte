@@ -14,7 +14,11 @@
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { gotoRoom } from '$lib/utils.svelte';
 	import { roomsCollection } from '../../../../hooks.client';
-	import { createMatrixRequest, submitAsyncRequest, MatrixSvelteListenEvent } from 'tauri-plugin-matrix-svelte-api';
+	import {
+		createMatrixRequest,
+		submitAsyncRequest,
+		MatrixSvelteListenEvent
+	} from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
 		actionCreateRoomOpen: boolean;

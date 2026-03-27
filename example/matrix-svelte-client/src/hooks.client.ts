@@ -5,7 +5,6 @@ import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import {
 	LoginStore,
 	MatrixSvelteListenEvent,
-	ProfileStore,
 	RoomsCollection,
 	RoomStore,
 	type RoomCreateEventType
@@ -13,15 +12,12 @@ import {
 
 // Create the store that will track the login state
 const loginStore = new LoginStore();
-// Create the store that gathers the user profiles
-const profileStore = new ProfileStore();
 // Init the room ids store that syncs available rooms with backend
 const roomsCollection = new RoomsCollection();
 
 let storeListener: UnlistenFn;
 
 export const init: ClientInit = async () => {
-	await profileStore.start();
 	await roomsCollection.startStoreAndSendConfirmationEvent();
 	storeListener = await getCurrentWebviewWindow().listen<RoomCreateEventType>(
 		MatrixSvelteListenEvent.RoomCreate,
@@ -51,4 +47,4 @@ export const init: ClientInit = async () => {
 	window.dispatchEvent(splashscreenEvent);
 };
 
-export { roomsCollection, roomStoresMap, storeListener, loginStore, profileStore };
+export { roomsCollection, roomStoresMap, storeListener, loginStore };

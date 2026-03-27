@@ -185,7 +185,7 @@
 	<Button
 		size="icon"
 		variant="ghost"
-		class="size-9 shrink-0 rounded-full transition-colors hover:bg-destructive/10 hover:text-destructive"
+		class="hover:bg-destructive/10 hover:text-destructive size-9 shrink-0 rounded-full transition-colors"
 		onclick={deleteRecording}
 		title="Delete recording"
 	>
@@ -207,7 +207,7 @@
 			<Button
 				size="icon"
 				variant="ghost"
-				class="size-8 shrink-0 rounded-full transition-colors hover:bg-primary/10"
+				class="hover:bg-primary/10 size-8 shrink-0 rounded-full transition-colors"
 				onclick={togglePlayback}
 				title={recorderState === 'playing' ? 'Pause' : 'Play'}
 			>
