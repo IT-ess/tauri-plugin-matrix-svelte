@@ -10,46 +10,31 @@
 	import Button from '../ui/button/button.svelte';
 	import { roomsCollection } from '../../../hooks.client';
 	import { onMount } from 'svelte';
-	import type { ProfileModel, RoomModel } from 'tauri-plugin-matrix-svelte-api';
+	import type { ProfileModel } from 'tauri-plugin-matrix-svelte-api';
+	import { gotoProfile } from '$lib/utils.svelte';
 
 	let {
-		dmRooms,
 		openInviteDrawerOnLoad
 	}: {
-		dmRooms: RoomModel[];
 		openInviteDrawerOnLoad: boolean;
 	} = $props();
 
 	let searchQuery = $state('');
 
-	// Todo: do something on click
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const onSelect = (user: ProfileModel) => {
-		return;
-	};
+	let userIds = $derived(
+		Object.values(roomsCollection.state.allJoinedRooms)
+			.filter((room) => room.directUserId && !room.isTombstoned)
+			.map((room) => room.directUserId as string)
+	);
 
-	// Filter contacts based on search query
-	const filteredProfiles: ProfileModel[] = $derived.by(() => {
+	// Filter contacts based on search query.
+	// Only user id search is supported now.
+	const filteredIds: string[] = $derived.by(() => {
 		if (!searchQuery.trim()) {
-			return dmRooms.map((room) => ({
-				userId: room.dmUserId as string,
-				displayName: room.displayName,
-				avatarUrl: room.avatarUrl
-			}));
+			return userIds;
 		}
 
-		const query = searchQuery.toLowerCase();
-		return dmRooms
-			.filter(
-				(profile) =>
-					(profile.displayName && profile.displayName.toLowerCase().includes(query)) ||
-					(profile.dmUserId && profile.dmUserId.toLowerCase().includes(query))
-			)
-			.map((room) => ({
-				userId: room.dmUserId as string,
-				displayName: room.displayName,
-				avatarUrl: room.avatarUrl
-			}));
+		return userIds.filter((id) => id.toLowerCase().includes(searchQuery.toLowerCase()));
 	});
 
 	let invitedRooms = $derived(Object.values(roomsCollection.state.invitedRooms));
@@ -96,7 +81,7 @@
 
 	<div class="h-full w-full flex-1 overflow-y-auto">
 		<p class="text-muted-foreground mt-2 ml-3 text-sm">
-			{filteredProfiles.length} contact{filteredProfiles.length !== 1 ? 's' : ''}
+			{filteredIds.length} contact{filteredIds.length !== 1 ? 's' : ''}
 		</p>
 		<div class="space-y-2 p-4">
 			<Button class="w-full" onclick={() => (openInviteDrawer = true)}
@@ -122,8 +107,8 @@
 				</Dialog.Content>
 			</Dialog.Root>
 
-			{#each filteredProfiles as profile (profile.userId)}
-				<ProfileItem {profile} {onSelect} />
+			{#each filteredIds as userId (userId)}
+				<ProfileItem {userId} />
 			{:else}
 				<div class="text-center py-8">
 					<p class="text-muted-foreground">{m.contact_selection_no_results()}</p>

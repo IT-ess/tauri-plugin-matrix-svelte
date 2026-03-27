@@ -5,4 +5,4 @@
 	let { data }: PageProps = $props();
 </script>
 
-<ProfileDetails matrixId={data.matrixUserId} avatar={data.avatar} name={data.name} />
+<ProfileDetails profile={data.profile} />

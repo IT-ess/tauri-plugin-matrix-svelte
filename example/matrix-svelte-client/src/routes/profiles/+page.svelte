@@ -23,7 +23,7 @@
 		</div>
 
 		<div class="bg-card flex h-full w-full flex-col rounded-lg border pb-2 shadow-sm">
-			<ProfileList dmRooms={data.dmRooms} openInviteDrawerOnLoad={data.openInviteDrawerOnLoad} />
+			<ProfileList openInviteDrawerOnLoad={data.openInviteDrawerOnLoad} />
 		</div>
 	</div>
 </div>

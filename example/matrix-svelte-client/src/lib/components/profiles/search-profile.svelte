@@ -11,6 +11,7 @@
 		submitAsyncRequest,
 		type ProfileModel
 	} from 'tauri-plugin-matrix-svelte-api';
+	import SearchProfileItem from './search-profile-item.svelte';
 
 	let { parentOpen = $bindable(true) }: { parentOpen: boolean } = $props();
 
@@ -78,10 +79,10 @@
 			{:then profiles}
 				{#if profiles !== undefined}
 					{#each profiles as profile (profile.userId)}
-						<ProfileItem {profile} {onSelect} />
+						<SearchProfileItem {profile} {onSelect} />
 					{:else}
 						{#if isMatrixId}
-							<ProfileItem
+							<SearchProfileItem
 								profile={{ userId: searchQuery, avatarUrl: null, displayName: null }}
 								{onSelect}
 							/>

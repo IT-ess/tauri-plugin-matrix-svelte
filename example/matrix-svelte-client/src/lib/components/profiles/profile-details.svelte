@@ -5,13 +5,18 @@
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
 	import { m } from '$lib/paraglide/messages';
-	import { getDmRoomIdOrCreateIt, MatrixSvelteListenEvent } from 'tauri-plugin-matrix-svelte-api';
+	import {
+		getDmRoomIdOrCreateIt,
+		MatrixSvelteListenEvent,
+		type ProfileModel
+	} from 'tauri-plugin-matrix-svelte-api';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { gotoRoom } from '$lib/utils.svelte';
 	import { onDestroy } from 'svelte';
 	import { Spinner } from '../ui/spinner';
 
-	let { avatar, name, matrixId }: { avatar?: string; name: string; matrixId: string } = $props();
+	let { profile }: { profile: ProfileModel } = $props();
+	let { avatarUrl, displayName, userId } = $derived(profile);
 
 	let unlistenCreateRoom: UnlistenFn;
 	let isCreatingRoom = $state(false);
@@ -19,7 +24,7 @@
 		unlistenCreateRoom = await listen<string>(MatrixSvelteListenEvent.NewlyCreatedRoomId, (id) => {
 			gotoRoom(id.payload, null);
 		});
-		const maybeRoomId = await getDmRoomIdOrCreateIt(matrixId);
+		const maybeRoomId = await getDmRoomIdOrCreateIt(userId);
 
 		if (maybeRoomId) {
 			gotoRoom(maybeRoomId, null);
@@ -48,16 +53,16 @@
 	<div class="flex min-h-3/8 flex-col justify-between">
 		<div class="flex flex-col items-center gap-4">
 			<Avatar.Root class="size-16">
-				{#if avatar}
-					{@render fetchAvatar(avatar, name)}
+				{#if avatarUrl}
+					{@render fetchAvatar(avatarUrl, displayName)}
 				{/if}
-				{@render avatarFallback(name)}
+				{@render avatarFallback(displayName)}
 			</Avatar.Root>
 			<h1 class="text-2xl font-bold">
-				{name}
+				{displayName}
 			</h1>
 			<h2 class="text-muted-foreground text-xl">
-				{matrixId}
+				{userId}
 			</h2>
 			<div class="my-4 flex gap-4">
 				<Button

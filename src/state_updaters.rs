@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use async_trait::async_trait;
 use matrix_ui_serializable::{
     AuthSession, FrontendSyncServiceState, FrontendVerificationState, FullMatrixSession,
-    LoginState, OwnedMxcUri, OwnedUserId, RecoveryState, RoomScreen, RoomsList, UserProfileMap,
+    LoginState, OwnedMxcUri, OwnedUserId, RecoveryState, RoomScreen, RoomsList,
     models::state_updater::{StateUpdater, StateUpdaterFunctions},
 };
 use serde_json::Value;
@@ -19,7 +19,6 @@ use crate::{
 // Keep the same ids as in the JS package !
 const ROOMS_COLLECTION_STORE_ID: &str = "rooms-collection";
 pub const LOGIN_STATE_STORE_ID: &str = "login-state";
-const PROFILES_STORE_ID: &str = "profiles";
 
 #[derive(Debug)]
 pub struct Updaters<R: Runtime> {
@@ -83,26 +82,6 @@ impl<R: Runtime> StateUpdaterFunctions for Updaters<R> {
         )?;
         Ok(())
     }
-    fn update_profile(&self, user_profiles: &UserProfileMap) -> anyhow::Result<()> {
-        let json = serde_json::to_value(user_profiles)?;
-        let mut empty_state = StoreState::new();
-        let state = match json {
-            Value::Object(map) => {
-                let hashmap: HashMap<String, Value> = map.into_iter().collect();
-                empty_state.patch(hashmap);
-                Ok(empty_state)
-            }
-            _ => Err(anyhow!(
-                "Unexpected JSON object received during serialization"
-            )),
-        };
-        self.app_handle.svelte().patch(
-            PROFILES_STORE_ID,
-            state.expect("Wrong state sent to frontend"),
-        )?;
-        Ok(())
-    }
-
     fn update_login_state(
         &self,
         login_state: LoginState,

@@ -10,9 +10,9 @@
 	import { buttonVariants } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { User, Users } from '@lucide/svelte';
-	import { profileStore } from '../../../hooks.client';
 	import {
 		createMatrixRequest,
+		fetchUserProfile,
 		submitAsyncRequest,
 		type InvitedRoomInfo
 	} from 'tauri-plugin-matrix-svelte-api';
@@ -42,24 +42,20 @@
 	let openAlertDialog = $state(false);
 	// svelte-ignore state_referenced_locally
 	const inviterUserId = invitedRoomInfo.inviterInfo ? invitedRoomInfo.inviterInfo.userId : null;
-	onMount(async () => {
-		if (inviterUserId && profileStore.state[inviterUserId] === undefined) {
-			await invoke('plugin:matrix-svelte|fetch_user_profile', {
-				userId: inviterUserId,
-				roomId: invitedRoomInfo.roomId
-			});
-		}
-	});
+	let profile = $derived(
+		inviterUserId ? fetchUserProfile(inviterUserId, invitedRoomInfo.roomId) : null
+	);
 </script>
 
 <Card class="hover:bg-accent/50 cursor-pointer p-4 transition-colors">
 	<button class="relative flex items-center gap-3" onclick={() => (openAlertDialog = true)}>
 		<Avatar class="h-10 w-10">
-			{#if inviterUserId && profileStore.state[inviterUserId] && profileStore.state[inviterUserId].state === 'loaded' && profileStore.state[inviterUserId].data.avatarUrl}
-				{@render fetchAvatar(
-					profileStore.state[inviterUserId].data.avatarUrl,
-					profileStore.state[inviterUserId].data.username ?? '?'
-				)}
+			{#if profile}
+				{#await profile then res}
+					{#if res.avatarUrl}
+						{@render fetchAvatar(res.avatarUrl, res.displayName)}
+					{/if}
+				{/await}
 			{/if}
 			{@render avatarFallback(roomNameToPlainString(invitedRoomInfo.roomName))}
 		</Avatar>

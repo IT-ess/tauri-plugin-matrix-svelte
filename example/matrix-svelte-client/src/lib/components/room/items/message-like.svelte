@@ -8,9 +8,7 @@
 		Trash2Icon
 	} from '@lucide/svelte';
 	import ImageMessage from './image-message.svelte';
-	import { invoke } from '@tauri-apps/api/core';
-	import { onMount } from 'svelte';
-	import { cn, gotoThread } from '$lib/utils.svelte';
+	import { cn, gotoProfile, gotoThread } from '$lib/utils.svelte';
 	import AudioMessage from './audio-message.svelte';
 	import VideoMessage from './video-message.svelte';
 	import FileMessage from './file-message.svelte';
@@ -33,13 +31,14 @@
 	import EditTextMessage from './item-actions/edit-text-message.svelte';
 	import Reactions from './item-actions/reactions.svelte';
 	import { getLocale } from '$lib/paraglide/runtime';
-	import { profileStore } from '../../../../hooks.client';
 	import TextMessage from './text-message.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import ThreadPreview from '../thread/thread-preview.svelte';
 	import {
 		createMatrixRequest,
+		fetchUserProfile,
 		submitAsyncRequest,
+		type FrontendRoomMember,
 		type MessageAbility,
 		type MsgLikeContent
 	} from 'tauri-plugin-matrix-svelte-api';
@@ -68,6 +67,7 @@
 		) => void;
 		isInThread?: boolean;
 		roomAvatar: string | null;
+		roomMembers: Record<string, FrontendRoomMember>;
 	};
 
 	let {
@@ -85,7 +85,8 @@
 		abilities,
 		handleOpenMediaViewMode,
 		isInThread,
-		roomAvatar
+		roomAvatar,
+		roomMembers
 	}: Props = $props();
 
 	let senderId = $derived(data.senderId);
@@ -245,15 +246,6 @@
 			onScrollToMessage(data.inReplyToId);
 		}
 	};
-
-	onMount(async () => {
-		if (profileStore.state[senderId] === undefined) {
-			await invoke('plugin:matrix-svelte|fetch_user_profile', {
-				userId: senderId,
-				roomId
-			});
-		}
-	});
 </script>
 
 <Popover bind:open={showDropdown}>
@@ -279,13 +271,9 @@
 		aria-label="Swipe right to reply"
 	>
 		<PopoverTrigger />
-		<Avatar class="border-primary border">
-			<!-- Reactive store, once the profile is loaded we load the image -->
-			{#if profileStore.state[senderId]?.state === 'loaded' && profileStore.state[senderId].data.avatarUrl}
-				{@render fetchAvatar(
-					profileStore.state[senderId].data.avatarUrl,
-					profileStore.state[senderId]?.data.username
-				)}
+		<Avatar onclick={() => gotoProfile(senderId)} class="border-primary border">
+			{#if roomMembers[senderId]?.avatar}
+				{@render fetchAvatar(roomMembers[senderId].avatar, sender)}
 			{/if}
 			{@render avatarFallback(sender)}
 		</Avatar>

@@ -4,7 +4,6 @@ import { twMerge } from 'tailwind-merge';
 import { m } from './paraglide/messages';
 import { goto } from '$app/navigation';
 import z from 'zod/v4';
-import { profileStore } from '../hooks.client';
 import { readFile } from '@tauri-apps/plugin-fs';
 import { fileTypeFromBlob } from 'file-type';
 import { type RoomDisplayName, uploadMedia } from 'tauri-plugin-matrix-svelte-api';
@@ -28,15 +27,6 @@ export const getInitials = (name: string) => {
 		.splice(0, 2)
 		.join('')
 		.toUpperCase();
-};
-
-export const checkUserInProfileStore = async (userId: string) => {
-	if (!profileStore.state?.[userId]) {
-		await invoke('plugin:matrix-svelte|fetch_user_profile', {
-			userId: userId,
-			roomId: undefined
-		});
-	}
 };
 
 export function roomNameToPlainString(rawName: RoomDisplayName): string {

@@ -9,7 +9,7 @@ use matrix_ui_serializable::models::misc::{
 use matrix_ui_serializable::models::profile::ProfileModel;
 use matrix_ui_serializable::{
     FrontendVerificationState, MatrixRequest, MediaRequestParameters, OwnedDeviceId, OwnedMxcUri,
-    OwnedRoomId, OwnedUserId,
+    OwnedRoomId, OwnedUserId, UserProfile,
 };
 use mime_serde_shim::Wrapper as MimeWrapper;
 use std::sync::mpsc::channel;
@@ -133,8 +133,8 @@ pub(crate) async fn fetch_media(
 pub(crate) async fn fetch_user_profile(
     user_id: OwnedUserId,
     room_id: Option<OwnedRoomId>,
-) -> Result<bool> {
-    matrix_ui_serializable::commands::fetch_user_profile(user_id, room_id)
+) -> Result<UserProfile> {
+    matrix_ui_serializable::commands::fetch_user_profile(user_id, room_id.as_ref())
         .await
         .map_err(Error::MatrixLib)
 }
