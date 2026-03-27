@@ -26,11 +26,9 @@
 
 	let userPowers = $derived(roomStore.state.tlState?.userPower);
 
-	let membersIds = $derived(
-		Object.entries(roomStore.state.members)
-			.filter((m) => m[1].membership == 'join')
-			.map((m) => m[0])
-	);
+	// No need to filter the membership (join, leave...) of each member,
+	// since we already filter it on the backend side.
+	let membersIds = $derived(Object.keys(roomStore.state.members));
 </script>
 
 <div class="bg-background flex h-full w-full flex-col">
