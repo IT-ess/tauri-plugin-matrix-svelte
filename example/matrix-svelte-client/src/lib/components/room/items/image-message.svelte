@@ -40,36 +40,30 @@
 			size: itemContent.info?.size ?? 1
 		});
 	};
+
+	let isLoaded = $state(false);
+
+	let imageWidthOrDefault = $derived(itemContent.info?.w ?? 200);
+	let imageHeightOrDefault = $derived(itemContent.info?.h ?? 200);
 </script>
 
 <div class={cn('bg-card relative mt-1 overflow-hidden', isSticker ? '' : 'rounded-lg border')}>
-	<!-- {#await loadImage()}
-		<div class="relative">
-			<canvas
-				{@attach (canvas) => {
-					if (import.meta.env.DEV) {
-						console.log('Attaching canvas. Blurhash is', blurhash);
-					}
-					const pixels = decode(blurhash, 200, 200);
-					const context = canvas.getContext('2d');
-					const imageData = context?.createImageData(200, 200);
-					if (imageData) {
-						imageData.data.set(pixels);
-						context?.putImageData(imageData, 0, 0);
-					}
-				}}
-				width={200}
-				height={200}
-				class="aspect-video w-full object-cover"
-			></canvas>
-
-			<div class="absolute inset-0 flex items-center justify-center bg-black/20">
-				<div class="rounded-full bg-white/90 px-3 py-1 text-xs">
-					{Math.round(loadingState.progress * 100)}%
-				</div>
-			</div>
-		</div>
-	{:then imageSrc} -->
+	{#if !isLoaded}
+		<canvas
+			{@attach (canvas) => {
+				const pixels = decode(blurhash, imageWidthOrDefault, imageHeightOrDefault);
+				const context = canvas.getContext('2d');
+				const imageData = context?.createImageData(imageWidthOrDefault, imageHeightOrDefault);
+				if (imageData) {
+					imageData.data.set(pixels);
+					context?.putImageData(imageData, 0, 0);
+				}
+			}}
+			width={imageWidthOrDefault}
+			height={imageHeightOrDefault}
+			class="w-full object-cover"
+		></canvas>
+	{/if}
 	<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
 	<img
 		src={imageSrc}
@@ -77,6 +71,7 @@
 		class="w-full cursor-pointer object-cover"
 		role="button"
 		tabindex="0"
+		onload={() => (isLoaded = true)}
 		onclick={() => toggleFullscreen(imageSrc)}
 		onkeydown={(e) => {
 			if (e.key === 'Enter' || e.key === ' ') {

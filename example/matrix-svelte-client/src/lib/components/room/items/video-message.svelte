@@ -6,6 +6,7 @@
 		type VideoMessageEventContent
 	} from 'tauri-plugin-matrix-svelte-api';
 	import { getCustomMxcUriFromOriginal, getUrlFromEncryptedSource } from '$lib/utils.svelte';
+	import { decode } from 'blurhash';
 
 	type Props = {
 		itemContent: VideoMessageEventContent;
@@ -50,35 +51,30 @@
 		});
 		hasClickedToggleFullscreen = false;
 	};
+
+	let isThumbLoaded = $state(false);
+	let imageWidthOrDefault = $derived(itemContent.info?.thumbnail_info?.w ?? 200);
+	let imageHeightOrDefault = $derived(itemContent.info?.thumbnail_info?.h ?? 200);
 </script>
 
 <div class="bg-card relative mt-1 overflow-hidden rounded-lg border">
-	<!-- Blurhash Canvas as optimistic UI -->
-	<!-- <div class="relative">
+	{#if !isThumbLoaded}
 		<canvas
 			{@attach (canvas) => {
-				if (import.meta.env.DEV) {
-					console.log('Attaching canvas. Blurhash is', blurhash);
-				}
-				const pixels = decode(blurhash, 200, 200);
+				const pixels = decode(blurhash, imageWidthOrDefault, imageHeightOrDefault);
 				const context = canvas.getContext('2d');
-				const imageData = context?.createImageData(200, 200);
+				const imageData = context?.createImageData(imageWidthOrDefault, imageHeightOrDefault);
 				if (imageData) {
 					imageData.data.set(pixels);
 					context?.putImageData(imageData, 0, 0);
 				}
 			}}
-			width={200}
-			height={200}
-			class="aspect-video w-full object-cover"
+			width={imageWidthOrDefault}
+			height={imageHeightOrDefault}
+			class="w-full object-cover"
 		></canvas>
+	{/if}
 
-		<div class="absolute inset-0 flex items-center justify-center bg-black/20">
-			<div class="rounded-full bg-white/90 px-3 py-1 text-xs">
-				{Math.round(thumbnailLoadingState.progress * 100)}%
-			</div>
-		</div>
-	</div> -->
 	<div
 		class="relative flex items-center justify-center"
 		onclick={toggleFullscreen}
@@ -88,6 +84,7 @@
 				toggleFullscreen();
 			}
 		}}
+		onload={() => (isThumbLoaded = true)}
 		role="button"
 		tabindex="0"
 	>
