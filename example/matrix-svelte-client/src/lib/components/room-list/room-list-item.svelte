@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Avatar } from '$lib/components/ui/avatar';
+	import { Avatar, AvatarImage } from '$lib/components/ui/avatar';
 	import { Badge } from '$lib/components/ui/badge';
 	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
 	import { roomNameToPlainString } from '$lib/utils.svelte';
@@ -42,9 +42,7 @@
 	tabindex={disabled ? -1 : 0}
 >
 	<Avatar>
-		{#if avatarUri}
-			{@render fetchAvatar(avatarUri, roomNameToPlainString(room.roomName))}
-		{/if}
+		<AvatarImage src={avatarUri} alt={roomNameToPlainString(room.roomName)} />
 		{@render avatarFallback(roomNameToPlainString(room.roomName))}
 	</Avatar>
 	<a

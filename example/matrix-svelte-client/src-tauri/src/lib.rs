@@ -1,14 +1,54 @@
+use tauri::http;
 use tauri::{Emitter, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
-use tauri_plugin_matrix_svelte::AUTH_DEEPLINK_SENDER;
+use tauri_plugin_matrix_svelte::{
+    AUTH_DEEPLINK_SENDER, MEDIA_MANAGER, MediaFormat, MediaRequestParameters, MediaSource,
+    OwnedMxcUri,
+};
 use tauri_plugin_svelte::CborMarshaler;
-use tracing::debug;
+use tracing::{debug, error, info, warn};
 
 mod logging;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default();
+    let mut builder = tauri::Builder::default().register_asynchronous_uri_scheme_protocol(
+        "mxc",
+        |_ctx, request, responder| {
+            warn!("FULL URI {}", request.uri());
+            let media_request = MediaRequestParameters {
+                source: MediaSource::Plain(OwnedMxcUri::from(request.uri().to_string())),
+                format: MediaFormat::File,
+            };
+            tauri::async_runtime::spawn(async move {
+                match MEDIA_MANAGER
+                    .wait()
+                    .get_media_content(&media_request, true)
+                    .await
+                {
+                    Ok(data) => match http::Response::builder().body(data) {
+                        Ok(res) => {
+                            responder.respond(res);
+                            info!("responded to uri request {}", request.uri());
+                        }
+                        Err(e) => {
+                            warn!("Cannot build response. {e}")
+                        }
+                    },
+                    Err(e) => {
+                        error!("Media error: {e}");
+                        responder.respond(
+                            http::Response::builder()
+                                .status(http::StatusCode::BAD_REQUEST)
+                                .header(http::header::CONTENT_TYPE, "text/plain")
+                                .body("failed to get media".as_bytes().to_vec())
+                                .unwrap(),
+                        );
+                    }
+                }
+            });
+        },
+    );
     builder = logging::setup_logging(builder);
 
     #[cfg(desktop)]
