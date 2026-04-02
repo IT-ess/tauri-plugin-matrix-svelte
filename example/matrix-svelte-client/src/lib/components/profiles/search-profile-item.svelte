@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Card } from '$lib/components/ui/card';
-	import { cn, getInitials } from '$lib/utils.svelte';
+	import { cn, getCustomMxcUriFromOriginal, getInitials } from '$lib/utils.svelte';
 	import type { ProfileModel } from 'tauri-plugin-matrix-svelte-api';
 
 	let {
@@ -25,7 +25,7 @@
 >
 	<button class="flex items-center gap-3" onclick={() => onSelect(profile)}>
 		<Avatar class="size-10">
-			<AvatarImage src={profile.avatarUrl} {alt} />
+			<AvatarImage src={getCustomMxcUriFromOriginal(profile.avatarUrl)} {alt} />
 			<AvatarFallback>{getInitials(alt)}</AvatarFallback>
 		</Avatar>
 		<div class="min-w-0 flex-1">

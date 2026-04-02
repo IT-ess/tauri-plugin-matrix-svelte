@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use tauri::http;
+use tauri::http::{self, Uri};
 use tauri::{Emitter, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_matrix_svelte::{
@@ -8,7 +8,7 @@ use tauri_plugin_matrix_svelte::{
     UrlSafe, V2EncryptedFileInfo,
 };
 use tauri_plugin_svelte::CborMarshaler;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, trace};
 
 mod logging;
 
@@ -17,9 +17,18 @@ pub fn run() {
     let mut builder = tauri::Builder::default().register_asynchronous_uri_scheme_protocol(
         "mxc",
         |_ctx, request, responder| {
-            warn!("FULL URI {}", request.uri());
+            // Looks like:
+            // On android and windows: http://mxc.localhost/matrix.org/mediaid?iv=...
+            // On others: mxc://matrix.org/mediaid?iv=...
+            let raw_uri = request.uri();
+            // Android and Windows doesn't support directly using a custom protocol.
+            // So we reconstruct a new_uri matching the common pattern.
+            let uri = if cfg!(any(target_os = "android", target_os = "windows")) {
+                android_windows_to_common_uri(raw_uri)
+            } else {
+                raw_uri.to_owned()
+            };
 
-            let uri = request.uri();
             let mxc_uri = OwnedMxcUri::from(uri.to_string().split('?').next().unwrap());
 
             let media_request: MediaRequestParameters = if let Some(query_str) = uri.query() {
@@ -56,10 +65,10 @@ pub fn run() {
                     Ok(data) => match http::Response::builder().body(data) {
                         Ok(res) => {
                             responder.respond(res);
-                            info!("responded to uri request {}", request.uri());
+                            trace!("responded to uri request {}", request.uri());
                         }
                         Err(e) => {
-                            warn!("Cannot build response. {e}")
+                            error!("Cannot build response. {e}")
                         }
                     },
                     Err(e) => {
@@ -238,4 +247,27 @@ struct MediaQueryParams {
     iv: Base64<Standard, [u8; 16]>,
     /// The SHA-256 Hash
     h: Base64<Standard, [u8; 32]>,
+}
+
+fn android_windows_to_common_uri(raw_uri: &Uri) -> Uri {
+    let mut split_iter = raw_uri.path_and_query().unwrap().as_str().split("/");
+
+    // burn the first /
+    split_iter.next();
+    let new_uri = Uri::builder()
+        .scheme("mxc")
+        .authority(split_iter.next().unwrap())
+        .path_and_query(format!("/{}", split_iter.next().unwrap()));
+    new_uri.build().unwrap()
+}
+
+#[test]
+fn reconstruct_custom_uri() {
+    let uri =
+        Uri::from_static("http://mxc.localhost/matrix.org/mysuperid?iv=MRQMwnE55C0AAAAAAAAAAA");
+    let common_uri = Uri::from_static("mxc://matrix.org/mysuperid?iv=MRQMwnE55C0AAAAAAAAAAA");
+
+    let new_uri = android_windows_to_common_uri(&uri);
+
+    assert_eq!(new_uri, common_uri);
 }

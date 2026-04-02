@@ -2,6 +2,7 @@
 	import { ChevronLeft } from '@lucide/svelte';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import {
+		getCustomMxcUriFromOriginal,
 		getInitials,
 		gotoRoomInfo,
 		gotoRoomsList,
@@ -25,7 +26,9 @@
 	// It seems that DM rooms avatar behave differently that regular rooms, so we need to use
 	// the user's avatar for direct rooms, and use the reactive one for regular rooms
 	let avatarUrl = $derived(
-		isDirect ? initialAvatarUrl : roomsCollection.state.allJoinedRooms[roomId].avatar
+		getCustomMxcUriFromOriginal(
+			isDirect ? initialAvatarUrl : roomsCollection.state.allJoinedRooms[roomId].avatar
+		)
 	);
 	let alt = $derived(roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId].roomName));
 </script>

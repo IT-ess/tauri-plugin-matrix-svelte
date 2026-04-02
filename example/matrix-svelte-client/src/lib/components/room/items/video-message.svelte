@@ -5,7 +5,7 @@
 		videoMessageSourceIsPlain,
 		type VideoMessageEventContent
 	} from 'tauri-plugin-matrix-svelte-api';
-	import { getUrlFromEncryptedSource } from '$lib/utils.svelte';
+	import { getCustomMxcUriFromOriginal, getUrlFromEncryptedSource } from '$lib/utils.svelte';
 
 	type Props = {
 		itemContent: VideoMessageEventContent;
@@ -30,13 +30,13 @@
 	let thumnailSrc = $derived(
 		itemContent.info
 			? videoMessageInfoThumbnailSourceIsPlain(itemContent.info)
-				? itemContent.info.thumbnail_url
+				? getCustomMxcUriFromOriginal(itemContent.info.thumbnail_url)
 				: getUrlFromEncryptedSource(itemContent.info.thumbnail_file)
 			: null
 	);
 	let videoSrc = $derived(
 		videoMessageSourceIsPlain(itemContent)
-			? itemContent.url
+			? (getCustomMxcUriFromOriginal(itemContent.url) as string)
 			: getUrlFromEncryptedSource(itemContent.file)
 	);
 

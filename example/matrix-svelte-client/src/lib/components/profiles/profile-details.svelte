@@ -10,7 +10,7 @@
 		type ProfileModel
 	} from 'tauri-plugin-matrix-svelte-api';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { getInitials, gotoRoom } from '$lib/utils.svelte';
+	import { getCustomMxcUriFromOriginal, getInitials, gotoRoom } from '$lib/utils.svelte';
 	import { onDestroy } from 'svelte';
 	import { Spinner } from '../ui/spinner';
 
@@ -52,7 +52,7 @@
 	<div class="flex min-h-3/8 flex-col justify-between">
 		<div class="flex flex-col items-center gap-4">
 			<Avatar.Root class="size-16">
-				<Avatar.Image src={avatarUrl} alt={displayName} />
+				<Avatar.Image src={getCustomMxcUriFromOriginal(avatarUrl)} alt={displayName} />
 				<Avatar.Fallback>{getInitials(displayName ?? '?')}</Avatar.Fallback>
 			</Avatar.Root>
 			<h1 class="text-2xl font-bold">

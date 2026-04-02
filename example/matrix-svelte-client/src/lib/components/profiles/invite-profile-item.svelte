@@ -2,7 +2,11 @@
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import { Card } from '$lib/components/ui/card';
-	import { getInitials, roomNameToPlainString } from '$lib/utils.svelte';
+	import {
+		getCustomMxcUriFromOriginal,
+		getInitials,
+		roomNameToPlainString
+	} from '$lib/utils.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
@@ -49,7 +53,10 @@
 		<Avatar class="size-10">
 			{#if profile}
 				{#await profile then res}
-					<AvatarImage src={res.avatarUrl} alt={res.displayName ?? '?'} />
+					<AvatarImage
+						src={getCustomMxcUriFromOriginal(res.avatarUrl)}
+						alt={res.displayName ?? '?'}
+					/>
 				{/await}
 			{/if}
 			<AvatarFallback>{getInitials(roomNameToPlainString(invitedRoomInfo.roomName))}</AvatarFallback

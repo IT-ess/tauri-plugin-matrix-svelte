@@ -8,7 +8,13 @@
 		Trash2Icon
 	} from '@lucide/svelte';
 	import ImageMessage from './image-message.svelte';
-	import { cn, getInitials, gotoProfile, gotoThread } from '$lib/utils.svelte';
+	import {
+		cn,
+		getCustomMxcUriFromOriginal,
+		getInitials,
+		gotoProfile,
+		gotoThread
+	} from '$lib/utils.svelte';
 	import AudioMessage from './audio-message.svelte';
 	import VideoMessage from './video-message.svelte';
 	import FileMessage from './file-message.svelte';
@@ -271,7 +277,7 @@
 	>
 		<PopoverTrigger />
 		<Avatar onclick={() => gotoProfile(senderId)} class="border-primary border">
-			<AvatarImage src={roomMembers[senderId]?.avatar} alt={sender} />
+			<AvatarImage src={getCustomMxcUriFromOriginal(roomMembers[senderId]?.avatar)} alt={sender} />
 			<AvatarFallback>{getInitials(sender ?? '?')}</AvatarFallback>
 		</Avatar>
 		<DropdownMenu bind:open={showDropdown}>

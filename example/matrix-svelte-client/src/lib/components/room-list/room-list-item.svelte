@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Badge } from '$lib/components/ui/badge';
-	import { getInitials, roomNameToPlainString } from '$lib/utils.svelte';
+	import {
+		getCustomMxcUriFromOriginal,
+		getInitials,
+		roomNameToPlainString
+	} from '$lib/utils.svelte';
 	import type { JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
@@ -42,7 +46,7 @@
 	tabindex={disabled ? -1 : 0}
 >
 	<Avatar>
-		<AvatarImage src={avatarUri} {alt} />
+		<AvatarImage src={getCustomMxcUriFromOriginal(avatarUri)} {alt} />
 		<AvatarFallback>{getInitials(alt)}</AvatarFallback>
 	</Avatar>
 	<a

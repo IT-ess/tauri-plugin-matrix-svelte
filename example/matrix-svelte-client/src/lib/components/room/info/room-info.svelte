@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getInitials, gotoRoom } from '$lib/utils.svelte';
+	import { getCustomMxcUriFromOriginal, getInitials, gotoRoom } from '$lib/utils.svelte';
 	import { ChevronLeft, SquareArrowRightExit, SquarePen, User, UserPlus } from '@lucide/svelte';
 	import { type RoomStore } from 'tauri-plugin-matrix-svelte-api';
 	import { roomsCollection } from '../../../../hooks.client';
@@ -43,7 +43,7 @@
 	<div class="flex min-h-3/8 flex-col justify-between">
 		<div class="flex flex-col items-center gap-4">
 			<Avatar class="size-24">
-				<AvatarImage src={avatar} alt={roomStore.state.roomName} />
+				<AvatarImage src={getCustomMxcUriFromOriginal(avatar)} alt={roomStore.state.roomName} />
 				<AvatarFallback>{getInitials(roomStore.state.roomName)}</AvatarFallback>
 			</Avatar>
 			<h1 class="text-2xl font-bold">

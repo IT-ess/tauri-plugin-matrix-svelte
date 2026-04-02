@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { decode } from 'blurhash';
-	import { cn, getUrlFromEncryptedSource } from '$lib/utils.svelte';
+	import { cn, getCustomMxcUriFromOriginal, getUrlFromEncryptedSource } from '$lib/utils.svelte';
 	import {
 		imageMessageSourceIsPlain,
 		type ImageMessageEventContent,
@@ -30,7 +30,7 @@
 
 	let imageSrc = $derived(
 		imageMessageSourceIsPlain(itemContent)
-			? itemContent.url
+			? (getCustomMxcUriFromOriginal(itemContent.url) as string)
 			: getUrlFromEncryptedSource(itemContent.file)
 	);
 

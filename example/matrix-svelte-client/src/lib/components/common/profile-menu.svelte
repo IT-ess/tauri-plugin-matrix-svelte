@@ -13,7 +13,7 @@
 		LogOut,
 		Pencil
 	} from '@lucide/svelte';
-	import { cn, getInitials } from '$lib/utils.svelte';
+	import { cn, getCustomMxcUriFromOriginal, getInitials } from '$lib/utils.svelte';
 	import Badge from '../ui/badge/badge.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import { toast } from 'svelte-sonner';
@@ -133,7 +133,7 @@
 	<div class="relative">
 		<Avatar class={cn('border-primary rounded-full border-2', isBig ? 'size-36' : 'size-10')}>
 			<AvatarImage
-				src={loginStore.state.userAvatar}
+				src={getCustomMxcUriFromOriginal(loginStore.state.userAvatar)}
 				alt={loginStore.state.userDisplayName ?? '?'}
 			/>
 			<AvatarFallback>{getInitials(loginStore.state.userDisplayName ?? '?')}</AvatarFallback>

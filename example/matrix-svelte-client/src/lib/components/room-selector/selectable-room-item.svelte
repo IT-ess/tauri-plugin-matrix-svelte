@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
-	import { cn, getInitials, roomNameToPlainString } from '$lib/utils.svelte';
+	import {
+		cn,
+		getCustomMxcUriFromOriginal,
+		getInitials,
+		roomNameToPlainString
+	} from '$lib/utils.svelte';
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { fetchUserProfile, type JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
 
@@ -39,7 +44,7 @@
 >
 	<Avatar>
 		{#await avatarUri then src}
-			<AvatarImage {src} {alt} />
+			<AvatarImage src={getCustomMxcUriFromOriginal(src)} {alt} />
 		{/await}
 		<AvatarFallback>{getInitials(alt)}</AvatarFallback>
 	</Avatar>

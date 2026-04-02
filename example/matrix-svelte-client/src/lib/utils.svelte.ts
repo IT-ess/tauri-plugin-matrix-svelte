@@ -11,6 +11,7 @@ import {
 	type RoomDisplayName,
 	uploadMedia
 } from 'tauri-plugin-matrix-svelte-api';
+import { platform } from '@tauri-apps/plugin-os';
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -194,7 +195,7 @@ export async function getMediaFromFSPath(path: string): Promise<{
 
 export function getUrlFromEncryptedSource(source: EncryptedFile): string {
 	return (
-		source.url +
+		getCustomMxcUriFromOriginal(source.url) +
 		'?iv=' +
 		encodeURIComponent(source.iv) +
 		'&h=' +
@@ -202,4 +203,20 @@ export function getUrlFromEncryptedSource(source: EncryptedFile): string {
 		'&k=' +
 		encodeURIComponent(source.key.k)
 	);
+}
+
+/**
+ * On Android and Windows, using the custom protocol to fetch
+ * media requires to use the http protocol. So our uri should
+ * look like: http://mxc.localhost/...
+ */
+export function getCustomMxcUriFromOriginal(mxcUri: string | null | undefined): string | null {
+	if (!mxcUri) return null;
+	const currentPlatform = platform();
+	if (currentPlatform == 'android' || currentPlatform == 'windows') {
+		const pathAndQuery = mxcUri.slice(6);
+		return 'http://mxc.localhost/' + pathAndQuery;
+	} else {
+		return mxcUri;
+	}
 }

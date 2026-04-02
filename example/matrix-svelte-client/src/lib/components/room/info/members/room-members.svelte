@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Input } from '$lib/components/ui/input';
 	import { m } from '$lib/paraglide/messages';
-	import { getInitials, gotoRoomInfo } from '$lib/utils.svelte';
+	import { getCustomMxcUriFromOriginal, getInitials, gotoRoomInfo } from '$lib/utils.svelte';
 	import { ChevronLeft, Search } from '@lucide/svelte';
 	import type { FrontendRoomMember, RoomStore } from 'tauri-plugin-matrix-svelte-api';
 	import * as Item from '$lib/components/ui/item/index.js';
@@ -77,7 +77,7 @@
 				>
 					<Item.Media>
 						<Avatar.Root>
-							<Avatar.Image src={info.avatar} alt={info.name} />
+							<Avatar.Image src={getCustomMxcUriFromOriginal(info.avatar)} alt={info.name} />
 							<Avatar.Fallback>{getInitials(info.name)}</Avatar.Fallback>
 						</Avatar.Root>
 					</Item.Media>

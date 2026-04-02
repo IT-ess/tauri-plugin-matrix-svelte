@@ -2,7 +2,7 @@
 	import { ImageUp, LoaderIcon } from '@lucide/svelte';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { m } from '$lib/paraglide/messages';
-	import { cn, getInitials } from '$lib/utils.svelte';
+	import { cn, getCustomMxcUriFromOriginal, getInitials } from '$lib/utils.svelte';
 	import { uploadMedia } from 'tauri-plugin-matrix-svelte-api';
 
 	let {
@@ -51,7 +51,7 @@
 <div class="flex flex-col items-center gap-4">
 	<div class="relative">
 		<Avatar class={cn('ring-primary/20 size-24 shadow-lg ring-4', isLoading ? 'opacity-60' : '')}>
-			<AvatarImage src={currentAvatarUri} alt={displayName} />
+			<AvatarImage src={getCustomMxcUriFromOriginal(currentAvatarUri)} alt={displayName} />
 			<AvatarFallback>{getInitials(displayName)}</AvatarFallback>
 		</Avatar>
 		{#if canEdit}
