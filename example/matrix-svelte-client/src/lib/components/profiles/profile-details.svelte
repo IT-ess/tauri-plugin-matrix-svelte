@@ -3,7 +3,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Separator } from '$lib/components/ui/separator';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
-	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import {
 		getDmRoomIdOrCreateIt,
@@ -11,7 +10,7 @@
 		type ProfileModel
 	} from 'tauri-plugin-matrix-svelte-api';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { gotoRoom } from '$lib/utils.svelte';
+	import { getInitials, gotoRoom } from '$lib/utils.svelte';
 	import { onDestroy } from 'svelte';
 	import { Spinner } from '../ui/spinner';
 
@@ -53,10 +52,8 @@
 	<div class="flex min-h-3/8 flex-col justify-between">
 		<div class="flex flex-col items-center gap-4">
 			<Avatar.Root class="size-16">
-				{#if avatarUrl}
-					{@render fetchAvatar(avatarUrl, displayName)}
-				{/if}
-				{@render avatarFallback(displayName)}
+				<Avatar.Image src={avatarUrl} alt={displayName} />
+				<Avatar.Fallback>{getInitials(displayName ?? '?')}</Avatar.Fallback>
 			</Avatar.Root>
 			<h1 class="text-2xl font-bold">
 				{displayName}

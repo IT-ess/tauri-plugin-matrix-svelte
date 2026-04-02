@@ -1,11 +1,8 @@
 <script lang="ts">
-	import { Avatar } from '$lib/components/ui/avatar';
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import { Card } from '$lib/components/ui/card';
-	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
-	import { invoke } from '@tauri-apps/api/core';
-	import { onMount } from 'svelte';
-	import { roomNameToPlainString } from '$lib/utils.svelte';
+	import { getInitials, roomNameToPlainString } from '$lib/utils.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
@@ -49,15 +46,14 @@
 
 <Card class="hover:bg-accent/50 cursor-pointer p-4 transition-colors">
 	<button class="relative flex items-center gap-3" onclick={() => (openAlertDialog = true)}>
-		<Avatar class="h-10 w-10">
+		<Avatar class="size-10">
 			{#if profile}
 				{#await profile then res}
-					{#if res.avatarUrl}
-						{@render fetchAvatar(res.avatarUrl, res.displayName)}
-					{/if}
+					<AvatarImage src={res.avatarUrl} alt={res.displayName ?? '?'} />
 				{/await}
 			{/if}
-			{@render avatarFallback(roomNameToPlainString(invitedRoomInfo.roomName))}
+			<AvatarFallback>{getInitials(roomNameToPlainString(invitedRoomInfo.roomName))}</AvatarFallback
+			>
 		</Avatar>
 
 		<div class="min-w-0 flex-1">

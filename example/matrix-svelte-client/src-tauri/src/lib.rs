@@ -31,6 +31,7 @@ pub fn run() {
 
                         MediaRequestParameters {
                             source: MediaSource::Encrypted(Box::new(encrypted_file)),
+                            // TODO: support thumbnails
                             format: MediaFormat::File,
                         }
                     }

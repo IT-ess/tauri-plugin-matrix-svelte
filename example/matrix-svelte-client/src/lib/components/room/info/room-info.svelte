@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { gotoRoom } from '$lib/utils.svelte';
+	import { getInitials, gotoRoom } from '$lib/utils.svelte';
 	import { ChevronLeft, SquareArrowRightExit, SquarePen, User, UserPlus } from '@lucide/svelte';
 	import { type RoomStore } from 'tauri-plugin-matrix-svelte-api';
 	import { roomsCollection } from '../../../../hooks.client';
@@ -10,8 +10,7 @@
 	import * as Item from '$lib/components/ui/item/index.js';
 	import InviteMembers from './members/invite-members.svelte';
 	import LeaveRoom from './leave-room.svelte';
-	import { Avatar } from '$lib/components/ui/avatar';
-	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import RoomDetails from './room-details.svelte';
 
 	let { avatar, roomStore }: { avatar: string | null; roomStore: RoomStore } = $props();
@@ -44,10 +43,8 @@
 	<div class="flex min-h-3/8 flex-col justify-between">
 		<div class="flex flex-col items-center gap-4">
 			<Avatar class="size-24">
-				{#if avatar}
-					{@render fetchAvatar(avatar, roomStore.state.roomName)}
-				{/if}
-				{@render avatarFallback(roomStore.state.roomName)}
+				<AvatarImage src={avatar} alt={roomStore.state.roomName} />
+				<AvatarFallback>{getInitials(roomStore.state.roomName)}</AvatarFallback>
 			</Avatar>
 			<h1 class="text-2xl font-bold">
 				{roomStore.state.roomName}

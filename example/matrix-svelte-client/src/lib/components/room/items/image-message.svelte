@@ -1,12 +1,8 @@
 <script lang="ts">
 	import { decode } from 'blurhash';
-	import { Button } from '$lib/components/ui/button';
 	import { cn, getUrlFromEncryptedSource } from '$lib/utils.svelte';
-	import { m } from '$lib/paraglide/messages';
 	import {
-		fetchMedia,
 		imageMessageSourceIsPlain,
-		MediaLoadingState,
 		type ImageMessageEventContent,
 		type StickerEventContent
 	} from 'tauri-plugin-matrix-svelte-api';
@@ -32,31 +28,6 @@
 	); // Placeholder blurhash
 	let alt = $derived(itemContent.body);
 
-	// State variables
-	// svelte-ignore state_referenced_locally
-	let loadingState = $state(new MediaLoadingState(itemContent.info?.size ?? 1));
-
-	// Load image function
-	// const loadImage = () => {
-	// 	if (imageMessageSourceIsPlain(itemContent)) {
-	// 		return fetchMedia(
-	// 			{
-	// 				format: 'File',
-	// 				source: { url: itemContent.url }
-	// 			},
-	// 			loadingState
-	// 		);
-	// 	} else {
-	// 		return fetchMedia(
-	// 			{
-	// 				format: 'File',
-	// 				source: { file: itemContent.file }
-	// 			},
-	// 			loadingState
-	// 		);
-	// 	}
-	// };
-
 	let imageSrc = $derived(
 		imageMessageSourceIsPlain(itemContent)
 			? itemContent.url
@@ -64,12 +35,10 @@
 	);
 
 	const toggleFullscreen = (imageSrc: string) => {
-		if (loadingState.isLoaded) {
-			handleOpenMediaViewMode('image', imageSrc, {
-				body: itemContent.body,
-				size: itemContent.info?.size ?? 1
-			});
-		}
+		handleOpenMediaViewMode('image', imageSrc, {
+			body: itemContent.body,
+			size: itemContent.info?.size ?? 1
+		});
 	};
 </script>
 
@@ -116,13 +85,4 @@
 			}
 		}}
 	/>
-	<!-- {:catch}
-		<div class="bg-destructive/80 absolute inset-0 flex items-center justify-center">
-			<div class="text-center text-white">
-				<p class="mb-2 text-sm">{m.failed_to_load()}</p>
-				<Button variant="secondary" size="sm" onclick={() => loadImage()}>{m.button_retry()}</Button
-				>
-			</div>
-		</div>
-	{/await} -->
 </div>

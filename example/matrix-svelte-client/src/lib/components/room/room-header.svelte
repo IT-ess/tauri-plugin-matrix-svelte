@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { ChevronLeft } from '@lucide/svelte';
-	import { Avatar } from '../ui/avatar';
-	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
-	import { gotoRoomInfo, gotoRoomsList, roomNameToPlainString } from '$lib/utils.svelte';
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
+	import {
+		getInitials,
+		gotoRoomInfo,
+		gotoRoomsList,
+		roomNameToPlainString
+	} from '$lib/utils.svelte';
 	import { roomsCollection } from '../../../hooks.client';
 	import type { RoomStore } from 'tauri-plugin-matrix-svelte-api';
 
@@ -23,6 +27,7 @@
 	let avatarUrl = $derived(
 		isDirect ? initialAvatarUrl : roomsCollection.state.allJoinedRooms[roomId].avatar
 	);
+	let alt = $derived(roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId].roomName));
 </script>
 
 <header
@@ -41,17 +46,9 @@
 		</button>
 
 		<Avatar>
-			{#if avatarUrl}
-				{@render fetchAvatar(
-					avatarUrl,
-					roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId].roomName)
-				)}
-			{/if}
-			{@render avatarFallback(
-				roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId].roomName)
-			)}
+			<AvatarImage src={avatarUrl} {alt} />
+			<AvatarFallback>{getInitials(alt)}</AvatarFallback>
 		</Avatar>
-
 		<!-- svelte-ignore a11y_interactive_supports_focus -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div onclick={() => gotoRoomInfo(roomId, avatarUrl)} role="button" class="min-w-0 flex-1">

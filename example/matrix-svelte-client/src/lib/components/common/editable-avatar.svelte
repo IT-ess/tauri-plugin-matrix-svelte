@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
 	import { ImageUp, LoaderIcon } from '@lucide/svelte';
-	import { Avatar } from '$lib/components/ui/avatar';
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { m } from '$lib/paraglide/messages';
-	import { cn } from '$lib/utils.svelte';
+	import { cn, getInitials } from '$lib/utils.svelte';
 	import { uploadMedia } from 'tauri-plugin-matrix-svelte-api';
 
 	let {
@@ -52,10 +51,8 @@
 <div class="flex flex-col items-center gap-4">
 	<div class="relative">
 		<Avatar class={cn('ring-primary/20 size-24 shadow-lg ring-4', isLoading ? 'opacity-60' : '')}>
-			{#if currentAvatarUri}
-				{@render fetchAvatar(currentAvatarUri, displayName)}
-			{/if}
-			{@render avatarFallback(displayName)}
+			<AvatarImage src={currentAvatarUri} alt={displayName} />
+			<AvatarFallback>{getInitials(displayName)}</AvatarFallback>
 		</Avatar>
 		{#if canEdit}
 			<button

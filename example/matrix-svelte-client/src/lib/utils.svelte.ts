@@ -193,7 +193,6 @@ export async function getMediaFromFSPath(path: string): Promise<{
 }
 
 export function getUrlFromEncryptedSource(source: EncryptedFile): string {
-	console.log(source);
 	return (
 		source.url +
 		'?iv=' +

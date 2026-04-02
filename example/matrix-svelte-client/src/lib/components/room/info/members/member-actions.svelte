@@ -1,11 +1,10 @@
 <script lang="ts">
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import { m } from '$lib/paraglide/messages';
-	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import { Button } from '$lib/components/ui/button';
 	import { Ban, User, X } from '@lucide/svelte';
-	import { gotoProfile } from '$lib/utils.svelte';
+	import { getInitials, gotoProfile } from '$lib/utils.svelte';
 	import {
 		createMatrixRequest,
 		submitAsyncRequest,
@@ -59,10 +58,8 @@
 	<Drawer.Content class="pb-safe">
 		<Drawer.Header class="my-5 items-center gap-3">
 			<Avatar.Root class="size-16">
-				{#if clickedUser.avatar}
-					{@render fetchAvatar(clickedUser.avatar, clickedUser.name)}
-				{/if}
-				{@render avatarFallback(clickedUser.name)}
+				<Avatar.Image src={clickedUser.avatar} alt={clickedUser.name} />
+				<Avatar.Fallback>{getInitials(clickedUser.name)}</Avatar.Fallback>
 			</Avatar.Root>
 			<h2 class="mt-2 text-lg font-semibold">{clickedUser.name}</h2>
 		</Drawer.Header>

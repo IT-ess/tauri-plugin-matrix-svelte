@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Sheet from '$lib/components/ui/sheet/index';
 	import { Button, buttonVariants } from '$lib/components/ui/button/index';
-	import { Avatar } from '../ui/avatar';
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import {
 		BellRing,
 		MonitorSmartphone,
@@ -13,9 +13,8 @@
 		LogOut,
 		Pencil
 	} from '@lucide/svelte';
-	import { cn } from '$lib/utils.svelte';
+	import { cn, getInitials } from '$lib/utils.svelte';
 	import Badge from '../ui/badge/badge.svelte';
-	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
@@ -133,10 +132,11 @@
 {#snippet avatar(isBig: boolean)}
 	<div class="relative">
 		<Avatar class={cn('border-primary rounded-full border-2', isBig ? 'size-36' : 'size-10')}>
-			{#if loginStore.state.userAvatar}
-				{@render fetchAvatar(loginStore.state.userAvatar, loginStore.state.userDisplayName ?? '?')}
-			{/if}
-			{@render avatarFallback(loginStore.state.userDisplayName)}
+			<AvatarImage
+				src={loginStore.state.userAvatar}
+				alt={loginStore.state.userDisplayName ?? '?'}
+			/>
+			<AvatarFallback>{getInitials(loginStore.state.userDisplayName ?? '?')}</AvatarFallback>
 		</Avatar>
 		<div class="absolute -bottom-1 -left-1 flex">
 			{@render verificationState(isBig)}

@@ -1,6 +1,5 @@
 const COMMANDS: &[&str] = &[
     "submit_async_request",
-    "fetch_media",
     "fetch_user_profile",
     "get_devices",
     "verify_device",

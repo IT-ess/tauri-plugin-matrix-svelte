@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { Avatar, AvatarImage } from '$lib/components/ui/avatar';
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Badge } from '$lib/components/ui/badge';
-	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
-	import { roomNameToPlainString } from '$lib/utils.svelte';
+	import { getInitials, roomNameToPlainString } from '$lib/utils.svelte';
 	import type { JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
@@ -30,6 +29,7 @@
 			return room.avatar;
 		}
 	});
+	let alt = $derived(roomNameToPlainString(room.roomName));
 </script>
 
 <div
@@ -42,8 +42,8 @@
 	tabindex={disabled ? -1 : 0}
 >
 	<Avatar>
-		<AvatarImage src={avatarUri} alt={roomNameToPlainString(room.roomName)} />
-		{@render avatarFallback(roomNameToPlainString(room.roomName))}
+		<AvatarImage src={avatarUri} {alt} />
+		<AvatarFallback>{getInitials(alt)}</AvatarFallback>
 	</Avatar>
 	<a
 		class="flex-1 space-y-1"

@@ -1,8 +1,6 @@
 <script lang="ts">
-	import { Avatar } from '$lib/components/ui/avatar';
-	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
-	import { cn, roomNameToPlainString } from '$lib/utils.svelte';
-	import { onMount } from 'svelte';
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
+	import { cn, getInitials, roomNameToPlainString } from '$lib/utils.svelte';
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { fetchUserProfile, type JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
 
@@ -23,6 +21,7 @@
 			return room.avatar;
 		}
 	});
+	let alt = $derived(roomNameToPlainString(room.roomName));
 
 	let checked = $state(false);
 	const handleToggle = () => {
@@ -39,12 +38,10 @@
 	onclick={handleToggle}
 >
 	<Avatar>
-		{#await avatarUri then uri}
-			{#if uri}
-				{@render fetchAvatar(uri, roomNameToPlainString(room.roomName))}
-			{/if}
+		{#await avatarUri then src}
+			<AvatarImage {src} {alt} />
 		{/await}
-		{@render avatarFallback(roomNameToPlainString(room.roomName))}
+		<AvatarFallback>{getInitials(alt)}</AvatarFallback>
 	</Avatar>
 	<div
 		class="hover:bg-muted flex w-full items-center justify-between rounded-lg p-2 transition-colors"

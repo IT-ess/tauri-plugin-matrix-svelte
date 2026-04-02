@@ -1,12 +1,11 @@
 <script lang="ts">
 	import { Input } from '$lib/components/ui/input';
 	import { m } from '$lib/paraglide/messages';
-	import { gotoRoomInfo } from '$lib/utils.svelte';
+	import { getInitials, gotoRoomInfo } from '$lib/utils.svelte';
 	import { ChevronLeft, Search } from '@lucide/svelte';
 	import type { FrontendRoomMember, RoomStore } from 'tauri-plugin-matrix-svelte-api';
 	import * as Item from '$lib/components/ui/item/index.js';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
-	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
 	import MemberActions from './member-actions.svelte';
 
 	let { avatar, roomStore }: { avatar: string | null; roomStore: RoomStore } = $props();
@@ -78,10 +77,8 @@
 				>
 					<Item.Media>
 						<Avatar.Root>
-							{#if info.avatar}
-								{@render fetchAvatar(info.avatar, info.name)}
-							{/if}
-							{@render avatarFallback(info.name)}
+							<Avatar.Image src={info.avatar} alt={info.name} />
+							<Avatar.Fallback>{getInitials(info.name)}</Avatar.Fallback>
 						</Avatar.Root>
 					</Item.Media>
 					<Item.Content class="gap-1">
