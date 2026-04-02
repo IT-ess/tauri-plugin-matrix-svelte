@@ -159,7 +159,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
 pub use crate::state_updaters::LOGIN_STATE_STORE_ID;
 pub use matrix_ui_serializable::commands::submit_async_request;
 pub use matrix_ui_serializable::oneshot;
-pub use matrix_ui_serializable::{LOGIN_STORE_READY, MEDIA_MANAGER};
 pub use matrix_ui_serializable::{
-    MatrixRequest, MediaFormat, MediaRequestParameters, MediaSource, OwnedMxcUri,
+    Base64, EncryptedFile, EncryptedFileHashes, EncryptedFileInfo, MatrixRequest, MediaFormat,
+    MediaRequestParameters, MediaSource, OwnedMxcUri, Standard, UrlSafe, V2EncryptedFileInfo,
 };
+pub use matrix_ui_serializable::{LOGIN_STORE_READY, MEDIA_MANAGER};

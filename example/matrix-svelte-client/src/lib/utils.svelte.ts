@@ -6,7 +6,11 @@ import { goto } from '$app/navigation';
 import z from 'zod/v4';
 import { readFile } from '@tauri-apps/plugin-fs';
 import { fileTypeFromBlob } from 'file-type';
-import { type RoomDisplayName, uploadMedia } from 'tauri-plugin-matrix-svelte-api';
+import {
+	type EncryptedFile,
+	type RoomDisplayName,
+	uploadMedia
+} from 'tauri-plugin-matrix-svelte-api';
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -186,4 +190,17 @@ export async function getMediaFromFSPath(path: string): Promise<{
 			? 'image'
 			: 'file';
 	return { filename, mediaSrc, mxcUriPromise, mediaType, blob, mime: res.mime };
+}
+
+export function getUrlFromEncryptedSource(source: EncryptedFile): string {
+	console.log(source);
+	return (
+		source.url +
+		'?iv=' +
+		encodeURIComponent(source.iv) +
+		'&h=' +
+		encodeURIComponent(source.hashes['sha256']) +
+		'&k=' +
+		encodeURIComponent(source.key.k)
+	);
 }

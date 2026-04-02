@@ -1,9 +1,11 @@
+use serde::Deserialize;
 use tauri::http;
 use tauri::{Emitter, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_matrix_svelte::{
-    AUTH_DEEPLINK_SENDER, MEDIA_MANAGER, MediaFormat, MediaRequestParameters, MediaSource,
-    OwnedMxcUri,
+    AUTH_DEEPLINK_SENDER, Base64, EncryptedFile, EncryptedFileHashes, EncryptedFileInfo,
+    MEDIA_MANAGER, MediaFormat, MediaRequestParameters, MediaSource, OwnedMxcUri, Standard,
+    UrlSafe, V2EncryptedFileInfo,
 };
 use tauri_plugin_svelte::CborMarshaler;
 use tracing::{debug, error, info, warn};
@@ -16,10 +18,34 @@ pub fn run() {
         "mxc",
         |_ctx, request, responder| {
             warn!("FULL URI {}", request.uri());
-            let media_request = MediaRequestParameters {
-                source: MediaSource::Plain(OwnedMxcUri::from(request.uri().to_string())),
-                format: MediaFormat::File,
+
+            let uri = request.uri();
+            let mxc_uri = OwnedMxcUri::from(uri.to_string().split('?').next().unwrap());
+
+            let media_request: MediaRequestParameters = if let Some(query_str) = uri.query() {
+                match serde_urlencoded::from_str(query_str) {
+                    Ok(MediaQueryParams { k, iv, h }) => {
+                        let info = EncryptedFileInfo::V2(V2EncryptedFileInfo::new(k, iv));
+                        let hashes = EncryptedFileHashes::with_sha256(h.into_inner());
+                        let encrypted_file = EncryptedFile::new(mxc_uri, info, hashes);
+
+                        MediaRequestParameters {
+                            source: MediaSource::Encrypted(Box::new(encrypted_file)),
+                            format: MediaFormat::File,
+                        }
+                    }
+                    Err(e) => {
+                        error!("Cannot deserialize encrypted media info. {e}");
+                        return;
+                    }
+                }
+            } else {
+                MediaRequestParameters {
+                    source: MediaSource::Plain(mxc_uri),
+                    format: MediaFormat::File,
+                }
             };
+
             tauri::async_runtime::spawn(async move {
                 match MEDIA_MANAGER
                     .wait()
@@ -200,4 +226,15 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[derive(Deserialize)]
+/// Used to deserialize the custom URIs
+struct MediaQueryParams {
+    /// The Base64 URL-safe Key
+    k: Base64<UrlSafe, [u8; 32]>,
+    /// The Base64 Standard IV
+    iv: Base64<Standard, [u8; 16]>,
+    /// The SHA-256 Hash
+    h: Base64<Standard, [u8; 32]>,
 }

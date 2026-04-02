@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { decode } from 'blurhash';
 	import { Button } from '$lib/components/ui/button';
-	import { cn } from '$lib/utils.svelte';
+	import { cn, getUrlFromEncryptedSource } from '$lib/utils.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import {
 		fetchMedia,
@@ -37,25 +37,31 @@
 	let loadingState = $state(new MediaLoadingState(itemContent.info?.size ?? 1));
 
 	// Load image function
-	const loadImage = () => {
-		if (imageMessageSourceIsPlain(itemContent)) {
-			return fetchMedia(
-				{
-					format: 'File',
-					source: { url: itemContent.url }
-				},
-				loadingState
-			);
-		} else {
-			return fetchMedia(
-				{
-					format: 'File',
-					source: { file: itemContent.file }
-				},
-				loadingState
-			);
-		}
-	};
+	// const loadImage = () => {
+	// 	if (imageMessageSourceIsPlain(itemContent)) {
+	// 		return fetchMedia(
+	// 			{
+	// 				format: 'File',
+	// 				source: { url: itemContent.url }
+	// 			},
+	// 			loadingState
+	// 		);
+	// 	} else {
+	// 		return fetchMedia(
+	// 			{
+	// 				format: 'File',
+	// 				source: { file: itemContent.file }
+	// 			},
+	// 			loadingState
+	// 		);
+	// 	}
+	// };
+
+	let imageSrc = $derived(
+		imageMessageSourceIsPlain(itemContent)
+			? itemContent.url
+			: getUrlFromEncryptedSource(itemContent.file)
+	);
 
 	const toggleFullscreen = (imageSrc: string) => {
 		if (loadingState.isLoaded) {
@@ -68,7 +74,7 @@
 </script>
 
 <div class={cn('bg-card relative mt-1 overflow-hidden', isSticker ? '' : 'rounded-lg border')}>
-	{#await loadImage()}
+	<!-- {#await loadImage()}
 		<div class="relative">
 			<canvas
 				{@attach (canvas) => {
@@ -94,23 +100,23 @@
 				</div>
 			</div>
 		</div>
-	{:then imageSrc}
-		<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
-		<img
-			src={imageSrc}
-			{alt}
-			class="w-full cursor-pointer object-cover"
-			role="button"
-			tabindex="0"
-			onclick={() => toggleFullscreen(imageSrc)}
-			onkeydown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					toggleFullscreen(imageSrc);
-				}
-			}}
-		/>
-	{:catch}
+	{:then imageSrc} -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
+	<img
+		src={imageSrc}
+		{alt}
+		class="w-full cursor-pointer object-cover"
+		role="button"
+		tabindex="0"
+		onclick={() => toggleFullscreen(imageSrc)}
+		onkeydown={(e) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				toggleFullscreen(imageSrc);
+			}
+		}}
+	/>
+	<!-- {:catch}
 		<div class="bg-destructive/80 absolute inset-0 flex items-center justify-center">
 			<div class="text-center text-white">
 				<p class="mb-2 text-sm">{m.failed_to_load()}</p>
@@ -118,5 +124,5 @@
 				>
 			</div>
 		</div>
-	{/await}
+	{/await} -->
 </div>
