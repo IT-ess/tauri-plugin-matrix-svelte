@@ -91,6 +91,6 @@
 		<div class="absolute rounded-full bg-white/70">
 			<Play class="text-primary size-12 p-2" />
 		</div>
-		<img src={thumnailSrc} {alt} class="w-full cursor-pointer object-cover" />
+		<img loading="lazy" src={thumnailSrc} {alt} class="w-full cursor-pointer object-cover" />
 	</div>
 </div>

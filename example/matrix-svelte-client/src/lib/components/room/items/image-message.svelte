@@ -68,6 +68,7 @@
 	<img
 		src={imageSrc}
 		{alt}
+		loading="lazy"
 		class="w-full cursor-pointer object-cover"
 		role="button"
 		tabindex="0"
