@@ -75,6 +75,8 @@
 		src={imageSrc}
 		{alt}
 		loading="lazy"
+		decoding="async"
+		fetchpriority="low"
 		class="w-full cursor-pointer object-cover"
 		role="button"
 		tabindex="0"
