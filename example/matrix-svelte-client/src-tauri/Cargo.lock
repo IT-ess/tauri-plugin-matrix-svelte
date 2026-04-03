@@ -3851,6 +3851,7 @@ dependencies = [
 name = "matrix-svelte-client"
 version = "0.3.0"
 dependencies = [
+ "mime_serde_shim",
  "rustls-platform-verifier",
  "serde",
  "serde_json",

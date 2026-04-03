@@ -1,6 +1,6 @@
 <script lang="ts">
 	import AudioPlayer from '$lib/components/audio/audio-player.svelte';
-	import { getCustomMxcUriFromOriginal, getUrlFromEncryptedSource } from '$lib/utils.svelte';
+	import { getCustomMxcUriFromOriginal } from '$lib/utils.svelte';
 	import {
 		audioMessageSourceIsPlain,
 		type AudioMessageEventContent
@@ -14,9 +14,15 @@
 	let { itemContent, isOwn }: Props = $props();
 
 	let src = $derived(
-		audioMessageSourceIsPlain(itemContent)
-			? (getCustomMxcUriFromOriginal(itemContent.url) as string)
-			: getUrlFromEncryptedSource(itemContent.file)
+		(audioMessageSourceIsPlain(itemContent)
+			? getCustomMxcUriFromOriginal(itemContent.url, {
+					mime: itemContent.info?.mimetype ?? undefined,
+					size: itemContent.info?.size ?? undefined
+				})
+			: getCustomMxcUriFromOriginal(itemContent.file, {
+					mime: itemContent.info?.mimetype ?? undefined,
+					size: itemContent.info?.size ?? undefined
+				})) as string
 	);
 </script>
 

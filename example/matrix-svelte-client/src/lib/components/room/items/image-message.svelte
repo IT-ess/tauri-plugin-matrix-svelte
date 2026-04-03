@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { decode } from 'blurhash';
-	import { cn, getCustomMxcUriFromOriginal, getUrlFromEncryptedSource } from '$lib/utils.svelte';
+	import { cn, getCustomMxcUriFromOriginal } from '$lib/utils.svelte';
 	import {
 		imageMessageSourceIsPlain,
 		type ImageMessageEventContent,
@@ -29,9 +29,15 @@
 	let alt = $derived(itemContent.body);
 
 	let imageSrc = $derived(
-		imageMessageSourceIsPlain(itemContent)
-			? (getCustomMxcUriFromOriginal(itemContent.url) as string)
-			: getUrlFromEncryptedSource(itemContent.file)
+		(imageMessageSourceIsPlain(itemContent)
+			? getCustomMxcUriFromOriginal(itemContent.url, {
+					mime: itemContent.info?.mimetype ?? undefined,
+					size: itemContent.info?.size ?? undefined
+				})
+			: getCustomMxcUriFromOriginal(itemContent.file, {
+					mime: itemContent.info?.mimetype ?? undefined,
+					size: itemContent.info?.size ?? undefined
+				})) as string
 	);
 
 	const toggleFullscreen = (imageSrc: string) => {

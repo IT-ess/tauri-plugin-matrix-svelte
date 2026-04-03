@@ -1,11 +1,12 @@
+use mime_serde_shim::Wrapper as MimeWrapper;
 use serde::Deserialize;
-use tauri::http::{self, Uri};
+use tauri::http::{self, HeaderValue, Uri};
 use tauri::{Emitter, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_matrix_svelte::{
     AUTH_DEEPLINK_SENDER, Base64, EncryptedFile, EncryptedFileHashes, EncryptedFileInfo,
-    MEDIA_MANAGER, MediaFormat, MediaRequestParameters, MediaSource, OwnedMxcUri, Standard,
-    UrlSafe, V2EncryptedFileInfo,
+    MEDIA_MANAGER, MediaFormat, MediaRequestParameters, MediaSource, MediaThumbnailSettings,
+    Method, OwnedMxcUri, Standard, UInt, UrlSafe, V2EncryptedFileInfo,
 };
 use tauri_plugin_svelte::CborMarshaler;
 use tracing::{debug, error, trace};
@@ -31,17 +32,57 @@ pub fn run() {
 
             let mxc_uri = OwnedMxcUri::from(uri.to_string().split('?').next().unwrap());
 
-            let media_request: MediaRequestParameters = if let Some(query_str) = uri.query() {
+            let (media_request, mime, size) = if let Some(query_str) = uri.query() {
                 match serde_urlencoded::from_str(query_str) {
-                    Ok(MediaQueryParams { k, iv, h }) => {
-                        let info = EncryptedFileInfo::V2(V2EncryptedFileInfo::new(k, iv));
-                        let hashes = EncryptedFileHashes::with_sha256(h.into_inner());
-                        let encrypted_file = EncryptedFile::new(mxc_uri, info, hashes);
+                    Ok(MediaQueryParams {
+                        k,
+                        iv,
+                        hash,
+                        mime,
+                        size,
+                        th,
+                        tw,
+                        tm,
+                    }) => {
+                        let media_format = if let Some(thumb_height) = th
+                            && let Some(thumb_width) = tw
+                            && let Some(method) = tm
+                        {
+                            MediaFormat::Thumbnail(MediaThumbnailSettings {
+                                method,
+                                width: thumb_width,
+                                height: thumb_height,
+                                animated: false,
+                            })
+                        } else {
+                            MediaFormat::File
+                        };
 
-                        MediaRequestParameters {
-                            source: MediaSource::Encrypted(Box::new(encrypted_file)),
-                            // TODO: support thumbnails
-                            format: MediaFormat::File,
+                        if let Some(k) = k
+                            && let Some(iv) = iv
+                            && let Some(hash) = hash
+                        {
+                            let info = EncryptedFileInfo::V2(V2EncryptedFileInfo::new(k, iv));
+                            let hashes = EncryptedFileHashes::with_sha256(hash.into_inner());
+                            let encrypted_file = EncryptedFile::new(mxc_uri, info, hashes);
+
+                            (
+                                MediaRequestParameters {
+                                    source: MediaSource::Encrypted(Box::new(encrypted_file)),
+                                    format: media_format,
+                                },
+                                mime,
+                                size,
+                            )
+                        } else {
+                            (
+                                MediaRequestParameters {
+                                    source: MediaSource::Plain(mxc_uri),
+                                    format: media_format,
+                                },
+                                mime,
+                                size,
+                            )
                         }
                     }
                     Err(e) => {
@@ -50,19 +91,40 @@ pub fn run() {
                     }
                 }
             } else {
-                MediaRequestParameters {
-                    source: MediaSource::Plain(mxc_uri),
-                    format: MediaFormat::File,
-                }
+                (
+                    MediaRequestParameters {
+                        source: MediaSource::Plain(mxc_uri),
+                        format: MediaFormat::File,
+                    },
+                    None,
+                    None,
+                )
             };
 
             tauri::async_runtime::spawn(async move {
+                let mut response = http::Response::builder()
+                    .header(http::header::CACHE_CONTROL, "public, max-age=3600");
+
+                if let Some(content_length) = size {
+                    response.headers_mut().unwrap().append(
+                        http::header::CONTENT_LENGTH,
+                        HeaderValue::from_str(content_length.to_string().as_str()).unwrap(),
+                    );
+                }
+
+                if let Some(mime) = mime {
+                    response.headers_mut().unwrap().append(
+                        http::header::CONTENT_TYPE,
+                        HeaderValue::from_str(mime.essence_str()).unwrap(),
+                    );
+                }
+
                 match MEDIA_MANAGER
                     .wait()
                     .get_media_content(&media_request, true)
                     .await
                 {
-                    Ok(data) => match http::Response::builder().body(data) {
+                    Ok(data) => match response.status(200).body(data) {
                         Ok(res) => {
                             responder.respond(res);
                             trace!("responded to uri request {}", request.uri());
@@ -242,11 +304,21 @@ pub fn run() {
 /// Used to deserialize the custom URIs
 struct MediaQueryParams {
     /// The Base64 URL-safe Key
-    k: Base64<UrlSafe, [u8; 32]>,
+    k: Option<Base64<UrlSafe, [u8; 32]>>,
     /// The Base64 Standard IV
-    iv: Base64<Standard, [u8; 16]>,
+    iv: Option<Base64<Standard, [u8; 16]>>,
     /// The SHA-256 Hash
-    h: Base64<Standard, [u8; 32]>,
+    hash: Option<Base64<Standard, [u8; 32]>>,
+    /// The optional mime-type
+    mime: Option<MimeWrapper>,
+    /// Optional content length
+    size: Option<UInt>,
+    /// Thumbnail height
+    th: Option<UInt>,
+    /// Thumbnail width
+    tw: Option<UInt>,
+    /// Thumbnail method,
+    tm: Option<Method>,
 }
 
 fn android_windows_to_common_uri(raw_uri: &Uri) -> Uri {

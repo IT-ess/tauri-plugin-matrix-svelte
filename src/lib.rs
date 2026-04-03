@@ -160,6 +160,7 @@ pub use matrix_ui_serializable::commands::submit_async_request;
 pub use matrix_ui_serializable::oneshot;
 pub use matrix_ui_serializable::{
     Base64, EncryptedFile, EncryptedFileHashes, EncryptedFileInfo, MatrixRequest, MediaFormat,
-    MediaRequestParameters, MediaSource, OwnedMxcUri, Standard, UrlSafe, V2EncryptedFileInfo,
+    MediaRequestParameters, MediaSource, MediaThumbnailSettings, Method, OwnedMxcUri, Standard,
+    UInt, UrlSafe, V2EncryptedFileInfo,
 };
 pub use matrix_ui_serializable::{LOGIN_STORE_READY, MEDIA_MANAGER};

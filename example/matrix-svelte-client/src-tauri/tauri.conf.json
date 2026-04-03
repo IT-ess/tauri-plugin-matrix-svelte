@@ -19,12 +19,12 @@
 		],
 		"security": {
 			"csp": {
-				"default-src": "'self' customprotocol: asset:",
+				"default-src": "'self' customprotocol: asset: http://mxc.localhost mxc: http://localhost",
 				"connect-src": "ipc: http://ipc.localhost http://tauri.localhost tauri:",
-				"img-src": "'self' asset: http://asset.localhost blob: data: https: http://mxc.localhost mxc:",
+				"img-src": "'self' asset: http://asset.localhost blob: data: https: http://mxc.localhost mxc: http://localhost",
 				"style-src": "'unsafe-inline' 'self' https://fonts.googleapis.com",
 				"object-src": "'none'",
-				"media-src": "'self' blob: data: asset: http://asset.localhost http://mxc.localhost mxc: https:"
+				"media-src": "'self' blob: data: asset: http://asset.localhost http://mxc.localhost mxc: https: http://localhost"
 			},
 			"capabilities": ["default", "svelte", "ios"]
 		}

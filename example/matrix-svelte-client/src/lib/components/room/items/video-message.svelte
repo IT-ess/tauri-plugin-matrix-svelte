@@ -5,7 +5,7 @@
 		videoMessageSourceIsPlain,
 		type VideoMessageEventContent
 	} from 'tauri-plugin-matrix-svelte-api';
-	import { getCustomMxcUriFromOriginal, getUrlFromEncryptedSource } from '$lib/utils.svelte';
+	import { getCustomMxcUriFromOriginal } from '$lib/utils.svelte';
 	import { decode } from 'blurhash';
 
 	type Props = {
@@ -31,14 +31,29 @@
 	let thumnailSrc = $derived(
 		itemContent.info
 			? videoMessageInfoThumbnailSourceIsPlain(itemContent.info)
-				? getCustomMxcUriFromOriginal(itemContent.info.thumbnail_url)
-				: getUrlFromEncryptedSource(itemContent.info.thumbnail_file)
+				? getCustomMxcUriFromOriginal(itemContent.info.thumbnail_url, {
+						mime: itemContent.info?.thumbnail_info?.mimetype ?? undefined,
+						size: itemContent.info?.thumbnail_info?.size ?? undefined,
+						th: itemContent.info.thumbnail_info?.h ?? undefined,
+						tw: itemContent.info.thumbnail_info?.w ?? undefined,
+						tm: 'crop'
+					})
+				: getCustomMxcUriFromOriginal(itemContent.info.thumbnail_file, {
+						mime: itemContent.info?.mimetype ?? undefined,
+						size: itemContent.info?.size ?? undefined
+					})
 			: null
 	);
 	let videoSrc = $derived(
-		videoMessageSourceIsPlain(itemContent)
-			? (getCustomMxcUriFromOriginal(itemContent.url) as string)
-			: getUrlFromEncryptedSource(itemContent.file)
+		(videoMessageSourceIsPlain(itemContent)
+			? getCustomMxcUriFromOriginal(itemContent.url, {
+					mime: itemContent.info?.mimetype ?? undefined,
+					size: itemContent.info?.size ?? undefined
+				})
+			: getCustomMxcUriFromOriginal(itemContent.file, {
+					mime: itemContent.info?.mimetype ?? undefined,
+					size: itemContent.info?.size ?? undefined
+				})) as string
 	);
 
 	let hasClickedToggleFullscreen = $state(false);

@@ -193,16 +193,72 @@ export async function getMediaFromFSPath(path: string): Promise<{
 	return { filename, mediaSrc, mxcUriPromise, mediaType, blob, mime: res.mime };
 }
 
-export function getUrlFromEncryptedSource(source: EncryptedFile): string {
-	return (
-		getCustomMxcUriFromOriginal(source.url) +
-		'?iv=' +
-		encodeURIComponent(source.iv) +
-		'&h=' +
-		encodeURIComponent(source.hashes['sha256']) +
-		'&k=' +
-		encodeURIComponent(source.key.k)
-	);
+export type MediaSource = string | EncryptedFile;
+
+function isEncryptedFile(value: MediaSource): value is EncryptedFile {
+	return typeof value !== 'string';
+}
+
+/**
+ * Transform a media source into a custom URI handled
+ * by the Tauri handler.
+ */
+export function getCustomMxcUriFromOriginal(
+	source: MediaSource | null | undefined,
+	optionalInfo?: {
+		mime?: string;
+		size?: number;
+		th?: number;
+		tw?: number;
+		tm?: 'crop' | 'scale';
+	}
+): string | null {
+	if (!source) return null;
+
+	if (isEncryptedFile(source)) {
+		return (
+			adaptBaseUriToPlatform(source.url) +
+			'?iv=' +
+			encodeURIComponent(source.iv) +
+			'&hash=' +
+			encodeURIComponent(source.hashes['sha256']) +
+			'&k=' +
+			encodeURIComponent(source.key.k) +
+			(optionalInfo ? '&' + getOptionalQueryParams(optionalInfo) : '')
+		);
+	} else {
+		return (
+			adaptBaseUriToPlatform(source) +
+			(optionalInfo ? '?' + getOptionalQueryParams(optionalInfo) : '')
+		);
+	}
+}
+
+export function getOptionalQueryParams(info: {
+	mime?: string;
+	size?: number;
+	th?: number;
+	tw?: number;
+	tm?: 'crop' | 'scale';
+}): string {
+	const params = [];
+	if (info.mime) {
+		params.push(`mime=${encodeURIComponent(info.mime)}`);
+	}
+	if (info.size) {
+		params.push(`size=${info.size}`);
+	}
+	if (info.th) {
+		params.push(`th=${info.th}`);
+	}
+	if (info.tw) {
+		params.push(`tw=${info.tw}`);
+	}
+	if (info.tm) {
+		params.push(`tm=${info.tm}`);
+	}
+
+	return params.join('&');
 }
 
 /**
@@ -210,12 +266,11 @@ export function getUrlFromEncryptedSource(source: EncryptedFile): string {
  * media requires to use the http protocol. So our uri should
  * look like: http://mxc.localhost/...
  */
-export function getCustomMxcUriFromOriginal(mxcUri: string | null | undefined): string | null {
-	if (!mxcUri) return null;
+function adaptBaseUriToPlatform(mxcUri: string): string {
 	const currentPlatform = platform();
 	if (currentPlatform == 'android' || currentPlatform == 'windows') {
-		const pathAndQuery = mxcUri.slice(6);
-		return 'http://mxc.localhost/' + pathAndQuery;
+		const path = mxcUri.slice(6);
+		return 'http://mxc.localhost/' + path;
 	} else {
 		return mxcUri;
 	}
