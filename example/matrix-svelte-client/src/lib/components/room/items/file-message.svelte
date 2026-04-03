@@ -11,7 +11,6 @@
 	} from 'tauri-plugin-matrix-svelte-api';
 	import { getCustomMxcUriFromOriginal } from '$lib/utils.svelte';
 	import { Spinner } from '$lib/components/ui/spinner';
-	import { fetch } from '@tauri-apps/plugin-http';
 
 	type Props = {
 		itemContent: FileMessageEventContent;
@@ -33,14 +32,12 @@
 		(fileMessageSourceIsPlain(itemContent)
 			? getCustomMxcUriFromOriginal(itemContent.url, {
 					mime: itemContent.info?.mimetype ?? undefined,
-					size: itemContent.info?.size ?? undefined,
+					size: itemContent.info?.size ?? undefined
 					// We force the http scheme, otherwise the tauri http-fetch denies the request.
-					forceHttp: true
 				})
 			: getCustomMxcUriFromOriginal(itemContent.file, {
 					mime: itemContent.info?.mimetype ?? undefined,
-					size: itemContent.info?.size ?? undefined,
-					forceHttp: true
+					size: itemContent.info?.size ?? undefined
 				})) as string
 	);
 

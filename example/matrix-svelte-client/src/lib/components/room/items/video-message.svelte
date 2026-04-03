@@ -72,7 +72,9 @@
 	let imageHeightOrDefault = $derived(itemContent.info?.thumbnail_info?.h ?? 200);
 </script>
 
-<div class="bg-card relative mt-1 overflow-hidden rounded-lg border">
+<div
+	class="bg-card relative mt-1 flex items-center justify-center overflow-hidden rounded-lg border"
+>
 	{#if !isThumbLoaded}
 		<canvas
 			{@attach (canvas) => {
@@ -103,9 +105,10 @@
 		role="button"
 		tabindex="0"
 	>
-		<div class="absolute rounded-full bg-white/70">
-			<Play class="text-primary size-12 p-2" />
-		</div>
 		<img loading="lazy" src={thumnailSrc} {alt} class="w-full cursor-pointer object-cover" />
+	</div>
+
+	<div class="absolute rounded-full bg-white/70">
+		<Play class="text-primary size-12 p-2" />
 	</div>
 </div>

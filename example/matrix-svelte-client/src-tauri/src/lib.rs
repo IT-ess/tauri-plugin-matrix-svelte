@@ -5,8 +5,9 @@ use tauri::{Emitter, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_matrix_svelte::{
     AUTH_DEEPLINK_SENDER, Base64, EncryptedFile, EncryptedFileHashes, EncryptedFileInfo,
-    MEDIA_MANAGER, MediaFormat, MediaRequestParameters, MediaSource, MediaThumbnailSettings,
-    Method, OwnedMxcUri, Standard, UInt, UrlSafe, V2EncryptedFileInfo,
+    MatrixRequest, MediaFormat, MediaRequestParameters, MediaSource, MediaThumbnailSettings,
+    Method, OwnedMxcUri, Standard, UInt, UrlSafe, V2EncryptedFileInfo, oneshot,
+    submit_async_request,
 };
 use tauri_plugin_svelte::CborMarshaler;
 use tracing::{debug, error, trace};
@@ -18,90 +19,90 @@ pub fn run() {
     let mut builder = tauri::Builder::default().register_asynchronous_uri_scheme_protocol(
         "mxc",
         |_ctx, request, responder| {
-            // Looks like:
-            // On android and windows: http://mxc.localhost/matrix.org/mediaid?iv=...
-            // On others: mxc://matrix.org/mediaid?iv=...
-            let raw_uri = request.uri();
-            // Android and Windows doesn't support directly using a custom protocol.
-            // So we reconstruct a new_uri matching the common pattern.
-            let uri = if cfg!(any(target_os = "android", target_os = "windows")) {
-                android_windows_to_common_uri(raw_uri)
-            } else {
-                raw_uri.to_owned()
-            };
+            tauri::async_runtime::spawn(async move {
+                // Looks like:
+                // On android and windows: http://mxc.localhost/matrix.org/mediaid?iv=...
+                // On others: mxc://matrix.org/mediaid?iv=...
+                let raw_uri = request.uri();
+                // Android and Windows doesn't support directly using a custom protocol.
+                // So we reconstruct a new_uri matching the common pattern.
+                let uri = if cfg!(any(target_os = "android", target_os = "windows")) {
+                    android_windows_to_common_uri(raw_uri)
+                } else {
+                    raw_uri.to_owned()
+                };
 
-            let mxc_uri = OwnedMxcUri::from(uri.to_string().split('?').next().unwrap());
+                let mxc_uri = OwnedMxcUri::from(uri.to_string().split('?').next().unwrap());
 
-            let (media_request, mime, size) = if let Some(query_str) = uri.query() {
-                match serde_urlencoded::from_str(query_str) {
-                    Ok(MediaQueryParams {
-                        k,
-                        iv,
-                        hash,
-                        mime,
-                        size,
-                        th,
-                        tw,
-                        tm,
-                    }) => {
-                        let media_format = if let Some(thumb_height) = th
-                            && let Some(thumb_width) = tw
-                            && let Some(method) = tm
-                        {
-                            MediaFormat::Thumbnail(MediaThumbnailSettings {
-                                method,
-                                width: thumb_width,
-                                height: thumb_height,
-                                animated: false,
-                            })
-                        } else {
-                            MediaFormat::File
-                        };
+                let (media_request, mime, size) = if let Some(query_str) = uri.query() {
+                    match serde_urlencoded::from_str(query_str) {
+                        Ok(MediaQueryParams {
+                            k,
+                            iv,
+                            hash,
+                            mime,
+                            size,
+                            th,
+                            tw,
+                            tm,
+                        }) => {
+                            let media_format = if let Some(thumb_height) = th
+                                && let Some(thumb_width) = tw
+                                && let Some(method) = tm
+                            {
+                                MediaFormat::Thumbnail(MediaThumbnailSettings {
+                                    method,
+                                    width: thumb_width,
+                                    height: thumb_height,
+                                    animated: false,
+                                })
+                            } else {
+                                MediaFormat::File
+                            };
 
-                        if let Some(k) = k
-                            && let Some(iv) = iv
-                            && let Some(hash) = hash
-                        {
-                            let info = EncryptedFileInfo::V2(V2EncryptedFileInfo::new(k, iv));
-                            let hashes = EncryptedFileHashes::with_sha256(hash.into_inner());
-                            let encrypted_file = EncryptedFile::new(mxc_uri, info, hashes);
+                            if let Some(k) = k
+                                && let Some(iv) = iv
+                                && let Some(hash) = hash
+                            {
+                                let info = EncryptedFileInfo::V2(V2EncryptedFileInfo::new(k, iv));
+                                let hashes = EncryptedFileHashes::with_sha256(hash.into_inner());
+                                let encrypted_file = EncryptedFile::new(mxc_uri, info, hashes);
 
-                            (
-                                MediaRequestParameters {
-                                    source: MediaSource::Encrypted(Box::new(encrypted_file)),
-                                    format: media_format,
-                                },
-                                mime,
-                                size,
-                            )
-                        } else {
-                            (
-                                MediaRequestParameters {
-                                    source: MediaSource::Plain(mxc_uri),
-                                    format: media_format,
-                                },
-                                mime,
-                                size,
-                            )
+                                (
+                                    MediaRequestParameters {
+                                        source: MediaSource::Encrypted(Box::new(encrypted_file)),
+                                        format: media_format,
+                                    },
+                                    mime,
+                                    size,
+                                )
+                            } else {
+                                (
+                                    MediaRequestParameters {
+                                        source: MediaSource::Plain(mxc_uri),
+                                        format: media_format,
+                                    },
+                                    mime,
+                                    size,
+                                )
+                            }
+                        }
+                        Err(e) => {
+                            error!("Cannot deserialize encrypted media info. {e}");
+                            return;
                         }
                     }
-                    Err(e) => {
-                        error!("Cannot deserialize encrypted media info. {e}");
-                        return;
-                    }
-                }
-            } else {
-                (
-                    MediaRequestParameters {
-                        source: MediaSource::Plain(mxc_uri),
-                        format: MediaFormat::File,
-                    },
-                    None,
-                    None,
-                )
-            };
+                } else {
+                    (
+                        MediaRequestParameters {
+                            source: MediaSource::Plain(mxc_uri),
+                            format: MediaFormat::File,
+                        },
+                        None,
+                        None,
+                    )
+                };
 
-            tauri::async_runtime::spawn(async move {
                 let mut response = http::Response::builder()
                     .header(http::header::CACHE_CONTROL, "public, max-age=3600");
 
@@ -119,12 +120,14 @@ pub fn run() {
                     );
                 }
 
-                match MEDIA_MANAGER
-                    .wait()
-                    .get_media_content(&media_request, true)
-                    .await
-                {
-                    Ok(data) => match response.status(200).body(data) {
+                let (tx, rx) = oneshot::channel();
+                submit_async_request(MatrixRequest::FetchMedia {
+                    media_request,
+                    content_sender: tx,
+                });
+
+                match rx.await {
+                    Ok(Ok(data)) => match response.status(200).body(data) {
                         Ok(res) => {
                             responder.respond(res);
                             trace!("responded to uri request {}", request.uri());
@@ -133,13 +136,23 @@ pub fn run() {
                             error!("Cannot build response. {e}")
                         }
                     },
-                    Err(e) => {
+                    Ok(Err(e)) => {
                         error!("Media error: {e}");
                         responder.respond(
                             http::Response::builder()
                                 .status(http::StatusCode::BAD_REQUEST)
                                 .header(http::header::CONTENT_TYPE, "text/plain")
                                 .body("failed to get media".as_bytes().to_vec())
+                                .unwrap(),
+                        );
+                    }
+                    Err(e) => {
+                        error!("Channel error: {e}");
+                        responder.respond(
+                            http::Response::builder()
+                                .status(http::StatusCode::INTERNAL_SERVER_ERROR)
+                                .header(http::header::CONTENT_TYPE, "text/plain")
+                                .body("failed to get media, channel error".as_bytes().to_vec())
                                 .unwrap(),
                         );
                     }
