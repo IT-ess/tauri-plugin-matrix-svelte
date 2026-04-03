@@ -1,12 +1,15 @@
+use anyhow::anyhow;
 use matrix_ui_serializable::commands::VerifyDeviceEvent;
-use matrix_ui_serializable::models::events::{FrontendDevice, MatrixLoginPayload};
+use matrix_ui_serializable::models::events::{
+    FrontendDevice, MatrixLoginPayload, MediaStreamEvent,
+};
 use matrix_ui_serializable::models::misc::{
     EditRoomInformationPayload, EditUserInformationPayload,
 };
 use matrix_ui_serializable::models::profile::ProfileModel;
 use matrix_ui_serializable::{
-    FrontendVerificationState, MatrixRequest, OwnedDeviceId, OwnedMxcUri, OwnedRoomId, OwnedUserId,
-    UserProfile,
+    FrontendVerificationState, MatrixRequest, MediaRequestParameters, OwnedDeviceId, OwnedMxcUri,
+    OwnedRoomId, OwnedUserId, UserProfile,
 };
 use mime_serde_shim::Wrapper as MimeWrapper;
 use std::sync::mpsc::channel;
@@ -61,6 +64,69 @@ pub async fn check_homeserver_auth_type()
 #[command]
 pub(crate) fn submit_async_request(request: MatrixRequest) {
     matrix_ui_serializable::commands::submit_async_request(request)
+}
+
+async fn fetch_media_helper(
+    media_request: MediaRequestParameters,
+    on_event: &Channel<MediaStreamEvent>,
+) -> anyhow::Result<usize> {
+    let (tx, rx) = matrix_ui_serializable::oneshot::channel();
+    matrix_ui_serializable::commands::submit_async_request(MatrixRequest::FetchMedia {
+        media_request,
+        content_sender: tx,
+    });
+
+    let image_data: Vec<u8> = match rx.await {
+        Ok(data) => match data {
+            Ok(data) => data,
+            Err(e) => return Err(anyhow!("Failed to fetch image: {}", e)),
+        },
+        Err(e) => return Err(anyhow!("Media receiver failed: {}", e)),
+    };
+
+    // Stream the image in chunks of 8KB
+    const CHUNK_SIZE: usize = 8192;
+    let mut bytes_sent = 0;
+
+    for chunk in image_data.chunks(CHUNK_SIZE) {
+        bytes_sent += chunk.len();
+
+        if let Err(e) = on_event.send(MediaStreamEvent::Chunk {
+            data: chunk.to_vec(),
+            chunk_size: chunk.len(),
+            bytes_received: bytes_sent,
+        }) {
+            return Err(anyhow!("Failed to send media chunk: {}", e));
+        }
+    }
+    Ok(bytes_sent)
+}
+
+#[tauri::command]
+pub(crate) async fn fetch_media(
+    media_request: MediaRequestParameters,
+    on_event: Channel<MediaStreamEvent>,
+) -> Result<()> {
+    on_event
+        .send(MediaStreamEvent::Started)
+        .map_err(anyhow::Error::from)?;
+
+    match fetch_media_helper(media_request, &on_event).await {
+        Ok(total_bytes) => {
+            on_event
+                .send(MediaStreamEvent::Finished { total_bytes })
+                .map_err(anyhow::Error::from)?;
+            Ok(())
+        }
+        Err(e) => {
+            on_event
+                .send(MediaStreamEvent::Error {
+                    message: e.to_string(),
+                })
+                .map_err(anyhow::Error::from)?;
+            Err(Error::Anyhow(e))
+        }
+    }
 }
 
 #[command]

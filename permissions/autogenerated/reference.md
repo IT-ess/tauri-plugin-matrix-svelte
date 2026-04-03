@@ -5,6 +5,7 @@ Default permissions for the plugin
 #### This default permission set includes the following:
 
 - `allow-submit-async-request`
+- `allow-fetch-media`
 - `allow-fetch-user-profile`
 - `allow-get-devices`
 - `allow-verify-device`
@@ -216,6 +217,32 @@ Enables the edit_user_information command without any pre-configured scope.
 <td>
 
 Denies the edit_user_information command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-fetch-media`
+
+</td>
+<td>
+
+Enables the fetch_media command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-fetch-media`
+
+</td>
+<td>
+
+Denies the fetch_media command without any pre-configured scope.
 
 </td>
 </tr>

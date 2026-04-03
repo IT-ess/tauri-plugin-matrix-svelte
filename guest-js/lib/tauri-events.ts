@@ -54,3 +54,30 @@ type ToastNotificationVariant =
 	| 'info'
 	| 'warning'
 	| 'error';
+
+// Channel events
+
+export type MediaStreamEvent =
+	| {
+			event: 'started';
+	  }
+	| {
+			event: 'chunk';
+			data: {
+				data: number[];
+				chunkSize: number;
+				bytesReceived: number;
+			};
+	  }
+	| {
+			event: 'finished';
+			data: {
+				totalBytes: number;
+			};
+	  }
+	| {
+			event: 'error';
+			data: {
+				message: string;
+			};
+	  };

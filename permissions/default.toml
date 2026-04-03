@@ -2,6 +2,7 @@
 description = "Default permissions for the plugin"
 permissions = [
     "allow-submit-async-request",
+    "allow-fetch-media",
     "allow-fetch-user-profile",
     "allow-get-devices",
     "allow-verify-device",

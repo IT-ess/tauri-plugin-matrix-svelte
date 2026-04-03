@@ -67,6 +67,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
     Builder::<R, PluginConfig>::new("matrix-svelte")
         .invoke_handler(tauri::generate_handler![
             commands::submit_async_request,
+            commands::fetch_media,
             commands::fetch_user_profile,
             commands::get_devices,
             commands::verify_device,
