@@ -66,7 +66,7 @@
 
 	onMount(async () => {
 		try {
-			fileExistsInFs = await exists(alt, {
+			fileExistsInFs = await exists('download/' + alt, {
 				baseDir: BaseDirectory.AppLocalData
 			});
 		} catch (err) {
