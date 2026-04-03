@@ -24,6 +24,7 @@
 		submitAsyncRequest,
 		isVideoOrImageInfo
 	} from 'tauri-plugin-matrix-svelte-api';
+	import { Spinner } from '$lib/components/ui/spinner';
 
 	type Props = {
 		roomStore: RoomStore;
@@ -253,16 +254,21 @@
 
 <div class="bg-background pb-tauri-bottom-safe relative flex h-full flex-col">
 	<ThreadHeader {roomStore} initialAvatarUrl={roomAvatarUrl} />
-	<div class={cn('w-full flex-1 overflow-hidden')}>
-		<ScrollArea bind:viewportRef={viewportElement} class="h-full bg-white">
-			<div class="flex flex-col gap-4 p-4 pb-2">
-				{#if isLoadingMore}
-					<div class="flex justify-center py-2" transition:fade|local>
-						<LoaderIcon class="text-muted-foreground h-6 w-6 animate-spin" />
-					</div>
-				{/if}
 
-				{#if threadItems}
+	{#if !threadItems}
+		<div class="flex h-full w-full items-center justify-center">
+			<Spinner class="size-8" />
+		</div>
+	{:else}
+		<div class={cn('w-full flex-1 overflow-hidden')}>
+			<ScrollArea bind:viewportRef={viewportElement} class="h-full bg-white">
+				<div class="flex flex-col gap-4 p-4 pb-2">
+					{#if isLoadingMore}
+						<div class="flex justify-center py-2" transition:fade|local>
+							<LoaderIcon class="text-muted-foreground h-6 w-6 animate-spin" />
+						</div>
+					{/if}
+
 					{#each threadItems as item (item.uniqueId)}
 						<div transition:fade|local>
 							<Item
@@ -283,34 +289,33 @@
 							/>
 						</div>
 					{/each}
-				{:else}
-					<b>Error: timeline state should be defined</b>
-				{/if}
-				<div id="bottomscroll"></div>
-			</div>
-		</ScrollArea>
-	</div>
 
-	{#if showScrollButton && !replyingTo}
-		<div transition:fade class="absolute right-4 bottom-32 z-10">
-			<Button
-				size="icon"
-				variant="secondary"
-				onclick={() => scroll.scrollToBottom()}
-				class="rounded-full shadow-lg"
-			>
-				<ArrowDownIcon class="h-4 w-4" />
-			</Button>
+					<div id="bottomscroll"></div>
+				</div>
+			</ScrollArea>
 		</div>
-	{/if}
 
-	<RoomInput
-		{roomStore}
-		bind:replyingTo
-		{handleOpenMediaSendMode}
-		{handleSendAudioMessage}
-		threadRootEventId={rootEventId}
-	/>
+		{#if showScrollButton && !replyingTo}
+			<div transition:fade class="absolute right-4 bottom-32 z-10">
+				<Button
+					size="icon"
+					variant="secondary"
+					onclick={() => scroll.scrollToBottom()}
+					class="rounded-full shadow-lg"
+				>
+					<ArrowDownIcon class="h-4 w-4" />
+				</Button>
+			</div>
+		{/if}
+
+		<RoomInput
+			{roomStore}
+			bind:replyingTo
+			{handleOpenMediaSendMode}
+			{handleSendAudioMessage}
+			threadRootEventId={rootEventId}
+		/>
+	{/if}
 </div>
 
 {#if showMediaViewer && mediaViewerSrc}
