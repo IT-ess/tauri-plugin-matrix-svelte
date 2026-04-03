@@ -33,14 +33,11 @@
 			? videoMessageInfoThumbnailSourceIsPlain(itemContent.info)
 				? getCustomMxcUriFromOriginal(itemContent.info.thumbnail_url, {
 						mime: itemContent.info?.thumbnail_info?.mimetype ?? undefined,
-						size: itemContent.info?.thumbnail_info?.size ?? undefined,
-						th: itemContent.info.thumbnail_info?.h ?? undefined,
-						tw: itemContent.info.thumbnail_info?.w ?? undefined,
-						tm: 'crop'
+						size: itemContent.info?.thumbnail_info?.size ?? undefined
 					})
 				: getCustomMxcUriFromOriginal(itemContent.info.thumbnail_file, {
-						mime: itemContent.info?.mimetype ?? undefined,
-						size: itemContent.info?.size ?? undefined
+						mime: itemContent.info?.thumbnail_info?.mimetype ?? undefined,
+						size: itemContent.info?.thumbnail_info?.size ?? undefined
 					})
 			: null
 	);
@@ -60,11 +57,16 @@
 	const toggleFullscreen = () => {
 		if (hasClickedToggleFullscreen) return;
 		hasClickedToggleFullscreen = true;
-		handleOpenMediaViewMode('video', videoSrc, {
-			body: itemContent.body,
-			size: itemContent.info?.size ?? 1
-		});
-		hasClickedToggleFullscreen = false;
+		try {
+			handleOpenMediaViewMode('video', videoSrc, {
+				body: itemContent.body,
+				size: itemContent.info?.size ?? 1
+			});
+		} catch (err) {
+			console.error(err);
+		} finally {
+			hasClickedToggleFullscreen = false;
+		}
 	};
 
 	let isThumbLoaded = $state(false);
@@ -101,14 +103,19 @@
 				toggleFullscreen();
 			}
 		}}
-		onload={() => (isThumbLoaded = true)}
 		role="button"
 		tabindex="0"
 	>
-		<img loading="lazy" src={thumnailSrc} {alt} class="w-full cursor-pointer object-cover" />
+		<img
+			loading="lazy"
+			onload={() => (isThumbLoaded = true)}
+			src={thumnailSrc}
+			{alt}
+			class="w-full cursor-pointer object-cover"
+		/>
 	</div>
 
-	<div class="absolute rounded-full bg-white/70">
+	<button onclick={toggleFullscreen} class="absolute rounded-full bg-white/70">
 		<Play class="text-primary size-12 p-2" />
-	</div>
+	</button>
 </div>

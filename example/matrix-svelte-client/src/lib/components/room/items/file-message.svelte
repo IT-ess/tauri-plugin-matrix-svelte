@@ -65,9 +65,13 @@
 	};
 
 	onMount(async () => {
-		fileExistsInFs = await exists(alt, {
-			baseDir: BaseDirectory.AppLocalData
-		});
+		try {
+			fileExistsInFs = await exists(alt, {
+				baseDir: BaseDirectory.AppLocalData
+			});
+		} catch (err) {
+			console.error(err);
+		}
 	});
 </script>
 
