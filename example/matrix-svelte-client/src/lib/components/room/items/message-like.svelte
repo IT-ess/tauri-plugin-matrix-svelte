@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Avatar } from '$lib/components/ui/avatar';
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import {
 		MessageSquareReply,
 		MessagesSquare,
@@ -8,7 +8,13 @@
 		Trash2Icon
 	} from '@lucide/svelte';
 	import ImageMessage from './image-message.svelte';
-	import { cn, gotoProfile, gotoThread } from '$lib/utils.svelte';
+	import {
+		cn,
+		getCustomMxcUriFromOriginal,
+		getInitials,
+		gotoProfile,
+		gotoThread
+	} from '$lib/utils.svelte';
 	import AudioMessage from './audio-message.svelte';
 	import VideoMessage from './video-message.svelte';
 	import FileMessage from './file-message.svelte';
@@ -27,7 +33,6 @@
 	import PopoverTrigger from '$lib/components/ui/popover/popover-trigger.svelte';
 	import { Tween } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
-	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
 	import EditTextMessage from './item-actions/edit-text-message.svelte';
 	import Reactions from './item-actions/reactions.svelte';
 	import { getLocale } from '$lib/paraglide/runtime';
@@ -272,10 +277,8 @@
 	>
 		<PopoverTrigger />
 		<Avatar onclick={() => gotoProfile(senderId)} class="border-primary border">
-			{#if roomMembers[senderId]?.avatar}
-				{@render fetchAvatar(roomMembers[senderId].avatar, sender)}
-			{/if}
-			{@render avatarFallback(sender)}
+			<AvatarImage src={getCustomMxcUriFromOriginal(roomMembers[senderId]?.avatar)} alt={sender} />
+			<AvatarFallback>{getInitials(sender ?? '?')}</AvatarFallback>
 		</Avatar>
 		<DropdownMenu bind:open={showDropdown}>
 			<DropdownMenuTrigger />

@@ -3851,9 +3851,11 @@ dependencies = [
 name = "matrix-svelte-client"
 version = "0.3.0"
 dependencies = [
+ "mime_serde_shim",
  "rustls-platform-verifier",
  "serde",
  "serde_json",
+ "serde_urlencoded",
  "tauri",
  "tauri-build",
  "tauri-plugin-clipboard-manager",
@@ -3878,7 +3880,7 @@ dependencies = [
 [[package]]
 name = "matrix-ui-serializable"
 version = "0.2.0"
-source = "git+https://github.com/IT-ess/matrix-ui-serializable#9153f080e9e9dc87843db08e7a34b1d416709d82"
+source = "git+https://github.com/IT-ess/matrix-ui-serializable#09dccbaa6b4da006bd68557938a0ac5bf314c0dd"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6127,6 +6129,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6662b5879511e06e8999a8a235d848113e942c9124f211511b16466ee2995f26"
 dependencies = [
  "serde_core",
+]
+
+[[package]]
+name = "serde_urlencoded"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3491c14715ca2294c4d6a88f15e84739788c1d030eed8c110436aafdaa2f3fd"
+dependencies = [
+ "form_urlencoded",
+ "itoa",
+ "ryu",
+ "serde",
 ]
 
 [[package]]

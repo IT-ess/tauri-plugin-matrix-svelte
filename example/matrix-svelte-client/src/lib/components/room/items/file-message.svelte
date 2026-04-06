@@ -61,7 +61,7 @@
 
 			onEvent.onmessage = (message) => {
 				if (message.event === 'started') {
-					console.log(`Starting image fetch, total size: ${totalSize} bytes`);
+					console.log(`Starting file fetch, total size: ${totalSize} bytes`);
 					return;
 				}
 
@@ -88,14 +88,14 @@
 					fileBuffer = combined;
 					isLoaded = true;
 					isLoading = false;
-					console.log(`Image fetch completed: ${message.data.totalBytes} bytes`);
+					console.log(`File fetch completed: ${message.data.totalBytes} bytes`);
 					return;
 				}
 
 				if (message.event === 'error') {
 					error = message.data.message;
 					isLoading = false;
-					console.error('Image fetch error:', message.data.message);
+					console.error('File fetch error:', message.data.message);
 					return;
 				}
 			};
@@ -124,7 +124,7 @@
 	};
 
 	onMount(async () => {
-		fileExistsInFs = await exists(alt, {
+		fileExistsInFs = await exists('download/' + alt, {
 			baseDir: BaseDirectory.AppLocalData
 		});
 	});

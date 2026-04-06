@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { ChevronLeft } from '@lucide/svelte';
-	import { avatarFallback, fetchAvatar } from '$lib/snippets.svelte';
-	import { gotoRoom, roomNameToPlainString } from '$lib/utils.svelte';
-	import { Avatar } from '$lib/components/ui/avatar';
+	import {
+		getCustomMxcUriFromOriginal,
+		getInitials,
+		gotoRoom,
+		roomNameToPlainString
+	} from '$lib/utils.svelte';
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { roomsCollection } from '../../../../hooks.client';
 	import { m } from '$lib/paraglide/messages';
 	import type { RoomStore } from 'tauri-plugin-matrix-svelte-api';
@@ -22,8 +26,11 @@
 	// It seems that DM rooms avatar behave differently that regular rooms, so we need to use
 	// the user's avatar for direct rooms, and use the reactive one for regular rooms
 	let avatarUrl = $derived(
-		isDirect ? initialAvatarUrl : roomsCollection.state.allJoinedRooms[roomId].avatar
+		getCustomMxcUriFromOriginal(
+			isDirect ? initialAvatarUrl : roomsCollection.state.allJoinedRooms[roomId].avatar
+		)
 	);
+	let alt = $derived(roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId].roomName));
 </script>
 
 <header class="pt-safe sticky top-0 z-50 w-full border-b">
@@ -37,15 +44,8 @@
 		</button>
 
 		<Avatar>
-			{#if avatarUrl}
-				{@render fetchAvatar(
-					avatarUrl,
-					roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId].roomName)
-				)}
-			{/if}
-			{@render avatarFallback(
-				roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId].roomName)
-			)}
+			<AvatarImage src={avatarUrl} {alt} />
+			<AvatarFallback>{getInitials(alt)}</AvatarFallback>
 		</Avatar>
 		<h1 class="text-foreground truncate text-base font-semibold">{m.room_thread_header()}</h1>
 	</div>

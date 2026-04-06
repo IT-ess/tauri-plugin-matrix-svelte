@@ -36,6 +36,7 @@
 		definedAvatarUri = uri;
 	};
 
+	let newRoomUnlistener: UnlistenFn;
 	const handleCreateGroup = async () => {
 		if (!groupName.trim()) {
 			toast.error('Please enter a group name');
@@ -55,6 +56,18 @@
 				invitedUserIds
 			});
 
+			newRoomUnlistener = await listen<string>(
+				MatrixSvelteListenEvent.NewlyCreatedRoomId,
+				(event) => {
+					isLoading = false;
+					actionCreateRoomOpen = false;
+					// Goto the room 250 ms after so the room store can be created
+					setTimeout(async () => {
+						await gotoRoom(event.payload, definedAvatarUri ?? null);
+					}, 250);
+				}
+			);
+
 			await submitAsyncRequest(request);
 		} catch (error) {
 			console.error(error);
@@ -64,23 +77,10 @@
 		}
 	};
 
-	let newRoomUnlistener: UnlistenFn;
-	onMount(async () => {
-		newRoomUnlistener = await listen<string>(
-			MatrixSvelteListenEvent.NewlyCreatedRoomId,
-			(event) => {
-				isLoading = false;
-				actionCreateRoomOpen = false;
-				// Goto the room 250 ms after so the room store can be created
-				setTimeout(async () => {
-					await gotoRoom(event.payload, definedAvatarUri ?? null);
-				}, 250);
-			}
-		);
-	});
-
 	onDestroy(() => {
-		newRoomUnlistener();
+		if (newRoomUnlistener) {
+			newRoomUnlistener();
+		}
 	});
 </script>
 

@@ -2,7 +2,6 @@
 	import LoginSteps from '$lib/components/login/login-steps.svelte';
 	import { goto } from '$app/navigation';
 	import type { PageData } from './$types';
-	import { loginState } from '$lib/login-state.svelte';
 	import { platform } from '@tauri-apps/plugin-os';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { onDestroy, onMount } from 'svelte';
@@ -40,7 +39,6 @@
 			console.log('awaiting verification state');
 			await sleep();
 		}
-		loginState.isLoggedIn = true;
 
 		console.log('logged in');
 
@@ -59,8 +57,6 @@
 			focusUnlistener = await listen('new-intent', async () => {
 				setTimeout(async () => {
 					if (await isLoggedIn()) {
-						loginState.isLoggedIn = true;
-
 						console.log('logged in');
 
 						isLoading = false;

@@ -1,12 +1,8 @@
 <script lang="ts">
 	import { decode } from 'blurhash';
-	import { Button } from '$lib/components/ui/button';
-	import { cn } from '$lib/utils.svelte';
-	import { m } from '$lib/paraglide/messages';
+	import { cn, getCustomMxcUriFromOriginal } from '$lib/utils.svelte';
 	import {
-		fetchMedia,
 		imageMessageSourceIsPlain,
-		MediaLoadingState,
 		type ImageMessageEventContent,
 		type StickerEventContent
 	} from 'tauri-plugin-matrix-svelte-api';
@@ -32,91 +28,73 @@
 	); // Placeholder blurhash
 	let alt = $derived(itemContent.body);
 
-	// State variables
-	// svelte-ignore state_referenced_locally
-	let loadingState = $state(new MediaLoadingState(itemContent.info?.size ?? 1));
-
-	// Load image function
-	const loadImage = () => {
-		if (imageMessageSourceIsPlain(itemContent)) {
-			return fetchMedia(
-				{
-					format: 'File',
-					source: { url: itemContent.url }
-				},
-				loadingState
-			);
-		} else {
-			return fetchMedia(
-				{
-					format: 'File',
-					source: { file: itemContent.file }
-				},
-				loadingState
-			);
-		}
-	};
+	let imageSrc = $derived(
+		(imageMessageSourceIsPlain(itemContent)
+			? getCustomMxcUriFromOriginal(itemContent.url, {
+					mime:
+						itemContent.info?.thumbnail_info?.mimetype ?? itemContent.info?.mimetype ?? undefined,
+					size: itemContent.info?.thumbnail_info?.size ?? itemContent.info?.size ?? undefined,
+					th: itemContent.info?.thumbnail_info?.h ?? undefined,
+					tw: itemContent.info?.thumbnail_info?.w ?? undefined,
+					tm: 'crop'
+				})
+			: getCustomMxcUriFromOriginal(itemContent.file, {
+					mime:
+						itemContent.info?.thumbnail_info?.mimetype ?? itemContent.info?.mimetype ?? undefined,
+					size: itemContent.info?.thumbnail_info?.size ?? itemContent.info?.size ?? undefined,
+					th: itemContent.info?.thumbnail_info?.h ?? undefined,
+					tw: itemContent.info?.thumbnail_info?.w ?? undefined,
+					tm: 'crop'
+				})) as string
+	);
 
 	const toggleFullscreen = (imageSrc: string) => {
-		if (loadingState.isLoaded) {
-			handleOpenMediaViewMode('image', imageSrc, {
-				body: itemContent.body,
-				size: itemContent.info?.size ?? 1
-			});
-		}
+		handleOpenMediaViewMode('image', imageSrc, {
+			body: itemContent.body,
+			size: itemContent.info?.size ?? 1
+		});
 	};
+
+	let isLoaded = $state(false);
+
+	let imageWidthOrDefault = $derived(itemContent.info?.w ?? 200);
+	let imageHeightOrDefault = $derived(itemContent.info?.h ?? 200);
 </script>
 
 <div class={cn('bg-card relative mt-1 overflow-hidden', isSticker ? '' : 'rounded-lg border')}>
-	{#await loadImage()}
-		<div class="relative">
-			<canvas
-				{@attach (canvas) => {
-					if (import.meta.env.DEV) {
-						console.log('Attaching canvas. Blurhash is', blurhash);
-					}
-					const pixels = decode(blurhash, 200, 200);
-					const context = canvas.getContext('2d');
-					const imageData = context?.createImageData(200, 200);
-					if (imageData) {
-						imageData.data.set(pixels);
-						context?.putImageData(imageData, 0, 0);
-					}
-				}}
-				width={200}
-				height={200}
-				class="aspect-video w-full object-cover"
-			></canvas>
-
-			<div class="absolute inset-0 flex items-center justify-center bg-black/20">
-				<div class="rounded-full bg-white/90 px-3 py-1 text-xs">
-					{Math.round(loadingState.progress * 100)}%
-				</div>
-			</div>
-		</div>
-	{:then imageSrc}
-		<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
-		<img
-			src={imageSrc}
-			{alt}
-			class="w-full cursor-pointer object-cover"
-			role="button"
-			tabindex="0"
-			onclick={() => toggleFullscreen(imageSrc)}
-			onkeydown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					toggleFullscreen(imageSrc);
+	{#if !isLoaded}
+		<canvas
+			{@attach (canvas) => {
+				const pixels = decode(blurhash, imageWidthOrDefault, imageHeightOrDefault);
+				const context = canvas.getContext('2d');
+				const imageData = context?.createImageData(imageWidthOrDefault, imageHeightOrDefault);
+				if (imageData) {
+					imageData.data.set(pixels);
+					context?.putImageData(imageData, 0, 0);
 				}
 			}}
-		/>
-	{:catch}
-		<div class="bg-destructive/80 absolute inset-0 flex items-center justify-center">
-			<div class="text-center text-white">
-				<p class="mb-2 text-sm">{m.failed_to_load()}</p>
-				<Button variant="secondary" size="sm" onclick={() => loadImage()}>{m.button_retry()}</Button
-				>
-			</div>
-		</div>
-	{/await}
+			width={imageWidthOrDefault}
+			height={imageHeightOrDefault}
+			class="w-full object-cover"
+		></canvas>
+	{/if}
+	<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
+	<img
+		src={imageSrc}
+		loading="lazy"
+		decoding="async"
+		style="aspect-ratio: {imageWidthOrDefault} / {imageHeightOrDefault}; content-visibility: auto; contain-intrinsic-size: 0 {imageHeightOrDefault}px;"
+		{alt}
+		class="cursor-pointer object-cover"
+		role="button"
+		tabindex="0"
+		onload={() => (isLoaded = true)}
+		onclick={() => toggleFullscreen(imageSrc)}
+		onkeydown={(e) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				toggleFullscreen(imageSrc);
+			}
+		}}
+	/>
 </div>

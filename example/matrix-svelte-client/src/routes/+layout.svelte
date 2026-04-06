@@ -10,7 +10,6 @@
 	import type { LayoutProps } from './$types';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { loginState } from '$lib/login-state.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import '@saurl/tauri-plugin-safe-area-insets-css-api';
 	import { loginStore } from '../hooks.client';
@@ -38,24 +37,6 @@
 	let toastUnlistener: UnlistenFn;
 
 	onMount(async () => {
-		// Necessary for first init
-		if (!loginState.isLoggedIn && page.route.id !== '/login') {
-			while (!(await isLoggedIn())) {
-				if (loginStore.state.state == 'awaitingForHomeserver') {
-					await goto('/login');
-					break;
-				}
-				const sleep = () => {
-					return new Promise((resolve) => setTimeout(resolve, 300));
-				};
-				console.log('awaiting for login state');
-				await sleep();
-			}
-			// If the client is active we set the context to loggedIn
-			// (by calling the function again to avoid breaking the loop and setting true)
-			loginState.isLoggedIn = await isLoggedIn();
-		}
-
 		emojisUnlistener = await listen<VerificationEmojisEventType>(
 			MatrixSvelteListenEvent.VerificationStart,
 			(event) => {
@@ -89,6 +70,17 @@
 				}
 			}
 		);
+	});
+
+	$effect(() => {
+		if (loginStore.state.state == 'awaitingForHomeserver') {
+			// Double check because sometimes the login store is lagging.
+			isLoggedIn().then((isLogged) => {
+				if (!isLogged) {
+					goto('/login');
+				}
+			});
+		}
 	});
 
 	onDestroy(() => {

@@ -1,14 +1,170 @@
+use mime_serde_shim::Wrapper as MimeWrapper;
+use serde::Deserialize;
+use tauri::http::{self, HeaderValue, Uri};
 use tauri::{Emitter, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
-use tauri_plugin_matrix_svelte::AUTH_DEEPLINK_SENDER;
+use tauri_plugin_matrix_svelte::{
+    AUTH_DEEPLINK_SENDER, Base64, EncryptedFile, EncryptedFileHashes, EncryptedFileInfo,
+    MatrixRequest, MediaFormat, MediaRequestParameters, MediaSource, MediaThumbnailSettings,
+    Method, OwnedMxcUri, Standard, UInt, UrlSafe, V2EncryptedFileInfo, oneshot,
+    submit_async_request,
+};
 use tauri_plugin_svelte::CborMarshaler;
-use tracing::debug;
+use tracing::{debug, error, trace};
 
 mod logging;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default();
+    let mut builder = tauri::Builder::default().register_asynchronous_uri_scheme_protocol(
+        "mxc",
+        |_ctx, request, responder| {
+            tauri::async_runtime::spawn(async move {
+                // Looks like:
+                // On android and windows: http://mxc.localhost/matrix.org/mediaid?iv=...
+                // On others: mxc://matrix.org/mediaid?iv=...
+                let raw_uri = request.uri();
+                // Android and Windows doesn't support directly using a custom protocol.
+                // So we reconstruct a new_uri matching the common pattern.
+                let uri = if cfg!(any(target_os = "android", target_os = "windows")) {
+                    android_windows_to_common_uri(raw_uri)
+                } else {
+                    raw_uri.to_owned()
+                };
+
+                let mxc_uri = OwnedMxcUri::from(uri.to_string().split('?').next().unwrap());
+
+                let (media_request, mime, size) = if let Some(query_str) = uri.query() {
+                    match serde_urlencoded::from_str(query_str) {
+                        Ok(MediaQueryParams {
+                            k,
+                            iv,
+                            hash,
+                            mime,
+                            size,
+                            th,
+                            tw,
+                            tm,
+                        }) => {
+                            let media_format = if let Some(thumb_height) = th
+                                && let Some(thumb_width) = tw
+                                && let Some(method) = tm
+                            {
+                                MediaFormat::Thumbnail(MediaThumbnailSettings {
+                                    method,
+                                    width: thumb_width,
+                                    height: thumb_height,
+                                    animated: false,
+                                })
+                            } else {
+                                MediaFormat::File
+                            };
+
+                            if let Some(k) = k
+                                && let Some(iv) = iv
+                                && let Some(hash) = hash
+                            {
+                                let info = EncryptedFileInfo::V2(V2EncryptedFileInfo::new(k, iv));
+                                let hashes = EncryptedFileHashes::with_sha256(hash.into_inner());
+                                let encrypted_file = EncryptedFile::new(mxc_uri, info, hashes);
+
+                                (
+                                    MediaRequestParameters {
+                                        source: MediaSource::Encrypted(Box::new(encrypted_file)),
+                                        format: media_format,
+                                    },
+                                    mime,
+                                    size,
+                                )
+                            } else {
+                                (
+                                    MediaRequestParameters {
+                                        source: MediaSource::Plain(mxc_uri),
+                                        format: media_format,
+                                    },
+                                    mime,
+                                    size,
+                                )
+                            }
+                        }
+                        Err(e) => {
+                            error!("Cannot deserialize encrypted media info. {e}");
+                            return;
+                        }
+                    }
+                } else {
+                    (
+                        MediaRequestParameters {
+                            source: MediaSource::Plain(mxc_uri),
+                            format: MediaFormat::File,
+                        },
+                        None,
+                        None,
+                    )
+                };
+
+                // TODO: even if we send this header, the webview doesn't
+                // cache the content for some reason. I should find a way
+                // to reliably cache the data.
+                let mut response = http::Response::builder().header(
+                    http::header::CACHE_CONTROL,
+                    "public, max-age=31536000, immutable",
+                );
+
+                if let Some(content_length) = size {
+                    response.headers_mut().unwrap().append(
+                        http::header::CONTENT_LENGTH,
+                        HeaderValue::from_str(content_length.to_string().as_str()).unwrap(),
+                    );
+                }
+
+                if let Some(mime) = mime {
+                    response.headers_mut().unwrap().append(
+                        http::header::CONTENT_TYPE,
+                        HeaderValue::from_str(mime.essence_str()).unwrap(),
+                    );
+                }
+
+                let (tx, rx) = oneshot::channel();
+                submit_async_request(MatrixRequest::FetchMedia {
+                    media_request,
+                    content_sender: tx,
+                });
+
+                match rx.await {
+                    Ok(Ok(data)) => match response.status(200).body(data) {
+                        Ok(res) => {
+                            responder.respond(res);
+                            trace!("responded to uri request {}", request.uri());
+                        }
+                        Err(e) => {
+                            error!("Cannot build response. {e}")
+                        }
+                    },
+                    Ok(Err(e)) => {
+                        error!("Media error: {e}");
+                        responder.respond(
+                            http::Response::builder()
+                                .status(http::StatusCode::BAD_REQUEST)
+                                .header(http::header::CONTENT_TYPE, "text/plain")
+                                .body("failed to get media".as_bytes().to_vec())
+                                .unwrap(),
+                        );
+                    }
+                    Err(e) => {
+                        error!("Channel error: {e}");
+                        responder.respond(
+                            http::Response::builder()
+                                .status(http::StatusCode::INTERNAL_SERVER_ERROR)
+                                .header(http::header::CONTENT_TYPE, "text/plain")
+                                .body("failed to get media, channel error".as_bytes().to_vec())
+                                .unwrap(),
+                        );
+                    }
+                }
+            });
+        },
+    );
     builder = logging::setup_logging(builder);
 
     #[cfg(desktop)]
@@ -160,4 +316,48 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[derive(Deserialize)]
+/// Used to deserialize the custom URIs
+struct MediaQueryParams {
+    /// The Base64 URL-safe Key
+    k: Option<Base64<UrlSafe, [u8; 32]>>,
+    /// The Base64 Standard IV
+    iv: Option<Base64<Standard, [u8; 16]>>,
+    /// The SHA-256 Hash
+    hash: Option<Base64<Standard, [u8; 32]>>,
+    /// The optional mime-type
+    mime: Option<MimeWrapper>,
+    /// Optional content length
+    size: Option<UInt>,
+    /// Thumbnail height
+    th: Option<UInt>,
+    /// Thumbnail width
+    tw: Option<UInt>,
+    /// Thumbnail method,
+    tm: Option<Method>,
+}
+
+fn android_windows_to_common_uri(raw_uri: &Uri) -> Uri {
+    let mut split_iter = raw_uri.path_and_query().unwrap().as_str().split("/");
+
+    // burn the first /
+    split_iter.next();
+    let new_uri = Uri::builder()
+        .scheme("mxc")
+        .authority(split_iter.next().unwrap())
+        .path_and_query(format!("/{}", split_iter.next().unwrap()));
+    new_uri.build().unwrap()
+}
+
+#[test]
+fn reconstruct_custom_uri() {
+    let uri =
+        Uri::from_static("http://mxc.localhost/matrix.org/mysuperid?iv=MRQMwnE55C0AAAAAAAAAAA");
+    let common_uri = Uri::from_static("mxc://matrix.org/mysuperid?iv=MRQMwnE55C0AAAAAAAAAAA");
+
+    let new_uri = android_windows_to_common_uri(&uri);
+
+    assert_eq!(new_uri, common_uri);
 }

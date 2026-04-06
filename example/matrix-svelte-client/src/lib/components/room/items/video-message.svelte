@@ -4,12 +4,13 @@
 	import { m } from '$lib/paraglide/messages';
 	import { Play } from '@lucide/svelte';
 	import {
-		fetchMedia,
-		MediaLoadingState,
 		videoMessageInfoThumbnailSourceIsPlain,
 		videoMessageSourceIsPlain,
+		type MediaStreamEvent,
 		type VideoMessageEventContent
 	} from 'tauri-plugin-matrix-svelte-api';
+	import { Channel, invoke } from '@tauri-apps/api/core';
+	import { getCustomMxcUriFromOriginal } from '$lib/utils.svelte';
 
 	type Props = {
 		itemContent: VideoMessageEventContent;
@@ -29,130 +30,185 @@
 	let blurhash = $derived(
 		itemContent.info?.['xyz.amorgan.blurhash'] ?? 'LQHx$:t8*JEj*0WqtlNd9@WUIVsT'
 	);
-	let alt = $derived(itemContent.body);
-
-	// State variables
-	// svelte-ignore state_referenced_locally
-	let loadingState = $state(new MediaLoadingState(itemContent.info?.size ?? 1));
-	// svelte-ignore state_referenced_locally
-	let thumbnailLoadingState = $state(
-		new MediaLoadingState(itemContent.info?.thumbnail_info?.size ?? 1)
+	let thumnailSrc = $derived(
+		itemContent.info
+			? videoMessageInfoThumbnailSourceIsPlain(itemContent.info)
+				? getCustomMxcUriFromOriginal(itemContent.info.thumbnail_url, {
+						mime: itemContent.info?.thumbnail_info?.mimetype ?? undefined,
+						size: itemContent.info?.thumbnail_info?.size ?? undefined
+					})
+				: getCustomMxcUriFromOriginal(itemContent.info.thumbnail_file, {
+						mime: itemContent.info?.thumbnail_info?.mimetype ?? undefined,
+						size: itemContent.info?.thumbnail_info?.size ?? undefined
+					})
+			: null
 	);
+	let imageWidthOrDefault = $derived(itemContent.info?.thumbnail_info?.w ?? 200);
+	let imageHeightOrDefault = $derived(itemContent.info?.thumbnail_info?.h ?? 200);
+	let isThumbLoaded = $state(false);
 
-	const loadVideoThumbnail = () => {
-		if (itemContent.info) {
-			if (videoMessageInfoThumbnailSourceIsPlain(itemContent.info)) {
-				return fetchMedia(
-					{
+	let alt = $derived(itemContent.body);
+	let isLoading = $state(false);
+	let error = $state<string | null>(null);
+	let videoSrc = $state<string | undefined>();
+	let totalSize = $derived(itemContent.info?.size ?? 1);
+	let bytesReceived = $state(0);
+	let progress = $derived(bytesReceived / totalSize);
+
+	const loadVideoSource = async () => {
+		if (isLoading) return;
+
+		isLoading = true;
+		error = null;
+		bytesReceived = 0;
+
+		const chunks: Uint8Array[] = [];
+		try {
+			const onEvent = new Channel<MediaStreamEvent>();
+
+			onEvent.onmessage = (message) => {
+				if (message.event === 'started') {
+					console.log(`Starting file fetch, total size: ${totalSize} bytes`);
+					return;
+				}
+
+				if (message.event === 'chunk') {
+					chunks.push(new Uint8Array(message.data.data));
+					bytesReceived = message.data.bytesReceived;
+					console.log(
+						`Received chunk: ${message.data.chunkSize} bytes, total: ${bytesReceived}/${totalSize}`
+					);
+					return;
+				}
+
+				if (message.event === 'finished') {
+					// Combine all chunks into a single Uint8Array
+					const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+					const combined = new Uint8Array(totalLength);
+					let offset = 0;
+
+					for (const chunk of chunks) {
+						combined.set(chunk, offset);
+						offset += chunk.length;
+					}
+
+					const blob = new Blob([combined]);
+					videoSrc = URL.createObjectURL(blob);
+					isLoading = false;
+					console.log(`File fetch completed: ${message.data.totalBytes} bytes`);
+					handleOpenMediaViewMode('video', videoSrc, {
+						body: itemContent.body,
+						size: itemContent.info?.size ?? 1
+					});
+					return;
+				}
+
+				if (message.event === 'error') {
+					error = message.data.message;
+					isLoading = false;
+					console.error('File fetch error:', message.data.message);
+					return;
+				}
+			};
+			if (videoMessageSourceIsPlain(itemContent)) {
+				await invoke('plugin:matrix-svelte|fetch_media', {
+					mediaRequest: {
 						format: 'File',
-						source: { url: itemContent.info.thumbnail_url }
+						source: { url: itemContent.url }
 					},
-					thumbnailLoadingState
-				);
+					onEvent
+				});
 			} else {
-				return fetchMedia(
-					{
+				await invoke('plugin:matrix-svelte|fetch_media', {
+					mediaRequest: {
 						format: 'File',
-						source: { file: itemContent.info.thumbnail_file }
+						source: { file: itemContent.file }
 					},
-					thumbnailLoadingState
-				);
+					onEvent
+				});
 			}
-		} else {
-			console.error('No thumbnail for this file');
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Unknown error occurred';
+			isLoading = false;
+			console.error('Invoke error:', err);
 		}
 	};
 
-	const loadVideoSource = () => {
-		if (videoMessageSourceIsPlain(itemContent)) {
-			return fetchMedia(
-				{
-					format: 'File',
-					source: { url: itemContent.url }
-				},
-				loadingState
-			);
+	const startVideoLoadOrOpen = async () => {
+		if (videoSrc) {
+			handleOpenMediaViewMode('video', videoSrc, {
+				body: itemContent.body,
+				size: itemContent.info?.size ?? 1
+			});
 		} else {
-			return fetchMedia(
-				{
-					format: 'File',
-					source: { file: itemContent.file }
-				},
-				loadingState
-			);
+			try {
+				await loadVideoSource();
+			} catch (err) {
+				console.error(err);
+			}
 		}
-	};
-
-	let hasClickedToggleFullscreen = $state(false);
-	const toggleFullscreen = async () => {
-		if (hasClickedToggleFullscreen) return;
-		hasClickedToggleFullscreen = true;
-		handleOpenMediaViewMode('video', await loadVideoSource(), {
-			body: itemContent.body,
-			size: itemContent.info?.size ?? 1
-		});
-		hasClickedToggleFullscreen = false;
 	};
 </script>
 
-<div class="bg-card relative mt-1 overflow-hidden rounded-lg border">
-	{#await loadVideoThumbnail()}
-		<!-- Blurhash Canvas as optimistic UI -->
-		<div class="relative">
-			<canvas
-				{@attach (canvas) => {
-					if (import.meta.env.DEV) {
-						console.log('Attaching canvas. Blurhash is', blurhash);
-					}
-					const pixels = decode(blurhash, 200, 200);
-					const context = canvas.getContext('2d');
-					const imageData = context?.createImageData(200, 200);
-					if (imageData) {
-						imageData.data.set(pixels);
-						context?.putImageData(imageData, 0, 0);
-					}
-				}}
-				width={200}
-				height={200}
-				class="aspect-video w-full object-cover"
-			></canvas>
-
-			<div class="absolute inset-0 flex items-center justify-center bg-black/20">
-				<div class="rounded-full bg-white/90 px-3 py-1 text-xs">
-					{Math.round(thumbnailLoadingState.progress * 100)}%
-				</div>
-			</div>
-		</div>
-	{:then videoSrc}
-		<div
-			class="relative flex items-center justify-center"
-			onclick={toggleFullscreen}
-			onkeydown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					toggleFullscreen();
+<div
+	class="bg-card relative mt-1 flex items-center justify-center overflow-hidden rounded-lg border"
+>
+	{#if !isThumbLoaded}
+		<canvas
+			{@attach (canvas) => {
+				const pixels = decode(blurhash, imageWidthOrDefault, imageHeightOrDefault);
+				const context = canvas.getContext('2d');
+				const imageData = context?.createImageData(imageWidthOrDefault, imageHeightOrDefault);
+				if (imageData) {
+					imageData.data.set(pixels);
+					context?.putImageData(imageData, 0, 0);
 				}
 			}}
-			role="button"
-			tabindex="0"
-		>
-			<div class="absolute rounded-full bg-white/70">
-				{#if hasClickedToggleFullscreen}
-					<p class="text-primary text-xl">{(loadingState.progress * 100).toFixed(0)}%</p>
-				{:else}
-					<Play class="text-primary size-12 p-2" />
-				{/if}
-			</div>
-			<img src={videoSrc} {alt} class="w-full cursor-pointer object-cover" />
-		</div>
-	{:catch}
-		<div class="bg-destructive/80 absolute inset-0 flex items-center justify-center">
+			width={imageWidthOrDefault}
+			height={imageHeightOrDefault}
+			class="w-full object-cover"
+		></canvas>
+	{/if}
+
+	<div
+		class="relative flex items-center justify-center"
+		onclick={startVideoLoadOrOpen}
+		onkeydown={(e) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				startVideoLoadOrOpen();
+			}
+		}}
+		role="button"
+		tabindex="0"
+	>
+		<img
+			loading="lazy"
+			decoding="async"
+			style="aspect-ratio: {imageWidthOrDefault} / {imageHeightOrDefault}; content-visibility: auto; contain-intrinsic-size: 0 {imageHeightOrDefault}px;"
+			onload={() => (isThumbLoaded = true)}
+			src={thumnailSrc}
+			{alt}
+			class="cursor-pointer object-cover"
+		/>
+	</div>
+
+	<button onclick={startVideoLoadOrOpen} class="absolute rounded-full bg-white/70">
+		{#if isLoading}
+			{progress.toFixed(0)}%
+		{:else}
+			<Play class="text-primary size-12 p-2" />
+		{/if}
+	</button>
+
+	{#if error}
+		<div class="bg-destructive/80 inset-0 flex items-center justify-center">
 			<div class="text-center text-white">
 				<p class="mb-2 text-sm">{m.failed_to_load()}</p>
-				<Button variant="secondary" size="sm" onclick={() => loadVideoThumbnail()}
+				<Button variant="secondary" size="sm" onclick={() => loadVideoSource()}
 					>{m.button_retry()}</Button
 				>
 			</div>
 		</div>
-	{/await}
+	{/if}
 </div>

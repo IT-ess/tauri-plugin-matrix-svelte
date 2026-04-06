@@ -1,12 +1,17 @@
-import { invoke } from '@tauri-apps/api/core';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { m } from './paraglide/messages';
 import { goto } from '$app/navigation';
 import z from 'zod/v4';
+import { untrack } from 'svelte';
 import { readFile } from '@tauri-apps/plugin-fs';
 import { fileTypeFromBlob } from 'file-type';
-import { type RoomDisplayName, uploadMedia } from 'tauri-plugin-matrix-svelte-api';
+import {
+	type EncryptedFile,
+	type RoomDisplayName,
+	uploadMedia
+} from 'tauri-plugin-matrix-svelte-api';
+import { platform } from '@tauri-apps/plugin-os';
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -187,3 +192,96 @@ export async function getMediaFromFSPath(path: string): Promise<{
 			: 'file';
 	return { filename, mediaSrc, mxcUriPromise, mediaType, blob, mime: res.mime };
 }
+
+export type MediaSource = string | EncryptedFile;
+
+function isEncryptedFile(value: MediaSource): value is EncryptedFile {
+	return typeof value !== 'string';
+}
+
+/**
+ * Transform a media source into a custom URI handled
+ * by the Tauri handler.
+ */
+export function getCustomMxcUriFromOriginal(
+	source: MediaSource | null | undefined,
+	optionalInfo?: {
+		mime?: string;
+		size?: number;
+		th?: number;
+		tw?: number;
+		tm?: 'crop' | 'scale';
+	}
+): string | null {
+	if (!source) return null;
+
+	if (isEncryptedFile(source)) {
+		return (
+			adaptBaseUriToPlatform(source.url) +
+			'?iv=' +
+			encodeURIComponent(source.iv) +
+			'&hash=' +
+			encodeURIComponent(source.hashes['sha256']) +
+			'&k=' +
+			encodeURIComponent(source.key.k) +
+			(optionalInfo ? '&' + getOptionalQueryParams(optionalInfo) : '')
+		);
+	} else {
+		return (
+			adaptBaseUriToPlatform(source) +
+			(optionalInfo ? '?' + getOptionalQueryParams(optionalInfo) : '')
+		);
+	}
+}
+
+export function getOptionalQueryParams(info: {
+	mime?: string;
+	size?: number;
+	th?: number;
+	tw?: number;
+	tm?: 'crop' | 'scale';
+}): string {
+	const params = [];
+	if (info.mime) {
+		params.push(`mime=${encodeURIComponent(info.mime)}`);
+	}
+	if (info.size) {
+		params.push(`size=${info.size}`);
+	}
+	if (info.th) {
+		params.push(`th=${info.th}`);
+	}
+	if (info.tw) {
+		params.push(`tw=${info.tw}`);
+	}
+	if (info.tm) {
+		params.push(`tm=${info.tm}`);
+	}
+
+	return params.join('&');
+}
+
+/**
+ * On Android and Windows, using the custom protocol to fetch
+ * media requires to use the http protocol. So our uri should
+ * look like: http://mxc.localhost/...
+ */
+function adaptBaseUriToPlatform(mxcUri: string): string {
+	const currentPlatform = platform();
+	if (currentPlatform == 'android' || currentPlatform == 'windows') {
+		const path = mxcUri.slice(6);
+		return 'http://mxc.localhost/' + path;
+	} else {
+		return mxcUri;
+	}
+}
+
+export const lazyEffect = (deps: () => any[], cb: () => any) => {
+	let first = true;
+
+	$effect(() => {
+		deps();
+		if (first) return (first = false);
+		return untrack(cb);
+	});
+};

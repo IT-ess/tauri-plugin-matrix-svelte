@@ -247,4 +247,3 @@ export * from './bindings/VideoMessageEventContent.js';
 export * from './bindings/VirtualTimelineItem.js';
 export * from './tauri-events.js';
 export * from './type-guards.js';
-export * from './media-cache.svelte.js';

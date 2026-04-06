@@ -24,6 +24,7 @@ export const load: LayoutLoad = async ({ url }) => {
 		// requires an additional fetch from the backend
 		roomName: roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId].roomName)
 	};
-	await emit(MatrixSvelteEmitEvent.UpdateCurrentActiveRoom, payload);
+	emit(MatrixSvelteEmitEvent.UpdateCurrentActiveRoom, payload);
+
 	return { roomStore, avatarUri };
 };

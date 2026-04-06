@@ -7,7 +7,7 @@
 	import { m } from '$lib/paraglide/messages';
 	import InviteProfileItem from '../profiles/invite-profile-item.svelte';
 	import { useSearchParams } from 'runed/kit';
-	import { roomsListSearchParamsSchema } from '$lib/utils.svelte';
+	import { lazyEffect, roomsListSearchParamsSchema } from '$lib/utils.svelte';
 	import { roomsCollection } from '../../../hooks.client';
 	import { filterRoomList } from 'tauri-plugin-matrix-svelte-api';
 
@@ -19,9 +19,10 @@
 
 	const params = useSearchParams(roomsListSearchParamsSchema);
 
-	$effect(() => {
-		filterRoomList(searchQuery);
-	});
+	lazyEffect(
+		() => [searchQuery],
+		() => filterRoomList(searchQuery)
+	);
 
 	let disabled = $derived(!['loaded', 'loading'].includes(roomsCollection.state.status.status));
 </script>
