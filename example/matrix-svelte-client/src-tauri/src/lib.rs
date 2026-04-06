@@ -103,8 +103,10 @@ pub fn run() {
                     )
                 };
 
-                let mut response = http::Response::builder()
-                    .header(http::header::CACHE_CONTROL, "public, max-age=3600");
+                let mut response = http::Response::builder().header(
+                    http::header::CACHE_CONTROL,
+                    "public, max-age=31536000, immutable",
+                );
 
                 if let Some(content_length) = size {
                     response.headers_mut().unwrap().append(

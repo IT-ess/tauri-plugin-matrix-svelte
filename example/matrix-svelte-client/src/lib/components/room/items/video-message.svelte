@@ -183,6 +183,7 @@
 		tabindex="0"
 	>
 		<img
+			loading="lazy"
 			onload={() => (isThumbLoaded = true)}
 			src={thumnailSrc}
 			{alt}

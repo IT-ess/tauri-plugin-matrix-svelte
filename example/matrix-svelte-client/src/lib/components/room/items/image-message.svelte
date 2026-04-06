@@ -73,6 +73,7 @@
 	<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
 	<img
 		src={imageSrc}
+		loading="lazy"
 		{alt}
 		class="w-full cursor-pointer object-cover"
 		role="button"
