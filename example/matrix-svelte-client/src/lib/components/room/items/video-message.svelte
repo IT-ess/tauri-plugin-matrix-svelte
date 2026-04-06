@@ -184,10 +184,12 @@
 	>
 		<img
 			loading="lazy"
+			decoding="async"
+			style="aspect-ratio: {imageWidthOrDefault} / {imageHeightOrDefault}; content-visibility: auto; contain-intrinsic-size: 0 {imageHeightOrDefault}px;"
 			onload={() => (isThumbLoaded = true)}
 			src={thumnailSrc}
 			{alt}
-			class="w-full cursor-pointer object-cover"
+			class="cursor-pointer object-cover"
 		/>
 	</div>
 
