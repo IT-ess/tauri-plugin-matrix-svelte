@@ -18,5 +18,13 @@ export const load: LayoutLoad = async ({ url }) => {
 	if (roomStore === undefined) {
 		error(500, 'The store of this room is not loaded');
 	}
+	const payload: UpdateCurrentActiveRoom = {
+		roomId,
+		// Kinda weird, but otherwise the room name is never initiated or
+		// requires an additional fetch from the backend
+		roomName: roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId].roomName)
+	};
+	emit(MatrixSvelteEmitEvent.UpdateCurrentActiveRoom, payload);
+
 	return { roomStore, avatarUri };
 };
