@@ -31,12 +31,20 @@
 	let imageSrc = $derived(
 		(imageMessageSourceIsPlain(itemContent)
 			? getCustomMxcUriFromOriginal(itemContent.url, {
-					mime: itemContent.info?.mimetype ?? undefined,
-					size: itemContent.info?.size ?? undefined
+					mime:
+						itemContent.info?.thumbnail_info?.mimetype ?? itemContent.info?.mimetype ?? undefined,
+					size: itemContent.info?.thumbnail_info?.size ?? itemContent.info?.size ?? undefined,
+					th: itemContent.info?.thumbnail_info?.h ?? undefined,
+					tw: itemContent.info?.thumbnail_info?.w ?? undefined,
+					tm: 'crop'
 				})
 			: getCustomMxcUriFromOriginal(itemContent.file, {
-					mime: itemContent.info?.mimetype ?? undefined,
-					size: itemContent.info?.size ?? undefined
+					mime:
+						itemContent.info?.thumbnail_info?.mimetype ?? itemContent.info?.mimetype ?? undefined,
+					size: itemContent.info?.thumbnail_info?.size ?? itemContent.info?.size ?? undefined,
+					th: itemContent.info?.thumbnail_info?.h ?? undefined,
+					tw: itemContent.info?.thumbnail_info?.w ?? undefined,
+					tm: 'crop'
 				})) as string
 	);
 
