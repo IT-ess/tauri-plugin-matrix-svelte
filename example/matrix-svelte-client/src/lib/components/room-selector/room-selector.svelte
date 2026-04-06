@@ -5,7 +5,7 @@
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
 	import { m } from '$lib/paraglide/messages';
 	import SelectableRoomItem from './selectable-room-item.svelte';
-	import { cn, roomNameToPlainString } from '$lib/utils.svelte';
+	import { cn, lazyEffect, roomNameToPlainString } from '$lib/utils.svelte';
 	import SearchRooms from '$lib/components/room-list/search-rooms.svelte';
 	import { roomsCollection } from '../../../hooks.client';
 	import { filterRoomList } from 'tauri-plugin-matrix-svelte-api';
@@ -37,9 +37,10 @@
 
 	let searchQuery = $state<string>('');
 
-	$effect(() => {
-		filterRoomList(searchQuery);
-	});
+	lazyEffect(
+		() => [searchQuery],
+		() => filterRoomList(searchQuery)
+	);
 </script>
 
 <div class="flex flex-col gap-2">

@@ -1,9 +1,9 @@
-import { invoke } from '@tauri-apps/api/core';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { m } from './paraglide/messages';
 import { goto } from '$app/navigation';
 import z from 'zod/v4';
+import { untrack } from 'svelte';
 import { readFile } from '@tauri-apps/plugin-fs';
 import { fileTypeFromBlob } from 'file-type';
 import {
@@ -275,3 +275,13 @@ function adaptBaseUriToPlatform(mxcUri: string): string {
 		return mxcUri;
 	}
 }
+
+export const lazyEffect = (deps: () => any[], cb: () => any) => {
+	let first = true;
+
+	$effect(() => {
+		deps();
+		if (first) return (first = false);
+		return untrack(cb);
+	});
+};
