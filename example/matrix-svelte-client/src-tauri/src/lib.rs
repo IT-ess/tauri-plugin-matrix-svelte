@@ -103,6 +103,9 @@ pub fn run() {
                     )
                 };
 
+                // TODO: even if we send this header, the webview doesn't
+                // cache the content for some reason. I should find a way
+                // to reliably cache the data.
                 let mut response = http::Response::builder().header(
                     http::header::CACHE_CONTROL,
                     "public, max-age=31536000, immutable",
