@@ -7,13 +7,12 @@
 	import { cn } from '$lib/utils.svelte';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import Item from '../items/item.svelte';
-	import { loginStore } from '../../../../hooks.client';
+	import { loginStore, roomStore } from '../../../../hooks.client';
 	import { tick } from 'svelte';
 	import { ScrollState } from 'runed';
 	import ThreadHeader from './thread-header.svelte';
 	import type { MediaViewerInfo } from '$lib/components/media/utils';
 	import {
-		RoomStore,
 		type RoomMessageEventContent,
 		type AudioInfo,
 		type VideoInfo,
@@ -27,11 +26,11 @@
 	import { Spinner } from '$lib/components/ui/spinner';
 
 	type Props = {
-		roomStore: RoomStore;
+		roomId: string;
 		rootEventId: string;
 		roomAvatarUrl: string | null;
 	};
-	let { roomStore, rootEventId, roomAvatarUrl }: Props = $props();
+	let { roomId, rootEventId, roomAvatarUrl }: Props = $props();
 
 	// This method is very problematic, because we only display the paginated
 	// items of the main timeline, so "old" events may not be displayed.
@@ -195,7 +194,7 @@
 		}
 		if (!mediaViewerMxcUri) throw Error('Missing media URI');
 		let request = createMatrixRequest.sendMessage({
-			roomId: roomStore.id,
+			roomId,
 			message: {
 				msgtype,
 				body: additionalInfo?.message ?? '', // The body must be defined for some reason.
@@ -253,7 +252,7 @@
 </script>
 
 <div class="bg-background pb-tauri-bottom-safe relative flex h-full flex-col">
-	<ThreadHeader {roomStore} initialAvatarUrl={roomAvatarUrl} />
+	<ThreadHeader {roomId} initialAvatarUrl={roomAvatarUrl} />
 
 	{#if !threadItems}
 		<div class="flex h-full w-full items-center justify-center">
@@ -273,7 +272,7 @@
 						<div transition:fade|local>
 							<Item
 								{item}
-								roomId={roomStore.id}
+								{roomId}
 								currentUserId={loginStore.state.userId ?? 'shouldbedefined'}
 								onReply={handleReplyTo}
 								onScrollToMessage={scrollToMessage}

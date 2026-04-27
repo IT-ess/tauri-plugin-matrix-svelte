@@ -9,18 +9,14 @@
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { roomsCollection } from '../../../../hooks.client';
 	import { m } from '$lib/paraglide/messages';
-	import type { RoomStore } from 'tauri-plugin-matrix-svelte-api';
 
 	let {
-		roomStore,
+		roomId,
 		initialAvatarUrl
 	}: {
-		roomStore: RoomStore;
+		roomId: string;
 		initialAvatarUrl: string | null;
 	} = $props();
-
-	// svelte-ignore state_referenced_locally
-	const roomId = roomStore.id;
 
 	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomId].isDirect);
 	// It seems that DM rooms avatar behave differently that regular rooms, so we need to use
@@ -36,7 +32,7 @@
 <header class="pt-safe sticky top-0 z-50 w-full border-b">
 	<div class="relative flex h-16 items-center gap-3 px-4">
 		<button
-			onclick={() => gotoRoom(roomStore.id, avatarUrl)}
+			onclick={() => gotoRoom(roomId, avatarUrl)}
 			class="hover:bg-accent flex h-10 w-10 items-center justify-center rounded-full transition-colors"
 			aria-label="Go back"
 		>

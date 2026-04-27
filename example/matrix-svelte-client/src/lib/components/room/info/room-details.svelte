@@ -16,7 +16,7 @@
 	let { actionRoomDetailsOpen = $bindable(false), roomStore, avatarUrl }: Props = $props();
 
 	let groupName = $derived(roomStore.state.roomName);
-	let groupTopic = $derived(roomsCollection.state.allJoinedRooms[roomStore.id].topic);
+	let groupTopic = $derived(roomsCollection.state.allJoinedRooms[roomStore.state.roomId].topic);
 	let isSaving = $state(false);
 
 	let isEditingName = $state(false);
@@ -28,7 +28,7 @@
 		}
 		isSaving = true;
 		await defineRoomInformations({
-			roomId: roomStore.id,
+			roomId: roomStore.state.roomId,
 			topic: null,
 			newAvatarUri: null,
 			newDisplayName: newName
@@ -45,7 +45,7 @@
 	const onSaveTopic = async (newTopic: string) => {
 		isSaving = true;
 		await defineRoomInformations({
-			roomId: roomStore.id,
+			roomId: roomStore.state.roomId,
 			topic: newTopic,
 			newAvatarUri: null,
 			newDisplayName: null
@@ -61,7 +61,7 @@
 		isSaving = true;
 		try {
 			await defineRoomInformations({
-				roomId: roomStore.id,
+				roomId: roomStore.state.roomId,
 				topic: null,
 				newAvatarUri: uri,
 				newDisplayName: null
@@ -74,7 +74,7 @@
 		}
 	};
 
-	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomStore.id].isDirect);
+	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomStore.state.roomId].isDirect);
 </script>
 
 <Dialog.Root bind:open={actionRoomDetailsOpen}>

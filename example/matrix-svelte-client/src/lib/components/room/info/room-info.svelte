@@ -15,9 +15,9 @@
 
 	let { avatar, roomStore }: { avatar: string | null; roomStore: RoomStore } = $props();
 
-	let roomTopic = $derived(roomsCollection.state.allJoinedRooms[roomStore.id].topic);
+	let roomTopic = $derived(roomsCollection.state.allJoinedRooms[roomStore.state.roomId].topic);
 
-	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomStore.id].isDirect);
+	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomStore.state.roomId].isDirect);
 
 	let actionInviteMembersOpen = $state(false);
 	let actionLeaveRoomOpen = $state(false);
@@ -33,7 +33,7 @@
 <div class="bg-background flex h-full w-full flex-col">
 	<div class="pt-safe sticky top-0 right-0 left-0 z-50 w-full pl-2">
 		<button
-			onclick={() => gotoRoom(roomStore.id, avatar)}
+			onclick={() => gotoRoom(roomStore.state.roomId, avatar)}
 			class="hover:bg-accent flex size-10 items-center justify-center rounded-full transition-colors"
 			aria-label="Go back"
 		>
@@ -82,7 +82,7 @@
 	<Item.Root>
 		{#snippet child({ props })}
 			<a
-				href={`/room/info/members?id=${encodeURIComponent(roomStore.id)}${avatar ? '&avatar=' + encodeURIComponent(avatar) : ''}`}
+				href={`/room/info/members?id=${encodeURIComponent(roomStore.state.roomId)}${avatar ? '&avatar=' + encodeURIComponent(avatar) : ''}`}
 				{...props}
 			>
 				<Item.Media>
@@ -115,8 +115,8 @@
 
 <InviteMembers
 	bind:actionInviteMembersOpen
-	roomId={roomStore.id}
+	roomId={roomStore.state.roomId}
 	previousUsersIdsList={membersIds}
 />
-<LeaveRoom bind:open={actionLeaveRoomOpen} roomId={roomStore.id} {isDirect} />
+<LeaveRoom bind:open={actionLeaveRoomOpen} roomId={roomStore.state.roomId} {isDirect} />
 <RoomDetails bind:actionRoomDetailsOpen {roomStore} avatarUrl={avatar} />

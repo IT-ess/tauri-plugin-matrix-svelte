@@ -79,7 +79,7 @@
 		{@render stateMessage(`${item.data.body.user_id} profile update`)}
 	{:else if item.data.kind === 'membershipChange'}
 		{@render stateMessage(
-			`${item.data.body.content.content.displayname} membership update: ${
+			`${item.data.body.content.content.displayname ?? item.data.body.content.user_id} membership update: ${
 				item.data.body.content.content.membership
 			}`
 		)}

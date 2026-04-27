@@ -1,8 +1,9 @@
 <script lang="ts">
 	import RoomMembers from '$lib/components/room/info/members/room-members.svelte';
+	import { roomStore } from '../../../../hooks.client';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 </script>
 
-<RoomMembers avatar={data.avatarUri} roomStore={data.roomStore} />
+<RoomMembers avatar={data.avatarUri} {roomStore} />

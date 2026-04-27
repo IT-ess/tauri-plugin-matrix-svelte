@@ -5,4 +5,4 @@
 	let { data }: PageProps = $props();
 </script>
 
-<Thread roomStore={data.roomStore} rootEventId={data.threadRoot} roomAvatarUrl={data.avatarUri} />
+<Thread roomId={data.roomId} rootEventId={data.threadRoot} roomAvatarUrl={data.avatarUri} />

@@ -67,7 +67,7 @@
 	const handleSendTextMessage = async () => {
 		if (!newMessage.trim()) return;
 
-		const request = createMatrixRequest.sendTextMessage(roomStore.id, newMessage, {
+		const request = createMatrixRequest.sendTextMessage(roomStore.state.roomId, newMessage, {
 			replyToId: replyingTo?.eventId,
 			threadRootId: threadRootEventId
 		});

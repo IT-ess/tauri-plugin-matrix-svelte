@@ -17,6 +17,7 @@ use crate::{
 };
 
 // Keep the same ids as in the JS package !
+const ROOM_STORE_ID: &str = "room-store";
 const ROOMS_COLLECTION_STORE_ID: &str = "rooms-collection";
 pub const LOGIN_STATE_STORE_ID: &str = "login-state";
 
@@ -52,7 +53,7 @@ impl<R: Runtime> StateUpdaterFunctions for Updaters<R> {
         )?;
         Ok(())
     }
-    fn update_room(&self, room: &RoomScreen, room_id: &str) -> anyhow::Result<()> {
+    fn update_room(&self, room: &RoomScreen) -> anyhow::Result<()> {
         let json = serde_json::to_value(room).expect("Couldn't serialize Rooms List");
         let mut empty_state = StoreState::new();
         let state = match json {
@@ -68,7 +69,7 @@ impl<R: Runtime> StateUpdaterFunctions for Updaters<R> {
 
         self.app_handle
             .svelte()
-            .patch(room_id, state.expect("Wrong state sent to frontend"))?;
+            .patch(ROOM_STORE_ID, state.expect("Wrong state sent to frontend"))?;
         Ok(())
     }
     fn update_sync_service(

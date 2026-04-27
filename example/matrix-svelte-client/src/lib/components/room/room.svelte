@@ -10,7 +10,7 @@
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import { tick } from 'svelte';
 	import { cn } from '$lib/utils.svelte';
-	import { loginStore, roomsCollection } from '../../../hooks.client';
+	import { loginStore, roomsCollection, roomStore } from '../../../hooks.client';
 	import RoomInput from './room-input.svelte';
 	import MediaViewer from '../common/media-viewer.svelte';
 	import type { MediaViewerInfo } from '../media/utils';
@@ -25,15 +25,19 @@
 		type ImageInfo,
 		type MediaRequestParameters,
 		type RoomMessageEventContent,
-		type RoomStore,
 		type VideoInfo
 	} from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
-		roomStore: RoomStore;
+		roomId: string;
 		roomAvatarUrl: string | null;
 	};
-	let { roomStore, roomAvatarUrl }: Props = $props();
+	let { roomId, roomAvatarUrl }: Props = $props();
+
+	if (import.meta.env.DEV) {
+		// eslint-disable-next-line svelte/no-inspect
+		$inspect(roomStore.state);
+	}
 
 	let isLoadingMore = $state(false);
 	let prevScrollHeight = $state(0);
@@ -59,10 +63,10 @@
 			if (
 				scroll.arrived.bottom &&
 				roomStore.state.tlState &&
-				roomsCollection.state.allJoinedRooms[roomStore.id].numUnreadMessages > 0
+				roomsCollection.state.allJoinedRooms[roomId].numUnreadMessages > 0
 			) {
 				const request = createMatrixRequest.markRoomAsRead({
-					roomId: roomStore.id
+					roomId
 				});
 				submitAsyncRequest(request);
 			}
@@ -87,7 +91,7 @@
 
 		try {
 			const request = createMatrixRequest.paginateRoomTimeline({
-				roomId: roomStore.id,
+				roomId,
 				numEvents: 20,
 				direction: 'backwards'
 			});
@@ -244,7 +248,7 @@
 		}
 		if (!mediaViewerMxcUri) throw Error('Missing media URI');
 		let request = createMatrixRequest.sendMessage({
-			roomId: roomStore.id,
+			roomId,
 			message: {
 				msgtype,
 				body: additionalInfo?.message ?? '', // The body must be defined for some reason.
@@ -315,7 +319,7 @@
 						<div transition:fade|local>
 							<Item
 								{item}
-								roomId={roomStore.id}
+								{roomId}
 								currentUserId={loginStore.state.userId ?? 'shouldbedefined'}
 								onReply={handleReplyTo}
 								onScrollToMessage={scrollToMessage}

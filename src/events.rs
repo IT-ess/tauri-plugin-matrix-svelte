@@ -3,8 +3,8 @@ use matrix_ui_serializable::{
     models::{
         event_bridge::broadcast,
         events::{
-            EmitEvent, MatrixLoginPayload, MatrixRoomStoreCreatedRequest,
-            MatrixUpdateCurrentActiveRoom, MatrixVerificationResponse,
+            EmitEvent, MatrixLoginPayload, MatrixUpdateCurrentActiveRoom,
+            MatrixVerificationResponse,
         },
     },
 };
@@ -22,9 +22,6 @@ pub async fn event_forwarder<R: Runtime>(
 ) -> anyhow::Result<()> {
     while let Ok(event) = receiver.resubscribe().recv().await {
         match event {
-            EmitEvent::RoomCreate(e) => {
-                app_handle.emit("matrix-svelte://room-create", e)?;
-            }
             EmitEvent::VerificationStart(e) => {
                 app_handle.emit("matrix-svelte://verification-start", e)?;
             }
@@ -70,8 +67,6 @@ const DEFAULT_BUFFER_SIZE: usize = 20;
 
 pub fn handle_incoming_events<R: Runtime>(app_handle: &AppHandle<R>) -> EventReceivers {
     // Event based
-    let (tx_room_created, rx_room_created) =
-        tauri::async_runtime::channel::<MatrixRoomStoreCreatedRequest>(DEFAULT_BUFFER_SIZE);
     let (tx_verif, rx_verif) =
         tauri::async_runtime::channel::<MatrixVerificationResponse>(DEFAULT_BUFFER_SIZE);
     let (tx_update_room, rx_update_room) =
@@ -79,12 +74,6 @@ pub fn handle_incoming_events<R: Runtime>(app_handle: &AppHandle<R>) -> EventRec
 
     let room_created_handle = app_handle.clone();
     // The listeners should be alive for the entire lifetime of the app
-    room_created_handle.listen("matrix-svelte://room-created", move |e| {
-        if let Ok(payload) = serde_json::from_str::<MatrixRoomStoreCreatedRequest>(e.payload()) {
-            futures::executor::block_on(tx_room_created.send(payload))
-                .expect("Couldn't forward event to lib");
-        }
-    });
     room_created_handle.listen("matrix-svelte://verification-result", move |e| {
         if let Ok(payload) = serde_json::from_str::<MatrixVerificationResponse>(e.payload()) {
             futures::executor::block_on(tx_verif.send(payload))
@@ -110,11 +99,5 @@ pub fn handle_incoming_events<R: Runtime>(app_handle: &AppHandle<R>) -> EventRec
         .set(tx_oauth_deeplink)
         .expect("oauth deeplink sender already set");
 
-    EventReceivers::new(
-        rx_room_created,
-        rx_verif,
-        rx_update_room,
-        rx_matrix_login,
-        rx_oauth_deeplink,
-    )
+    EventReceivers::new(rx_verif, rx_update_room, rx_matrix_login, rx_oauth_deeplink)
 }

@@ -19,8 +19,7 @@
 		initialAvatarUrl: string | null;
 	} = $props();
 
-	// svelte-ignore state_referenced_locally
-	const roomId = roomStore.id;
+	let roomId = $derived(roomStore.state.roomId);
 
 	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomId].isDirect);
 	// It seems that DM rooms avatar behave differently that regular rooms, so we need to use
@@ -39,9 +38,7 @@
 	<div class="relative flex h-16 items-center gap-3 px-4">
 		<button
 			onclick={() =>
-				gotoRoomsList(
-					roomsCollection.state.allJoinedRooms[roomStore.id].isDirect ? 'dm' : 'groups'
-				)}
+				gotoRoomsList(roomsCollection.state.allJoinedRooms[roomId].isDirect ? 'dm' : 'groups')}
 			class="hover:bg-accent flex h-10 w-10 items-center justify-center rounded-full transition-colors"
 			aria-label="Go back"
 		>
