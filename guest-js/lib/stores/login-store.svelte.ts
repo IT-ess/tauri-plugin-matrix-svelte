@@ -29,8 +29,7 @@ export class LoginStore extends RuneStore<LoginStateType> {
 		};
 		const options: TauriPluginSvelteRuneStoreOptions<LoginStateType> = {
 			hooks,
-			syncStrategy: 'debounce',
-			syncInterval: 50
+			save: false
 		};
 
 		super(

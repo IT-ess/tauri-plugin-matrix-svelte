@@ -84,6 +84,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
             commands::disconnect_and_clear_session,
             commands::check_if_last_device,
             commands::is_logged_in,
+            commands::has_session_stored,
             commands::reset_cross_signing,
             commands::edit_user_information,
             commands::upload_media,

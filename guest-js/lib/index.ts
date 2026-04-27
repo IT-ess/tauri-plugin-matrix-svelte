@@ -126,6 +126,14 @@ export function isLoggedIn(): Promise<boolean> {
 }
 
 /**
+ * Checks whether the client had a session stored.
+ * This is a blocking operation.
+ */
+export function hasSessionStored(): Promise<boolean> {
+	return invoke<boolean>('plugin:matrix-svelte|has_session_stored', {});
+}
+
+/**
  *
  * Give the ability to the user to reset its identity, losing all its historic
  * messages in the process.

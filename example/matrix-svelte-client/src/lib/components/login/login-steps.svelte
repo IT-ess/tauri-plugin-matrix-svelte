@@ -207,7 +207,11 @@
 					</Dialog.Header>
 					<Tooltip.Provider>
 						<InputGroup.Root>
-							<InputGroup.Input bind:value={$formData.homeserver} />
+							<InputGroup.Input
+								bind:value={$formData.homeserver}
+								autocorrect="off"
+								autocapitalize="off"
+							/>
 							<InputGroup.Addon>
 								<ServerIcon />
 							</InputGroup.Addon>

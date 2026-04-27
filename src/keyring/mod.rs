@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::RngExt;
 use std::fs;
 use std::io::{self, Write};
 use std::path::PathBuf;

@@ -17,6 +17,7 @@ const COMMANDS: &[&str] = &[
     "disconnect_and_clear_session",
     "check_if_last_device",
     "is_logged_in",
+    "has_session_stored",
     "reset_cross_signing",
     "edit_user_information",
     "upload_media",

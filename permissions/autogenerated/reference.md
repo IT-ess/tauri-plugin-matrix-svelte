@@ -22,6 +22,7 @@ Default permissions for the plugin
 - `allow-disconnect-and-clear-session`
 - `allow-check-if-last-device`
 - `allow-is-logged-in`
+- `allow-has-session-stored`
 - `allow-reset-cross-signing`
 - `allow-edit-user-information`
 - `allow-upload-media`
@@ -454,6 +455,32 @@ Enables the has_backup_setup command without any pre-configured scope.
 <td>
 
 Denies the has_backup_setup command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-has-session-stored`
+
+</td>
+<td>
+
+Enables the has_session_stored command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-has-session-stored`
+
+</td>
+<td>
+
+Denies the has_session_stored command without any pre-configured scope.
 
 </td>
 </tr>

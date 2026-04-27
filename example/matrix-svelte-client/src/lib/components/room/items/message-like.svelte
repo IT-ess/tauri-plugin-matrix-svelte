@@ -41,9 +41,9 @@
 	import ThreadPreview from '../thread/thread-preview.svelte';
 	import {
 		createMatrixRequest,
-		fetchUserProfile,
 		submitAsyncRequest,
 		type FrontendRoomMember,
+		type MediaRequestParameters,
 		type MessageAbility,
 		type MsgLikeContent
 	} from 'tauri-plugin-matrix-svelte-api';
@@ -68,7 +68,8 @@
 				filename?: string;
 				body?: string;
 				size: number;
-			}
+			},
+			mediaSource: MediaRequestParameters['source']
 		) => void;
 		isInThread?: boolean;
 		roomAvatar: string | null;

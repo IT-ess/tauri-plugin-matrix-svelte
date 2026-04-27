@@ -1,5 +1,9 @@
 <script lang="ts">
-	import type { FrontendRoomMember, TimelineItem } from 'tauri-plugin-matrix-svelte-api';
+	import type {
+		FrontendRoomMember,
+		MediaRequestParameters,
+		TimelineItem
+	} from 'tauri-plugin-matrix-svelte-api';
 	import { roomsCollection } from '../../../../hooks.client';
 	import MessageLike from './message-like.svelte';
 	import Virtual from './virtual.svelte';
@@ -18,7 +22,8 @@
 				filename?: string;
 				body?: string;
 				size: number;
-			}
+			},
+			mediaSource: MediaRequestParameters['source']
 		) => void;
 		isInThread?: boolean;
 		roomAvatar: string | null;

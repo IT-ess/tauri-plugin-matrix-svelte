@@ -49,7 +49,7 @@ pub(crate) fn forward_oauth_login_deeplink(url: Url) {
 
 #[command]
 pub async fn build_client_from_homeserver_url(homeserver: String) -> Result<()> {
-    matrix_ui_serializable::commands::build_client_from_homeserver_url(homeserver)
+    matrix_ui_serializable::commands::build_temp_client_from_homeserver_url(homeserver)
         .await
         .map_err(Error::MatrixLib)
 }
@@ -242,6 +242,13 @@ pub(crate) async fn check_if_last_device() -> Result<bool> {
 #[command]
 pub(crate) fn is_logged_in() -> bool {
     matrix_ui_serializable::commands::is_logged_in()
+}
+
+#[command(async)]
+// Run in a new thread so we don't deadlock
+// the frontend
+pub(crate) fn has_session_stored() -> bool {
+    matrix_ui_serializable::commands::has_session_stored()
 }
 
 #[command]

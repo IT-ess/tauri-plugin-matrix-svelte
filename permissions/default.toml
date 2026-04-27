@@ -19,6 +19,7 @@ permissions = [
     "allow-disconnect-and-clear-session",
     "allow-check-if-last-device",
     "allow-is-logged-in",
+    "allow-has-session-stored",
     "allow-reset-cross-signing",
     "allow-edit-user-information",
     "allow-upload-media",

@@ -21,8 +21,9 @@ export class RoomsCollection extends RuneStore<RoomsList> {
 		};
 		const options: TauriPluginSvelteRuneStoreOptions<RoomsList> = {
 			hooks,
+			save: false,
 			syncStrategy: 'debounce',
-			syncInterval: 300
+			syncInterval: 10
 		};
 
 		super(

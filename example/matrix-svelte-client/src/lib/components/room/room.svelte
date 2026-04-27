@@ -12,21 +12,22 @@
 	import { cn } from '$lib/utils.svelte';
 	import { loginStore, roomsCollection } from '../../../hooks.client';
 	import RoomInput from './room-input.svelte';
-	import MediaViewer from '$lib/components/common/media-viewer.svelte';
+	import MediaViewer from '../common/media-viewer.svelte';
 	import type { MediaViewerInfo } from '../media/utils';
+	import { Spinner } from '../ui/spinner';
 	import {
-		RoomStore,
 		createMatrixRequest,
-		submitAsyncRequest,
-		type RoomMessageEventContent,
-		type AudioInfo,
-		type VideoInfo,
-		type ImageInfo,
-		type FileInfo,
 		isVideoOrImageInfo,
-		uploadMedia
+		submitAsyncRequest,
+		uploadMedia,
+		type AudioInfo,
+		type FileInfo,
+		type ImageInfo,
+		type MediaRequestParameters,
+		type RoomMessageEventContent,
+		type RoomStore,
+		type VideoInfo
 	} from 'tauri-plugin-matrix-svelte-api';
-	import { Spinner } from '$lib/components/ui/spinner';
 
 	type Props = {
 		roomStore: RoomStore;
@@ -176,7 +177,7 @@
 	let showMediaViewer = $state(false);
 	let mediaViewerSrc = $state<string | null>(null);
 	let mediaViewerMxcUri = $state<Promise<string> | undefined>();
-
+	let mediaViewerSource = $state<MediaRequestParameters['source']>();
 	let mediaViewerInfo = $state<MediaViewerInfo | undefined>();
 	let viewerMode: 'send' | 'view' = $state('send');
 	let viewedMediaType: 'image' | 'video' | 'file' = $state('image');
@@ -201,13 +202,15 @@
 			filename?: string;
 			body?: string;
 			size: number;
-		}
+		},
+		mediaSource: MediaRequestParameters['source']
 	) => {
 		viewedMediaType = type;
 		mediaViewerSrc = src;
 
 		mediaViewerInfo = { ...info };
 		viewerMode = 'view';
+		mediaViewerSource = mediaSource;
 		showMediaViewer = true;
 	};
 
@@ -247,7 +250,6 @@
 				body: additionalInfo?.message ?? '', // The body must be defined for some reason.
 				// TODO: use those two fields ?
 				'm.mentions': null,
-				'm.relates_to': undefined,
 				filename: mediaViewerInfo?.filename ?? null,
 				info: completeInfo ?? null,
 				url: await mediaViewerMxcUri,
@@ -300,11 +302,7 @@
 
 <div class="bg-background pb-tauri-bottom-safe relative flex h-full flex-col">
 	<RoomHeader {roomStore} initialAvatarUrl={roomAvatarUrl} />
-	{#if !roomItems}
-		<div class="flex h-full w-full items-center justify-center">
-			<Spinner class="size-8" />
-		</div>
-	{:else}
+	{#if roomStore.state.tlState}
 		<div class={cn('w-full flex-1 overflow-hidden')}>
 			<ScrollArea bind:viewportRef={viewportElement} class="h-full bg-white">
 				<div class="flex flex-col gap-4 p-4 pb-2">
@@ -349,6 +347,10 @@
 		{/if}
 
 		<RoomInput {roomStore} bind:replyingTo {handleOpenMediaSendMode} {handleSendAudioMessage} />
+	{:else}
+		<div class="m-auto">
+			<Spinner class="size-8" />
+		</div>
 	{/if}
 </div>
 
@@ -361,5 +363,6 @@
 		onClose={handleCloseMediaViewer}
 		onSend={handleSendMedia}
 		filename={mediaViewerInfo?.filename}
+		mediaSource={mediaViewerSource}
 	/>
 {/if}
