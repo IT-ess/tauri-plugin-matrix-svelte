@@ -8,7 +8,6 @@
 	import { Toaster, toast } from 'svelte-sonner';
 	import { MediaQuery } from 'svelte/reactivity';
 	import type { LayoutProps } from './$types';
-	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { m } from '$lib/paraglide/messages';
 	import '@saurl/tauri-plugin-safe-area-insets-css-api';
