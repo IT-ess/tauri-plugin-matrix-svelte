@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-write-media-to-selected-folder"
+description = "Enables the write_media_to_selected_folder command without any pre-configured scope."
+commands.allow = ["write_media_to_selected_folder"]
+
+[[permission]]
+identifier = "deny-write-media-to-selected-folder"
+description = "Denies the write_media_to_selected_folder command without any pre-configured scope."
+commands.deny = ["write_media_to_selected_folder"]

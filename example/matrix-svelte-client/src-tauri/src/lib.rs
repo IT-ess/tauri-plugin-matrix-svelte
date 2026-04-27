@@ -1,13 +1,13 @@
+use anyhow::anyhow;
 use mime_serde_shim::Wrapper as MimeWrapper;
 use serde::Deserialize;
 use tauri::http::{self, HeaderValue, Uri};
 use tauri::{Emitter, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_matrix_svelte::{
-    AUTH_DEEPLINK_SENDER, Base64, EncryptedFile, EncryptedFileHashes, EncryptedFileInfo,
-    MatrixRequest, MediaFormat, MediaRequestParameters, MediaSource, MediaThumbnailSettings,
-    Method, OwnedMxcUri, Standard, UInt, UrlSafe, V2EncryptedFileInfo, oneshot,
-    submit_async_request,
+    AUTH_DEEPLINK_SENDER, Base64, CLIENT, EncryptedFile, EncryptedFileHashes, EncryptedFileInfo,
+    MediaFormat, MediaRequestParameters, MediaSource, MediaThumbnailSettings, Method, OwnedMxcUri,
+    Standard, UInt, UrlSafe, V2EncryptedFileInfo,
 };
 use tauri_plugin_svelte::CborMarshaler;
 use tracing::{debug, error, trace};
@@ -27,7 +27,20 @@ pub fn run() {
                 // Android and Windows doesn't support directly using a custom protocol.
                 // So we reconstruct a new_uri matching the common pattern.
                 let uri = if cfg!(any(target_os = "android", target_os = "windows")) {
-                    android_windows_to_common_uri(raw_uri)
+                    match android_windows_to_common_uri(raw_uri) {
+                        Ok(common_uri) => common_uri,
+                        Err(e) => {
+                            error!("URI {raw_uri} couldn't be converted to android format. {e}.");
+                            responder.respond(
+                                http::Response::builder()
+                                    .status(http::StatusCode::BAD_REQUEST)
+                                    .header(http::header::CONTENT_TYPE, "text/plain")
+                                    .body("failed to get media, wrong url".as_bytes().to_vec())
+                                    .unwrap(),
+                            );
+                            return;
+                        }
+                    }
                 } else {
                     raw_uri.to_owned()
                 };
@@ -125,14 +138,19 @@ pub fn run() {
                     );
                 }
 
-                let (tx, rx) = oneshot::channel();
-                submit_async_request(MatrixRequest::FetchMedia {
-                    media_request,
-                    content_sender: tx,
-                });
+                let Some(client) = CLIENT.get() else {
+                    responder.respond(
+                        http::Response::builder()
+                            .status(http::StatusCode::BAD_REQUEST)
+                            .header(http::header::CONTENT_TYPE, "text/plain")
+                            .body("failed to get media. Client not ready.".as_bytes().to_vec())
+                            .unwrap(),
+                    );
+                    return;
+                };
 
-                match rx.await {
-                    Ok(Ok(data)) => match response.status(200).body(data) {
+                match client.media().get_media_content(&media_request, true).await {
+                    Ok(data) => match response.status(200).body(data) {
                         Ok(res) => {
                             responder.respond(res);
                             trace!("responded to uri request {}", request.uri());
@@ -141,7 +159,7 @@ pub fn run() {
                             error!("Cannot build response. {e}")
                         }
                     },
-                    Ok(Err(e)) => {
+                    Err(e) => {
                         error!("Media error: {e}");
                         responder.respond(
                             http::Response::builder()
@@ -151,20 +169,11 @@ pub fn run() {
                                 .unwrap(),
                         );
                     }
-                    Err(e) => {
-                        error!("Channel error: {e}");
-                        responder.respond(
-                            http::Response::builder()
-                                .status(http::StatusCode::INTERNAL_SERVER_ERROR)
-                                .header(http::header::CONTENT_TYPE, "text/plain")
-                                .body("failed to get media, channel error".as_bytes().to_vec())
-                                .unwrap(),
-                        );
-                    }
                 }
             });
         },
     );
+
     builder = logging::setup_logging(builder);
 
     #[cfg(desktop)]
@@ -179,12 +188,22 @@ pub fn run() {
         }));
     }
 
+    #[cfg(mobile)]
+    {
+        builder = builder.plugin(tauri_plugin_sharekit::init());
+    }
+
     // Init deeplink plugin before tauri_plugin_mobile_sharetarget
     builder = builder.plugin(tauri_plugin_deep_link::init());
 
     #[cfg(target_os = "ios")]
     {
         builder = builder.plugin(tauri_plugin_web_auth::init());
+    }
+
+    #[cfg(target_os = "android")]
+    {
+        builder = builder.plugin(tauri_plugin_android_fs::init());
     }
 
     builder
@@ -339,16 +358,25 @@ struct MediaQueryParams {
     tm: Option<Method>,
 }
 
-fn android_windows_to_common_uri(raw_uri: &Uri) -> Uri {
+fn android_windows_to_common_uri(raw_uri: &Uri) -> anyhow::Result<Uri> {
     let mut split_iter = raw_uri.path_and_query().unwrap().as_str().split("/");
 
     // burn the first /
     split_iter.next();
     let new_uri = Uri::builder()
         .scheme("mxc")
-        .authority(split_iter.next().unwrap())
-        .path_and_query(format!("/{}", split_iter.next().unwrap()));
-    new_uri.build().unwrap()
+        .authority(
+            split_iter
+                .next()
+                .ok_or(anyhow!("Missing authority in URI"))?,
+        )
+        .path_and_query(format!(
+            "/{}",
+            split_iter
+                .next()
+                .ok_or(anyhow!("Missing path and query in URI"))?
+        ));
+    new_uri.build().map_err(anyhow::Error::from)
 }
 
 #[test]
@@ -357,7 +385,7 @@ fn reconstruct_custom_uri() {
         Uri::from_static("http://mxc.localhost/matrix.org/mysuperid?iv=MRQMwnE55C0AAAAAAAAAAA");
     let common_uri = Uri::from_static("mxc://matrix.org/mysuperid?iv=MRQMwnE55C0AAAAAAAAAAA");
 
-    let new_uri = android_windows_to_common_uri(&uri);
+    let new_uri = android_windows_to_common_uri(&uri).unwrap();
 
     assert_eq!(new_uri, common_uri);
 }

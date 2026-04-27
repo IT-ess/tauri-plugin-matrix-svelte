@@ -295,6 +295,18 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "Enables the android_share_matrix_media command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-android-share-matrix-media",
+          "markdownDescription": "Enables the android_share_matrix_media command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the android_share_matrix_media command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-android-share-matrix-media",
+          "markdownDescription": "Denies the android_share_matrix_media command without any pre-configured scope."
+        },
+        {
           "description": "Enables the build_client_from_homeserver_url command without any pre-configured scope.",
           "type": "string",
           "const": "allow-build-client-from-homeserver-url",
@@ -583,6 +595,18 @@
           "markdownDescription": "Denies the setup_new_backup command without any pre-configured scope."
         },
         {
+          "description": "Enables the silent_save_matrix_media_to_cache_dir command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-silent-save-matrix-media-to-cache-dir",
+          "markdownDescription": "Enables the silent_save_matrix_media_to_cache_dir command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the silent_save_matrix_media_to_cache_dir command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-silent-save-matrix-media-to-cache-dir",
+          "markdownDescription": "Denies the silent_save_matrix_media_to_cache_dir command without any pre-configured scope."
+        },
+        {
           "description": "Enables the submit_async_request command without any pre-configured scope.",
           "type": "string",
           "const": "allow-submit-async-request",
@@ -643,10 +667,22 @@
           "markdownDescription": "Denies the watch_notifications command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-get-devices`\n- `allow-verify-device`\n- `allow-submit-matrix-login-request`\n- `allow-forward-oauth-login-deeplink`\n- `allow-build-client-from-homeserver-url`\n- `allow-check-homeserver-auth-type`\n- `allow-get-dm-room-from-user-id`\n- `allow-check-device-verification`\n- `allow-has-backup-setup`\n- `allow-restore-backup-with-passphrase`\n- `allow-setup-new-backup`\n- `allow-search-users`\n- `allow-disconnect-and-clear-session`\n- `allow-check-if-last-device`\n- `allow-is-logged-in`\n- `allow-reset-cross-signing`\n- `allow-edit-user-information`\n- `allow-upload-media`\n- `allow-filter-room-list`\n- `allow-define-room-informations`\n- `allow-get-dm-room-id-or-create-it`\n- `allow-register-notifications`",
+          "description": "Enables the write_media_to_selected_folder command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-write-media-to-selected-folder",
+          "markdownDescription": "Enables the write_media_to_selected_folder command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the write_media_to_selected_folder command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-write-media-to-selected-folder",
+          "markdownDescription": "Denies the write_media_to_selected_folder command without any pre-configured scope."
+        },
+        {
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-get-devices`\n- `allow-verify-device`\n- `allow-submit-matrix-login-request`\n- `allow-forward-oauth-login-deeplink`\n- `allow-build-client-from-homeserver-url`\n- `allow-check-homeserver-auth-type`\n- `allow-get-dm-room-from-user-id`\n- `allow-check-device-verification`\n- `allow-has-backup-setup`\n- `allow-restore-backup-with-passphrase`\n- `allow-setup-new-backup`\n- `allow-search-users`\n- `allow-disconnect-and-clear-session`\n- `allow-check-if-last-device`\n- `allow-is-logged-in`\n- `allow-reset-cross-signing`\n- `allow-edit-user-information`\n- `allow-upload-media`\n- `allow-filter-room-list`\n- `allow-define-room-informations`\n- `allow-get-dm-room-id-or-create-it`\n- `allow-write-media-to-selected-folder`\n- `allow-silent-save-matrix-media-to-cache-dir`\n- `allow-android-share-matrix-media`\n- `allow-register-notifications`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-get-devices`\n- `allow-verify-device`\n- `allow-submit-matrix-login-request`\n- `allow-forward-oauth-login-deeplink`\n- `allow-build-client-from-homeserver-url`\n- `allow-check-homeserver-auth-type`\n- `allow-get-dm-room-from-user-id`\n- `allow-check-device-verification`\n- `allow-has-backup-setup`\n- `allow-restore-backup-with-passphrase`\n- `allow-setup-new-backup`\n- `allow-search-users`\n- `allow-disconnect-and-clear-session`\n- `allow-check-if-last-device`\n- `allow-is-logged-in`\n- `allow-reset-cross-signing`\n- `allow-edit-user-information`\n- `allow-upload-media`\n- `allow-filter-room-list`\n- `allow-define-room-informations`\n- `allow-get-dm-room-id-or-create-it`\n- `allow-register-notifications`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-get-devices`\n- `allow-verify-device`\n- `allow-submit-matrix-login-request`\n- `allow-forward-oauth-login-deeplink`\n- `allow-build-client-from-homeserver-url`\n- `allow-check-homeserver-auth-type`\n- `allow-get-dm-room-from-user-id`\n- `allow-check-device-verification`\n- `allow-has-backup-setup`\n- `allow-restore-backup-with-passphrase`\n- `allow-setup-new-backup`\n- `allow-search-users`\n- `allow-disconnect-and-clear-session`\n- `allow-check-if-last-device`\n- `allow-is-logged-in`\n- `allow-reset-cross-signing`\n- `allow-edit-user-information`\n- `allow-upload-media`\n- `allow-filter-room-list`\n- `allow-define-room-informations`\n- `allow-get-dm-room-id-or-create-it`\n- `allow-write-media-to-selected-folder`\n- `allow-silent-save-matrix-media-to-cache-dir`\n- `allow-android-share-matrix-media`\n- `allow-register-notifications`"
         }
       ]
     }

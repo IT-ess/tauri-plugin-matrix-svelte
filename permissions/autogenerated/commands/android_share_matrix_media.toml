@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-android-share-matrix-media"
+description = "Enables the android_share_matrix_media command without any pre-configured scope."
+commands.allow = ["android_share_matrix_media"]
+
+[[permission]]
+identifier = "deny-android-share-matrix-media"
+description = "Denies the android_share_matrix_media command without any pre-configured scope."
+commands.deny = ["android_share_matrix_media"]

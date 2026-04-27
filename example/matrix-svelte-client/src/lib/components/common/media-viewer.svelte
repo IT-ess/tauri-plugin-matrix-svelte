@@ -3,14 +3,30 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { beforeNavigate } from '$app/navigation';
-	import { XIcon, SendIcon, LoaderIcon, ZoomInIcon, ZoomOutIcon, Paperclip } from '@lucide/svelte';
+	import {
+		XIcon,
+		SendIcon,
+		LoaderIcon,
+		ZoomInIcon,
+		ZoomOutIcon,
+		Paperclip,
+		Share,
+		Download
+	} from '@lucide/svelte';
 	import { m } from '$lib/paraglide/messages';
 	import { encodeImageToBlurhash } from './encode-blurhash.svelte';
-	import type {
-		FileInfo,
-		ImageInfo,
-		RoomMessageEventContent,
-		VideoInfo
+	import { platform } from '@tauri-apps/plugin-os';
+	import { cn } from '$lib/utils.svelte';
+	import { shareFile } from '@choochmeque/tauri-plugin-sharekit-api';
+	import {
+		androidShareMatrixMedia,
+		silentSaveMatrixMediaToCacheDir,
+		writeMediaToSelectedFolder,
+		type FileInfo,
+		type ImageInfo,
+		type MediaRequestParameters,
+		type RoomMessageEventContent,
+		type VideoInfo
 	} from 'tauri-plugin-matrix-svelte-api';
 
 	type MediaType = 'image' | 'video' | 'file';
@@ -29,6 +45,7 @@
 			mediaInfo?: VideoInfo | ImageInfo | FileInfo,
 			additionalInfo?: { message?: string; waveform?: number[] }
 		) => Promise<void>;
+		mediaSource?: MediaRequestParameters['source']; // Only required in view mode
 	}
 
 	let {
@@ -39,7 +56,8 @@
 		isLoading = false,
 		filename,
 		onClose,
-		onSend
+		onSend,
+		mediaSource
 	}: Props = $props();
 
 	let messageText = $state('');
@@ -157,17 +175,100 @@
 		}
 	};
 
+	let exportActionOngoing = $state(false);
+	const handleShare = async () => {
+		if (!mediaSource) return;
+
+		exportActionOngoing = true;
+		try {
+			const sanitizedFilename = filename?.replaceAll(' ', '_') ?? 'Refs_file';
+			if (target == 'android') {
+				await androidShareMatrixMedia({ format: 'File', source: mediaSource }, sanitizedFilename);
+			} else if (target == 'ios') {
+				const filePath = await silentSaveMatrixMediaToCacheDir(
+					{
+						format: 'File',
+						source: mediaSource
+					},
+					sanitizedFilename
+				);
+				await shareFile(filePath);
+			}
+		} catch (err) {
+			console.error(err);
+		} finally {
+			exportActionOngoing = false;
+		}
+	};
+
+	const handleDownload = async () => {
+		if (!mediaSource) return;
+		exportActionOngoing = true;
+		try {
+			const sanitizedFilename = filename?.replaceAll(' ', '_') ?? 'Refs_file';
+			await writeMediaToSelectedFolder({ format: 'File', source: mediaSource }, sanitizedFilename);
+		} catch (err) {
+			console.error(err);
+		} finally {
+			exportActionOngoing = false;
+		}
+	};
+
 	// Before navigate interceptor
 
 	beforeNavigate(({ cancel }) => {
 		cancel();
 		onClose();
 	});
+
+	const target = platform();
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
 <div class="fixed inset-0 z-50 bg-black/95" transition:fade={{ duration: 200 }}>
+	{#if showUI}
+		<div
+			class="pt-safe absolute top-0 right-0 left-0 z-60 flex items-center justify-between border-b border-white/10 bg-black/50 backdrop-blur-sm transition-all duration-200"
+			transition:fade={{ duration: 200 }}
+		>
+			<Button
+				size="icon"
+				variant="ghost"
+				class="size-10 rounded-full text-white hover:bg-white/10"
+				onclick={(e) => {
+					e.stopImmediatePropagation();
+					onClose();
+				}}
+			>
+				<XIcon size={24} />
+			</Button>
+			<div class="w-full">
+				<p class={cn('mb-0.5 text-white', target == 'ios' && !mediaSource ? 'ml-1' : 'ml-10')}>
+					{filename}
+				</p>
+			</div>
+			{#if mediaSource}
+				<div class="flex gap-1">
+					<Button
+						disabled={exportActionOngoing}
+						onclick={handleShare}
+						variant="ghost"
+						class="text-white"><Share /></Button
+					>
+					{#if target != 'ios'}
+						<Button
+							disabled={exportActionOngoing}
+							onclick={handleDownload}
+							variant="ghost"
+							class="text-white"><Download /></Button
+						>
+					{/if}
+				</div>
+			{/if}
+		</div>
+	{/if}
+
 	<div
 		class="absolute inset-0 flex items-center justify-center overflow-hidden"
 		onwheel={mediaType === 'image' ? handleWheel : null}
@@ -257,28 +358,6 @@
 			</div>
 		{/if}
 	</div>
-
-	{#if showUI}
-		<div
-			class="absolute top-0 right-0 left-0 flex items-center justify-between border-b border-white/10 bg-black/50 p-3 backdrop-blur-sm transition-all duration-200 sm:p-4"
-			transition:fade={{ duration: 200 }}
-		>
-			<Button
-				size="icon"
-				variant="ghost"
-				class="pt-safe size-10 rounded-full pb-2 text-white hover:bg-white/10"
-				onclick={(e) => {
-					e.stopImmediatePropagation();
-					onClose();
-				}}
-			>
-				<XIcon size={24} />
-			</Button>
-			<div class="w-full">
-				<p class="pt-safe pb-2 text-white">{filename}</p>
-			</div>
-		</div>
-	{/if}
 
 	{#if mode === 'send' && showUI}
 		<div

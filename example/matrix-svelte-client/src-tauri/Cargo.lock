@@ -3855,6 +3855,7 @@ dependencies = [
 name = "matrix-svelte-client"
 version = "0.3.0"
 dependencies = [
+ "anyhow",
  "mime_serde_shim",
  "rustls-platform-verifier",
  "serde",
@@ -3862,6 +3863,7 @@ dependencies = [
  "serde_urlencoded",
  "tauri",
  "tauri-build",
+ "tauri-plugin-android-fs",
  "tauri-plugin-clipboard-manager",
  "tauri-plugin-deep-link",
  "tauri-plugin-devtools",
@@ -3873,6 +3875,7 @@ dependencies = [
  "tauri-plugin-os",
  "tauri-plugin-persisted-scope",
  "tauri-plugin-safe-area-insets-css",
+ "tauri-plugin-sharekit",
  "tauri-plugin-single-instance",
  "tauri-plugin-svelte",
  "tauri-plugin-web-auth",
@@ -3884,7 +3887,6 @@ dependencies = [
 [[package]]
 name = "matrix-ui-serializable"
 version = "0.2.0"
-source = "git+https://github.com/IT-ess/matrix-ui-serializable#f7d3793012c2670f5aaa1a6af4b197302e9ec56b"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4334,9 +4336,36 @@ checksum = "e6f29f568bec459b0ddff777cec4fe3fd8666d82d5a40ebd0ff7e66134f89bcc"
 dependencies = [
  "bitflags 2.11.1",
  "block2 0.6.1",
+ "libc",
  "objc2 0.6.2",
+ "objc2-cloud-kit",
+ "objc2-core-data",
  "objc2-core-foundation",
  "objc2-core-graphics",
+ "objc2-core-image",
+ "objc2-foundation 0.3.1",
+ "objc2-quartz-core 0.3.1",
+]
+
+[[package]]
+name = "objc2-cloud-kit"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17614fdcd9b411e6ff1117dfb1d0150f908ba83a7df81b1f118005fe0a8ea15d"
+dependencies = [
+ "bitflags 2.11.1",
+ "objc2 0.6.2",
+ "objc2-foundation 0.3.1",
+]
+
+[[package]]
+name = "objc2-core-data"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "291fbbf7d29287518e8686417cf7239c74700fd4b607623140a7d4a3c834329d"
+dependencies = [
+ "bitflags 2.11.1",
+ "objc2 0.6.2",
  "objc2-foundation 0.3.1",
 ]
 
@@ -4347,7 +4376,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c10c2894a6fed806ade6027bcd50662746363a9589d3ec9d9bef30a4e4bc166"
 dependencies = [
  "bitflags 2.11.1",
+ "block2 0.6.1",
  "dispatch2",
+ "libc",
  "objc2 0.6.2",
 ]
 
@@ -4362,6 +4393,16 @@ dependencies = [
  "objc2 0.6.2",
  "objc2-core-foundation",
  "objc2-io-surface",
+]
+
+[[package]]
+name = "objc2-core-image"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "79b3dc0cc4386b6ccf21c157591b34a7f44c8e75b064f85502901ab2188c007e"
+dependencies = [
+ "objc2 0.6.2",
+ "objc2-foundation 0.3.1",
 ]
 
 [[package]]
@@ -4438,6 +4479,17 @@ dependencies = [
  "objc2 0.5.2",
  "objc2-foundation 0.2.2",
  "objc2-metal",
+]
+
+[[package]]
+name = "objc2-quartz-core"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90ffb6a0cd5f182dc964334388560b12a57f7b74b3e2dec5e2722aa2dfb2ccd5"
+dependencies = [
+ "bitflags 2.11.1",
+ "objc2 0.6.2",
+ "objc2-foundation 0.3.1",
 ]
 
 [[package]]
@@ -6322,7 +6374,7 @@ dependencies = [
  "log",
  "objc2 0.5.2",
  "objc2-foundation 0.2.2",
- "objc2-quartz-core",
+ "objc2-quartz-core 0.2.2",
  "raw-window-handle",
  "redox_syscall",
  "wasm-bindgen",
@@ -6517,6 +6569,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "sync_async"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b815ef8e053247ad785b136d233ee9c9872eeda5319f2719d57cac88270c3dd9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
 ]
 
 [[package]]
@@ -6757,6 +6820,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "tauri-plugin-android-fs"
+version = "28.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b12e49f103e69e0f35e10983961135128e7fa5d38ec4517efecb0e6582d4c1d8"
+dependencies = [
+ "base64 0.22.1",
+ "glob",
+ "percent-encoding",
+ "schemars 0.8.22",
+ "serde",
+ "serde_json",
+ "sync_async",
+ "tauri",
+ "tauri-plugin",
+ "tauri-plugin-fs",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "tauri-plugin-clipboard-manager"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6873,6 +6955,7 @@ dependencies = [
  "dbus-secret-service-keyring-store",
  "futures",
  "futures-util",
+ "infer",
  "keyring-core",
  "matrix-ui-serializable",
  "mime_serde_shim",
@@ -6881,6 +6964,8 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-plugin",
+ "tauri-plugin-android-fs",
+ "tauri-plugin-dialog",
  "tauri-plugin-notifications",
  "tauri-plugin-svelte",
  "thiserror 2.0.18",
@@ -6977,6 +7062,27 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "tauri-plugin-sharekit"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "875bdd9fb587e38505db5394df2542f2af4f63d5b2b6356728c9d73692c26900"
+dependencies = [
+ "log",
+ "objc2 0.6.2",
+ "objc2-app-kit",
+ "objc2-core-foundation",
+ "objc2-foundation 0.3.1",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.18",
+ "windows",
+ "windows-collections",
 ]
 
 [[package]]

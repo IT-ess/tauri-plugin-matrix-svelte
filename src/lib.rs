@@ -90,6 +90,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
             commands::filter_room_list,
             commands::define_room_informations,
             commands::get_dm_room_id_or_create_it,
+            commands::write_media_to_selected_folder,
+            commands::silent_save_matrix_media_to_cache_dir,
+            #[cfg(target_os = "android")]
+            commands::android_share_matrix_media,
             commands::register_notifications
         ])
         .setup(|app, api| {
@@ -157,7 +161,6 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
 
 // Re-export for app
 pub use crate::state_updaters::LOGIN_STATE_STORE_ID;
-pub use matrix_ui_serializable::LOGIN_STORE_READY;
 pub use matrix_ui_serializable::commands::submit_async_request;
 pub use matrix_ui_serializable::oneshot;
 pub use matrix_ui_serializable::{
@@ -165,3 +168,4 @@ pub use matrix_ui_serializable::{
     MediaRequestParameters, MediaSource, MediaThumbnailSettings, Method, OwnedMxcUri, Standard,
     UInt, UrlSafe, V2EncryptedFileInfo,
 };
+pub use matrix_ui_serializable::{CLIENT, LOGIN_STORE_READY};

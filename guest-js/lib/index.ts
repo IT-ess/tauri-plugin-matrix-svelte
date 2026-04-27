@@ -11,6 +11,7 @@ import { createMatrixRequest, type MatrixRequest } from './matrix-requests/reque
 import { LoginStore } from './stores/login-store.svelte.js';
 import { RoomStore } from './stores/room-store.svelte.js';
 import { RoomsCollection } from './stores/rooms-collection.svelte.js';
+import type { MediaRequestParameters } from './matrix-requests/media.js';
 
 export function submitMatrixLoginRequest(request: MatrixLoginPayload): Promise<null> {
 	return invoke('plugin:matrix-svelte|submit_matrix_login_request', {
@@ -176,6 +177,44 @@ export function getDmRoomIdOrCreateIt(userId: UserId): Promise<RoomId | null> {
 	return invoke('plugin:matrix-svelte|get_dm_room_id_or_create_it', { userId });
 }
 
+/** Write a Matrix media to a selected folder.
+ * The Rust code handles opening the dialog.
+ * @returns the path where the file has been written.
+ */
+export function writeMediaToSelectedFolder(
+	mediaRequest: MediaRequestParameters,
+	filename: string
+): Promise<string> {
+	return invoke<string>('plugin:matrix-svelte|write_media_to_selected_folder', {
+		mediaRequest,
+		filename
+	});
+}
+
+/** Write a Matrix media to the cache folder silently.
+ * @returns the path where the file has been written.
+ */
+export function silentSaveMatrixMediaToCacheDir(
+	mediaRequest: MediaRequestParameters,
+	filename: string
+): Promise<string> {
+	return invoke<string>('plugin:matrix-svelte|silent_save_matrix_media_to_cache_dir', {
+		mediaRequest,
+		filename
+	});
+}
+
+/**
+ * Write a media to the downloads folder silently
+ * and open the share sheet.
+ */
+export function androidShareMatrixMedia(
+	mediaRequest: MediaRequestParameters,
+	filename: string
+): Promise<void> {
+	return invoke('plugin:matrix-svelte|android_share_matrix_media', { mediaRequest, filename });
+}
+
 /**
  *
  * Register push notifications on mobile and OS notifications on desktop. On desktop just send empty strings.
@@ -247,3 +286,4 @@ export * from './bindings/VideoMessageEventContent.js';
 export * from './bindings/VirtualTimelineItem.js';
 export * from './tauri-events.js';
 export * from './type-guards.js';
+export * from './matrix-requests/media.js';

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-silent-save-matrix-media-to-cache-dir"
+description = "Enables the silent_save_matrix_media_to_cache_dir command without any pre-configured scope."
+commands.allow = ["silent_save_matrix_media_to_cache_dir"]
+
+[[permission]]
+identifier = "deny-silent-save-matrix-media-to-cache-dir"
+description = "Denies the silent_save_matrix_media_to_cache_dir command without any pre-configured scope."
+commands.deny = ["silent_save_matrix_media_to_cache_dir"]

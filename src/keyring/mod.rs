@@ -72,8 +72,8 @@ pub(crate) fn clear_session_in_keyring(app_data_path: PathBuf) -> crate::Result<
 pub(crate) fn init_keyring_store() -> anyhow::Result<()> {
     #[cfg(target_os = "android")]
     {
-        use android_native_keyring_store::credential::AndroidStore;
-        let store = AndroidStore::from_ndk_context().map_err(anyhow::Error::from)?;
+        use android_native_keyring_store::Store as AndroidStore;
+        let store = AndroidStore::new().map_err(anyhow::Error::from)?;
         keyring_core::set_default_store(store);
     }
 

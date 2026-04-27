@@ -28,6 +28,9 @@ Default permissions for the plugin
 - `allow-filter-room-list`
 - `allow-define-room-informations`
 - `allow-get-dm-room-id-or-create-it`
+- `allow-write-media-to-selected-folder`
+- `allow-silent-save-matrix-media-to-cache-dir`
+- `allow-android-share-matrix-media`
 - `allow-register-notifications`
 
 ## Permission Table
@@ -38,6 +41,32 @@ Default permissions for the plugin
 <th>Description</th>
 </tr>
 
+
+<tr>
+<td>
+
+`matrix-svelte:allow-android-share-matrix-media`
+
+</td>
+<td>
+
+Enables the android_share_matrix_media command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-android-share-matrix-media`
+
+</td>
+<td>
+
+Denies the android_share_matrix_media command without any pre-configured scope.
+
+</td>
+</tr>
 
 <tr>
 <td>
@@ -666,6 +695,32 @@ Denies the setup_new_backup command without any pre-configured scope.
 <tr>
 <td>
 
+`matrix-svelte:allow-silent-save-matrix-media-to-cache-dir`
+
+</td>
+<td>
+
+Enables the silent_save_matrix_media_to_cache_dir command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-silent-save-matrix-media-to-cache-dir`
+
+</td>
+<td>
+
+Denies the silent_save_matrix_media_to_cache_dir command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `matrix-svelte:allow-submit-async-request`
 
 </td>
@@ -789,6 +844,32 @@ Enables the watch_notifications command without any pre-configured scope.
 <td>
 
 Denies the watch_notifications command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-write-media-to-selected-folder`
+
+</td>
+<td>
+
+Enables the write_media_to_selected_folder command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-write-media-to-selected-folder`
+
+</td>
+<td>
+
+Denies the write_media_to_selected_folder command without any pre-configured scope.
 
 </td>
 </tr>

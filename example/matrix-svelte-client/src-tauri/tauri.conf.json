@@ -26,7 +26,7 @@
 				"object-src": "'none'",
 				"media-src": "'self' blob: data: asset: http://asset.localhost http://mxc.localhost mxc: https: http://localhost"
 			},
-			"capabilities": ["default", "svelte", "ios"]
+			"capabilities": ["default", "svelte", "ios", "mobile"]
 		}
 	},
 	"plugins": {

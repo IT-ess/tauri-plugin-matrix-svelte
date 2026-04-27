@@ -23,6 +23,9 @@ const COMMANDS: &[&str] = &[
     "filter_room_list",
     "define_room_informations",
     "get_dm_room_id_or_create_it",
+    "write_media_to_selected_folder",
+    "silent_save_matrix_media_to_cache_dir",
+    "android_share_matrix_media",
     "register_notifications",
 ];
 

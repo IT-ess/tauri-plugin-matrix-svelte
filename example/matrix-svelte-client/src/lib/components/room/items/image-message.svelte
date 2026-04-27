@@ -4,6 +4,7 @@
 	import {
 		imageMessageSourceIsPlain,
 		type ImageMessageEventContent,
+		type MediaRequestParameters,
 		type StickerEventContent
 	} from 'tauri-plugin-matrix-svelte-api';
 
@@ -17,7 +18,8 @@
 				filename?: string;
 				body?: string;
 				size: number;
-			}
+			},
+			mediaSource: MediaRequestParameters['source']
 		) => void;
 	};
 
@@ -33,26 +35,25 @@
 			? getCustomMxcUriFromOriginal(itemContent.url, {
 					mime:
 						itemContent.info?.thumbnail_info?.mimetype ?? itemContent.info?.mimetype ?? undefined,
-					size: itemContent.info?.thumbnail_info?.size ?? itemContent.info?.size ?? undefined,
-					th: itemContent.info?.thumbnail_info?.h ?? undefined,
-					tw: itemContent.info?.thumbnail_info?.w ?? undefined,
-					tm: 'crop'
+					size: itemContent.info?.thumbnail_info?.size ?? itemContent.info?.size ?? undefined
 				})
 			: getCustomMxcUriFromOriginal(itemContent.file, {
 					mime:
 						itemContent.info?.thumbnail_info?.mimetype ?? itemContent.info?.mimetype ?? undefined,
-					size: itemContent.info?.thumbnail_info?.size ?? itemContent.info?.size ?? undefined,
-					th: itemContent.info?.thumbnail_info?.h ?? undefined,
-					tw: itemContent.info?.thumbnail_info?.w ?? undefined,
-					tm: 'crop'
+					size: itemContent.info?.thumbnail_info?.size ?? itemContent.info?.size ?? undefined
 				})) as string
 	);
 
 	const toggleFullscreen = (imageSrc: string) => {
-		handleOpenMediaViewMode('image', imageSrc, {
-			body: itemContent.body,
-			size: itemContent.info?.size ?? 1
-		});
+		handleOpenMediaViewMode(
+			'image',
+			imageSrc,
+			{
+				body: itemContent.body,
+				size: itemContent.info?.size ?? 1
+			},
+			imageMessageSourceIsPlain(itemContent) ? { url: itemContent.url } : { file: itemContent.file }
+		);
 	};
 
 	let isLoaded = $state(false);
@@ -61,21 +62,25 @@
 	let imageHeightOrDefault = $derived(itemContent.info?.h ?? 200);
 </script>
 
-<div class={cn('bg-card relative mt-1 overflow-hidden', isSticker ? '' : 'rounded-lg border')}>
+<div
+	class={cn('bg-card relative mt-1 overflow-hidden', isSticker ? '' : 'rounded-lg border')}
+	style="content-visibility: auto;"
+>
 	{#if !isLoaded}
 		<canvas
 			{@attach (canvas) => {
-				const pixels = decode(blurhash, imageWidthOrDefault, imageHeightOrDefault);
+				const pixels = decode(blurhash, 32, 32);
 				const context = canvas.getContext('2d');
-				const imageData = context?.createImageData(imageWidthOrDefault, imageHeightOrDefault);
+				const imageData = context?.createImageData(32, 32);
 				if (imageData) {
 					imageData.data.set(pixels);
 					context?.putImageData(imageData, 0, 0);
 				}
 			}}
-			width={imageWidthOrDefault}
-			height={imageHeightOrDefault}
-			class="w-full object-cover"
+			width={32}
+			height={32}
+			class="h-full w-full object-cover"
+			style="image-rendering: auto;"
 		></canvas>
 	{/if}
 	<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
@@ -83,7 +88,8 @@
 		src={imageSrc}
 		loading="lazy"
 		decoding="async"
-		style="aspect-ratio: {imageWidthOrDefault} / {imageHeightOrDefault}; content-visibility: auto; contain-intrinsic-size: 0 {imageHeightOrDefault}px;"
+		width={imageWidthOrDefault}
+		height={imageHeightOrDefault}
 		{alt}
 		class="cursor-pointer object-cover"
 		role="button"

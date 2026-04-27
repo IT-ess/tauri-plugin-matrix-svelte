@@ -14,6 +14,8 @@ pub enum Error {
     MatrixLib(#[from] matrix_ui_serializable::Error),
     #[error(transparent)]
     Keyring(#[from] keyring_core::Error),
+    #[error(transparent)]
+    Tauri(#[from] tauri::Error),
     #[cfg(mobile)]
     #[error(transparent)]
     PluginInvoke(#[from] tauri::plugin::mobile::PluginInvokeError),

@@ -103,6 +103,9 @@ importers:
       '@choochmeque/tauri-plugin-notifications-api':
         specifier: ^0.4.5
         version: 0.4.5
+      '@choochmeque/tauri-plugin-sharekit-api':
+        specifier: ^0.3.1
+        version: 0.3.1
       '@eslint/compat':
         specifier: ^2.0.5
         version: 2.0.5(eslint@10.2.1(jiti@2.6.1))
@@ -294,6 +297,9 @@ packages:
 
   '@choochmeque/tauri-plugin-notifications-api@0.4.5':
     resolution: {integrity: sha512-j/qSJI9HjHsSUMsI5x9Qmx/FHdD81UvZm1ZRIbC6+DQPkj1xVJgPm+L1lFFUVO+NzLVUFnBiTsCSQ6xlSSj0DQ==}
+
+  '@choochmeque/tauri-plugin-sharekit-api@0.3.1':
+    resolution: {integrity: sha512-Cdd1wPW9Arang3sapz1LXDdklY06wnaf+zqsT+iS1c64cyozjhKYwAzLdirJY0HtlPlaZ7G5PsCfqgLoXkpqlg==}
 
   '@csstools/color-helpers@6.0.2':
     resolution: {integrity: sha512-LMGQLS9EuADloEFkcTBR3BwV/CGHV7zyDxVRtVDTwdI2Ca4it0CCVTT9wCkxSgokjE5Ho41hEPgb8OEUwoXr6Q==}
@@ -2613,6 +2619,10 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.10.1
 
+  '@choochmeque/tauri-plugin-sharekit-api@0.3.1':
+    dependencies:
+      '@tauri-apps/api': 2.10.1
+
   '@csstools/color-helpers@6.0.2':
     optional: true
 
@@ -3320,10 +3330,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/eslint-plugin@8.59.0(@typescript-eslint/parser@8.59.0(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3))(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3)':
+  '@typescript-eslint/eslint-plugin@8.59.0(@typescript-eslint/parser@8.59.0(eslint@10.2.1(jiti@2.6.1))(typescript@5.9.3))(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.2
-      '@typescript-eslint/parser': 8.59.0(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3)
+      '@typescript-eslint/parser': 8.59.0(eslint@10.2.1(jiti@2.6.1))(typescript@5.9.3)
       '@typescript-eslint/scope-manager': 8.59.0
       '@typescript-eslint/type-utils': 8.59.0(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3)
       '@typescript-eslint/utils': 8.59.0(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3)
@@ -4647,7 +4657,7 @@ snapshots:
 
   typescript-eslint@8.59.0(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3):
     dependencies:
-      '@typescript-eslint/eslint-plugin': 8.59.0(@typescript-eslint/parser@8.59.0(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3))(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3)
+      '@typescript-eslint/eslint-plugin': 8.59.0(@typescript-eslint/parser@8.59.0(eslint@10.2.1(jiti@2.6.1))(typescript@5.9.3))(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3)
       '@typescript-eslint/parser': 8.59.0(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3)
       '@typescript-eslint/typescript-estree': 8.59.0(typescript@6.0.3)
       '@typescript-eslint/utils': 8.59.0(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3)

@@ -3,14 +3,15 @@
 	import { Button } from '$lib/components/ui/button';
 	import { m } from '$lib/paraglide/messages';
 	import { Play } from '@lucide/svelte';
+	import type { MediaRequestParameters } from 'tauri-plugin-matrix-svelte-api';
+	import { Channel, invoke } from '@tauri-apps/api/core';
+	import { getCustomMxcUriFromOriginal } from '$lib/utils.svelte';
 	import {
 		videoMessageInfoThumbnailSourceIsPlain,
 		videoMessageSourceIsPlain,
 		type MediaStreamEvent,
 		type VideoMessageEventContent
 	} from 'tauri-plugin-matrix-svelte-api';
-	import { Channel, invoke } from '@tauri-apps/api/core';
-	import { getCustomMxcUriFromOriginal } from '$lib/utils.svelte';
 
 	type Props = {
 		itemContent: VideoMessageEventContent;
@@ -21,7 +22,8 @@
 				filename?: string;
 				body?: string;
 				size: number;
-			}
+			},
+			mediaSource: MediaRequestParameters['source']
 		) => void;
 	};
 
@@ -54,6 +56,9 @@
 	let totalSize = $derived(itemContent.info?.size ?? 1);
 	let bytesReceived = $state(0);
 	let progress = $derived(bytesReceived / totalSize);
+	let mediaSource = $derived(
+		videoMessageSourceIsPlain(itemContent) ? { url: itemContent.url } : { file: itemContent.file }
+	);
 
 	const loadVideoSource = async () => {
 		if (isLoading) return;
@@ -96,10 +101,15 @@
 					videoSrc = URL.createObjectURL(blob);
 					isLoading = false;
 					console.log(`File fetch completed: ${message.data.totalBytes} bytes`);
-					handleOpenMediaViewMode('video', videoSrc, {
-						body: itemContent.body,
-						size: itemContent.info?.size ?? 1
-					});
+					handleOpenMediaViewMode(
+						'video',
+						videoSrc,
+						{
+							body: itemContent.body,
+							size: itemContent.info?.size ?? 1
+						},
+						mediaSource
+					);
 					return;
 				}
 
@@ -111,7 +121,7 @@
 				}
 			};
 			if (videoMessageSourceIsPlain(itemContent)) {
-				await invoke('plugin:matrix-svelte|fetch_media', {
+				await invoke('fetch_media', {
 					mediaRequest: {
 						format: 'File',
 						source: { url: itemContent.url }
@@ -119,7 +129,7 @@
 					onEvent
 				});
 			} else {
-				await invoke('plugin:matrix-svelte|fetch_media', {
+				await invoke('fetch_media', {
 					mediaRequest: {
 						format: 'File',
 						source: { file: itemContent.file }
@@ -136,10 +146,15 @@
 
 	const startVideoLoadOrOpen = async () => {
 		if (videoSrc) {
-			handleOpenMediaViewMode('video', videoSrc, {
-				body: itemContent.body,
-				size: itemContent.info?.size ?? 1
-			});
+			handleOpenMediaViewMode(
+				'video',
+				videoSrc,
+				{
+					body: itemContent.body,
+					size: itemContent.info?.size ?? 1
+				},
+				mediaSource
+			);
 		} else {
 			try {
 				await loadVideoSource();
@@ -152,26 +167,38 @@
 
 <div
 	class="bg-card relative mt-1 flex items-center justify-center overflow-hidden rounded-lg border"
+	style="content-visibility: auto;"
 >
 	{#if !isThumbLoaded}
 		<canvas
 			{@attach (canvas) => {
-				const pixels = decode(blurhash, imageWidthOrDefault, imageHeightOrDefault);
+				const pixels = decode(blurhash, 32, 32);
 				const context = canvas.getContext('2d');
-				const imageData = context?.createImageData(imageWidthOrDefault, imageHeightOrDefault);
+				const imageData = context?.createImageData(32, 32);
 				if (imageData) {
 					imageData.data.set(pixels);
 					context?.putImageData(imageData, 0, 0);
 				}
 			}}
-			width={imageWidthOrDefault}
-			height={imageHeightOrDefault}
-			class="w-full object-cover"
+			width={32}
+			height={32}
+			style="image-rendering: auto;"
+			class="h-full w-full object-cover"
 		></canvas>
 	{/if}
 
-	<div
-		class="relative flex items-center justify-center"
+	<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
+	<img
+		onload={() => (isThumbLoaded = true)}
+		src={thumnailSrc}
+		loading="lazy"
+		decoding="async"
+		width={imageWidthOrDefault}
+		height={imageHeightOrDefault}
+		{alt}
+		class="cursor-pointer object-cover"
+		role="button"
+		tabindex="0"
 		onclick={startVideoLoadOrOpen}
 		onkeydown={(e) => {
 			if (e.key === 'Enter' || e.key === ' ') {
@@ -179,19 +206,7 @@
 				startVideoLoadOrOpen();
 			}
 		}}
-		role="button"
-		tabindex="0"
-	>
-		<img
-			loading="lazy"
-			decoding="async"
-			style="aspect-ratio: {imageWidthOrDefault} / {imageHeightOrDefault}; content-visibility: auto; contain-intrinsic-size: 0 {imageHeightOrDefault}px;"
-			onload={() => (isThumbLoaded = true)}
-			src={thumnailSrc}
-			{alt}
-			class="cursor-pointer object-cover"
-		/>
-	</div>
+	/>
 
 	<button onclick={startVideoLoadOrOpen} class="absolute rounded-full bg-white/70">
 		{#if isLoading}

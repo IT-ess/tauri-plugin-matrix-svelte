@@ -9,9 +9,10 @@ use matrix_ui_serializable::models::misc::{
 use matrix_ui_serializable::models::profile::ProfileModel;
 use matrix_ui_serializable::{
     FrontendVerificationState, MatrixRequest, MediaRequestParameters, OwnedDeviceId, OwnedMxcUri,
-    OwnedRoomId, OwnedUserId, UserProfile,
+    OwnedRoomId, OwnedUserId, UserProfile, oneshot,
 };
 use mime_serde_shim::Wrapper as MimeWrapper;
+use std::path::Path;
 use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
 use tauri::ipc::Channel;
@@ -283,6 +284,187 @@ pub(crate) async fn define_room_informations(payload: EditRoomInformationPayload
 #[command]
 pub(crate) fn get_dm_room_id_or_create_it(user_id: OwnedUserId) -> Option<OwnedRoomId> {
     matrix_ui_serializable::commands::get_dm_room_id_or_create_it(user_id)
+}
+
+async fn get_media_and_infer_filename<'a>(
+    media_request: MediaRequestParameters,
+    filename: String,
+) -> Result<(Vec<u8>, &'a str, &'a str, String)> {
+    let (tx, rx) = oneshot::channel();
+    matrix_ui_serializable::commands::submit_async_request(MatrixRequest::FetchMedia {
+        media_request,
+        content_sender: tx,
+    });
+    let contents = rx
+        .await
+        .map_err(anyhow::Error::from)?
+        .map_err(anyhow::Error::from)?;
+    let (kind, mimetype) = infer::get(&contents)
+        .map(|k| (k.extension(), k.mime_type()))
+        .unwrap_or(("", ""));
+
+    let filename_path = Path::new(&filename).with_extension(kind);
+    let filename = filename_path.to_str().unwrap_or("refs_file").to_owned();
+    Ok((contents, kind, mimetype, filename))
+}
+
+#[command(async)]
+pub(crate) async fn write_media_to_selected_folder<R: Runtime>(
+    app_handle: AppHandle<R>,
+    media_request: MediaRequestParameters,
+    filename: String,
+) -> Result<String> {
+    let (contents, _kind, _mimetype, filename) =
+        get_media_and_infer_filename(media_request, filename).await?;
+
+    // Android File API is more complex, so we use a dedicated plugin.
+    #[cfg(target_os = "android")]
+    {
+        use std::io::Write;
+        use tauri_plugin_android_fs::{AndroidFsExt, PublicGeneralPurposeDir};
+        let android_api = app_handle.android_fs_async();
+
+        if !android_api
+            .public_storage()
+            .request_permission()
+            .await
+            .map_err(anyhow::Error::from)?
+        {
+            return Err(Error::Anyhow(anyhow!("Permission denied by user")));
+        }
+
+        let initial_location = android_api
+            .public_storage()
+            .resolve_initial_location(None, PublicGeneralPurposeDir::Download, "", true)
+            .await
+            .map_err(anyhow::Error::from)?;
+
+        let selected_path = android_api
+            .file_picker()
+            .save_file(Some(&initial_location), filename, Some(_mimetype), true)
+            .await
+            .map_err(anyhow::Error::from)?;
+
+        if let Some(path) = selected_path {
+            let mut file: std::fs::File = android_api
+                .open_file_writable(&path)
+                .await
+                .map_err(anyhow::Error::from)?;
+
+            file.write_all(&contents)?;
+            Ok(path.uri)
+        } else {
+            Err(Error::Anyhow(anyhow!("No file path has been selected")))
+        }
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        use tauri::Manager;
+        use tauri_plugin_dialog::DialogExt;
+
+        let selected_path = app_handle
+            .dialog()
+            .file()
+            .set_directory(app_handle.path().download_dir()?)
+            .set_file_name(filename)
+            .add_filter("Refs", &[_kind])
+            .blocking_save_file()
+            .ok_or(anyhow!("No path was selected"))?
+            .into_path()
+            .map_err(anyhow::Error::from)?;
+
+        if let Err(e) = std::fs::write(&selected_path, contents) {
+            tracing::error!("Couldn't write file to given path. {e}");
+            Err(Error::Io(e))
+        } else {
+            Ok(selected_path.to_string_lossy().to_string())
+        }
+    }
+}
+
+#[command(async)]
+pub(crate) async fn silent_save_matrix_media_to_cache_dir<R: Runtime>(
+    app_handle: AppHandle<R>,
+    media_request: MediaRequestParameters,
+    filename: String,
+) -> Result<String> {
+    let (contents, _, _mimetype, filename) =
+        get_media_and_infer_filename(media_request, filename).await?;
+    // Android File API is more complex, so we use a dedicated plugin.
+    #[cfg(target_os = "android")]
+    {
+        use std::io::Write;
+        use tauri_plugin_android_fs::{AndroidFsExt, FileUri};
+
+        let android_api = app_handle.android_fs_async();
+
+        let app_storage = android_api.app_storage();
+        let cache_dir = app_storage
+            .resolve_path(None, tauri_plugin_android_fs::AppDir::Cache)
+            .await
+            .map_err(anyhow::Error::from)?;
+        let cache_dir_uri = FileUri::from_path(cache_dir);
+        let file_uri = android_api
+            .create_new_file(&cache_dir_uri, filename, Some(_mimetype))
+            .await
+            .map_err(|e| Error::Anyhow(anyhow::Error::from(e)))?;
+        let mut file: std::fs::File = android_api
+            .open_file_writable(&file_uri)
+            .await
+            .map_err(anyhow::Error::from)?;
+
+        file.write_all(&contents)?;
+        Ok(file_uri.uri)
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        use tauri::Manager;
+
+        let path = app_handle.path().app_cache_dir()?.join(filename);
+        std::fs::write(&path, &contents)?;
+        Ok(path.to_string_lossy().to_string())
+    }
+}
+
+#[cfg(target_os = "android")]
+#[command(async)]
+pub(crate) async fn android_share_matrix_media<R: Runtime>(
+    app_handle: AppHandle<R>,
+    media_request: MediaRequestParameters,
+    filename: String,
+) -> Result<()> {
+    use tauri_plugin_android_fs::{AndroidFsExt, PublicGeneralPurposeDir};
+
+    let android_api = app_handle.android_fs_async();
+    let (contents, _, mimetype, filename) =
+        get_media_and_infer_filename(media_request, filename).await?;
+
+    if !android_api
+        .public_storage()
+        .request_permission()
+        .await
+        .map_err(anyhow::Error::from)?
+    {
+        return Err(Error::Anyhow(anyhow!("Permission denied by user")));
+    }
+
+    let file_uri = android_api
+        .public_storage()
+        .write_new(
+            None, // Storage volume (e.g. internal storage, SD card). If none, primary one
+            PublicGeneralPurposeDir::Download,
+            filename,
+            Some(mimetype),
+            &contents,
+        )
+        .await
+        .map_err(anyhow::Error::from)?;
+
+    android_api
+        .file_opener()
+        .share_file(&file_uri)
+        .await
+        .map_err(|e| Error::Anyhow(anyhow::Error::from(e)))
 }
 
 #[command]
