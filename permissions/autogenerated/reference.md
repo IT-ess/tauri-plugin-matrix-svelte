@@ -31,6 +31,7 @@ Default permissions for the plugin
 - `allow-get-dm-room-id-or-create-it`
 - `allow-write-media-to-selected-folder`
 - `allow-silent-save-matrix-media-to-cache-dir`
+- `allow-get-event-from-main-timeline`
 - `allow-android-share-matrix-media`
 - `allow-register-notifications`
 
@@ -429,6 +430,32 @@ Enables the get_dm_room_id_or_create_it command without any pre-configured scope
 <td>
 
 Denies the get_dm_room_id_or_create_it command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-get-event-from-main-timeline`
+
+</td>
+<td>
+
+Enables the get_event_from_main_timeline command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-get-event-from-main-timeline`
+
+</td>
+<td>
+
+Denies the get_event_from_main_timeline command without any pre-configured scope.
 
 </td>
 </tr>

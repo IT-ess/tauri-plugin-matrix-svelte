@@ -1,7 +1,7 @@
 import { Channel, invoke } from '@tauri-apps/api/core';
 import type { EditUserInformationPayload } from './bindings/EditUserInformationPayload.js';
 import type { FrontendDevice } from './bindings/FrontendDevice.js';
-import type { UserId, DeviceId, RoomId, MxcUri } from './matrix-requests/common.js';
+import type { UserId, DeviceId, RoomId, MxcUri, EventId } from './matrix-requests/common.js';
 import type { EditRoomInformationPayload } from './bindings/EditRoomInformationPayload.js';
 import type { MatrixLoginPayload } from './bindings/MatrixLoginPayload.js';
 import type { ProfileModel } from './bindings/ProfileModel.js';
@@ -12,6 +12,7 @@ import { LoginStore } from './stores/login-store.svelte.js';
 import { RoomStore } from './stores/room-store.svelte.js';
 import { RoomsCollection } from './stores/rooms-collection.svelte.js';
 import type { MediaRequestParameters } from './matrix-requests/media.js';
+import type { TimelineItem } from './bindings/TimelineItem.js';
 
 export function submitMatrixLoginRequest(request: MatrixLoginPayload): Promise<null> {
 	return invoke('plugin:matrix-svelte|submit_matrix_login_request', {
@@ -221,6 +222,16 @@ export function androidShareMatrixMedia(
 	filename: string
 ): Promise<void> {
 	return invoke('plugin:matrix-svelte|android_share_matrix_media', { mediaRequest, filename });
+}
+
+/**
+ * Get a single event from a room's main timeline.
+ */
+export function getEventFromMainTimeline(roomId: RoomId, eventId: EventId): Promise<TimelineItem> {
+	return invoke<TimelineItem>('plugin:matrix-svelte|get_event_from_main_timeline', {
+		roomId,
+		eventId
+	});
 }
 
 /**

@@ -475,6 +475,18 @@
           "markdownDescription": "Denies the get_dm_room_id_or_create_it command without any pre-configured scope."
         },
         {
+          "description": "Enables the get_event_from_main_timeline command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-event-from-main-timeline",
+          "markdownDescription": "Enables the get_event_from_main_timeline command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_event_from_main_timeline command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-event-from-main-timeline",
+          "markdownDescription": "Denies the get_event_from_main_timeline command without any pre-configured scope."
+        },
+        {
           "description": "Enables the has_backup_setup command without any pre-configured scope.",
           "type": "string",
           "const": "allow-has-backup-setup",
@@ -691,10 +703,10 @@
           "markdownDescription": "Denies the write_media_to_selected_folder command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-get-devices`\n- `allow-verify-device`\n- `allow-submit-matrix-login-request`\n- `allow-forward-oauth-login-deeplink`\n- `allow-build-client-from-homeserver-url`\n- `allow-check-homeserver-auth-type`\n- `allow-get-dm-room-from-user-id`\n- `allow-check-device-verification`\n- `allow-has-backup-setup`\n- `allow-restore-backup-with-passphrase`\n- `allow-setup-new-backup`\n- `allow-search-users`\n- `allow-disconnect-and-clear-session`\n- `allow-check-if-last-device`\n- `allow-is-logged-in`\n- `allow-has-session-stored`\n- `allow-reset-cross-signing`\n- `allow-edit-user-information`\n- `allow-upload-media`\n- `allow-filter-room-list`\n- `allow-define-room-informations`\n- `allow-get-dm-room-id-or-create-it`\n- `allow-write-media-to-selected-folder`\n- `allow-silent-save-matrix-media-to-cache-dir`\n- `allow-android-share-matrix-media`\n- `allow-register-notifications`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-get-devices`\n- `allow-verify-device`\n- `allow-submit-matrix-login-request`\n- `allow-forward-oauth-login-deeplink`\n- `allow-build-client-from-homeserver-url`\n- `allow-check-homeserver-auth-type`\n- `allow-get-dm-room-from-user-id`\n- `allow-check-device-verification`\n- `allow-has-backup-setup`\n- `allow-restore-backup-with-passphrase`\n- `allow-setup-new-backup`\n- `allow-search-users`\n- `allow-disconnect-and-clear-session`\n- `allow-check-if-last-device`\n- `allow-is-logged-in`\n- `allow-has-session-stored`\n- `allow-reset-cross-signing`\n- `allow-edit-user-information`\n- `allow-upload-media`\n- `allow-filter-room-list`\n- `allow-define-room-informations`\n- `allow-get-dm-room-id-or-create-it`\n- `allow-write-media-to-selected-folder`\n- `allow-silent-save-matrix-media-to-cache-dir`\n- `allow-get-event-from-main-timeline`\n- `allow-android-share-matrix-media`\n- `allow-register-notifications`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-get-devices`\n- `allow-verify-device`\n- `allow-submit-matrix-login-request`\n- `allow-forward-oauth-login-deeplink`\n- `allow-build-client-from-homeserver-url`\n- `allow-check-homeserver-auth-type`\n- `allow-get-dm-room-from-user-id`\n- `allow-check-device-verification`\n- `allow-has-backup-setup`\n- `allow-restore-backup-with-passphrase`\n- `allow-setup-new-backup`\n- `allow-search-users`\n- `allow-disconnect-and-clear-session`\n- `allow-check-if-last-device`\n- `allow-is-logged-in`\n- `allow-has-session-stored`\n- `allow-reset-cross-signing`\n- `allow-edit-user-information`\n- `allow-upload-media`\n- `allow-filter-room-list`\n- `allow-define-room-informations`\n- `allow-get-dm-room-id-or-create-it`\n- `allow-write-media-to-selected-folder`\n- `allow-silent-save-matrix-media-to-cache-dir`\n- `allow-android-share-matrix-media`\n- `allow-register-notifications`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-submit-async-request`\n- `allow-fetch-media`\n- `allow-fetch-user-profile`\n- `allow-get-devices`\n- `allow-verify-device`\n- `allow-submit-matrix-login-request`\n- `allow-forward-oauth-login-deeplink`\n- `allow-build-client-from-homeserver-url`\n- `allow-check-homeserver-auth-type`\n- `allow-get-dm-room-from-user-id`\n- `allow-check-device-verification`\n- `allow-has-backup-setup`\n- `allow-restore-backup-with-passphrase`\n- `allow-setup-new-backup`\n- `allow-search-users`\n- `allow-disconnect-and-clear-session`\n- `allow-check-if-last-device`\n- `allow-is-logged-in`\n- `allow-has-session-stored`\n- `allow-reset-cross-signing`\n- `allow-edit-user-information`\n- `allow-upload-media`\n- `allow-filter-room-list`\n- `allow-define-room-informations`\n- `allow-get-dm-room-id-or-create-it`\n- `allow-write-media-to-selected-folder`\n- `allow-silent-save-matrix-media-to-cache-dir`\n- `allow-get-event-from-main-timeline`\n- `allow-android-share-matrix-media`\n- `allow-register-notifications`"
         }
       ]
     }
