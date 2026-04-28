@@ -34,7 +34,8 @@ export const getInitials = (name: string) => {
 		.toUpperCase();
 };
 
-export function roomNameToPlainString(rawName: RoomDisplayName): string {
+export function roomNameToPlainString(rawName: RoomDisplayName | null | undefined): string {
+	if (!rawName) return '?';
 	switch (rawName.kind) {
 		case 'named':
 		case 'aliased':

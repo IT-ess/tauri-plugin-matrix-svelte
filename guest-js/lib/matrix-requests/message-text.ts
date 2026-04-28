@@ -17,9 +17,9 @@ export const sendMessage = (payload: SendMessageRequest['payload']): SendMessage
 export const sendTextMessage = (
 	roomId: RoomId,
 	body: string,
+	threadRootEventId: EventId | null,
 	options?: {
 		replyToId?: EventId;
-		threadRootId?: EventId;
 		// formatted?: FormattedBody; TODO: support formatted messages
 		mentions?: Mentions;
 		relatesTo?: Relation<RoomMessageEventContentWithoutRelation>;
@@ -28,6 +28,7 @@ export const sendTextMessage = (
 	event: 'sendMessage',
 	payload: {
 		roomId,
+		threadRootEventId,
 		message: {
 			msgtype: 'm.text',
 			body,
@@ -35,7 +36,6 @@ export const sendTextMessage = (
 			...(options?.relatesTo && { relates_to: options.relatesTo }),
 			...(options?.mentions && { 'm.mentions': options.mentions })
 		},
-		replyToId: options?.replyToId ?? null,
-		threadRootId: options?.threadRootId ?? null
+		replyToId: options?.replyToId ?? null
 	}
 });

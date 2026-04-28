@@ -71,7 +71,7 @@
 			},
 			mediaSource: MediaRequestParameters['source']
 		) => void;
-		isInThread?: boolean;
+		threadRootEventId: string | null;
 		roomAvatar: string | null;
 		roomMembers: Record<string, FrontendRoomMember>;
 	};
@@ -90,7 +90,7 @@
 		onScrollToMessage,
 		abilities,
 		handleOpenMediaViewMode,
-		isInThread,
+		threadRootEventId,
 		roomAvatar,
 		roomMembers
 	}: Props = $props();
@@ -140,6 +140,7 @@
 		if (data.kind !== 'text') return;
 		let request = createMatrixRequest.editMessage({
 			roomId,
+			threadRootEventId,
 			timelineEventItemId: { timelineItemId, isLocal },
 			editedContent: {
 				msgtype: 'm.text',
@@ -153,6 +154,7 @@
 	const handleRedactMessage = () => {
 		const request = createMatrixRequest.redactMessage({
 			roomId,
+			threadRootEventId,
 			timelineEventId: eventId,
 			reason: null
 		});
@@ -356,7 +358,7 @@
 							</p>
 						{/if}
 					</div>
-					{#if data.threadSummary && !isInThread}
+					{#if data.threadSummary && !threadRootEventId}
 						<ThreadPreview
 							threadSummary={data.threadSummary}
 							{roomId}
@@ -394,7 +396,7 @@
 						<ReplyIcon class="size-4" />
 						{m.button_reply()}</DropdownMenuItem
 					>
-					{#if !isInThread}
+					{#if !threadRootEventId}
 						<DropdownMenuItem
 							class="text-md"
 							onclick={() => gotoThread(roomId, eventId, roomAvatar)}

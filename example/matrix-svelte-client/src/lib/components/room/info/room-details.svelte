@@ -9,14 +9,15 @@
 	import { roomsCollection } from '../../../../hooks.client';
 
 	type Props = {
+		roomId: string;
 		actionRoomDetailsOpen: boolean;
 		roomStore: RoomStore;
 		avatarUrl: string | null;
 	};
-	let { actionRoomDetailsOpen = $bindable(false), roomStore, avatarUrl }: Props = $props();
+	let { roomId, actionRoomDetailsOpen = $bindable(false), roomStore, avatarUrl }: Props = $props();
 
 	let groupName = $derived(roomStore.state.roomName);
-	let groupTopic = $derived(roomsCollection.state.allJoinedRooms[roomStore.state.roomId].topic);
+	let groupTopic = $derived(roomsCollection.state.allJoinedRooms[roomId].topic);
 	let isSaving = $state(false);
 
 	let isEditingName = $state(false);
@@ -28,7 +29,7 @@
 		}
 		isSaving = true;
 		await defineRoomInformations({
-			roomId: roomStore.state.roomId,
+			roomId,
 			topic: null,
 			newAvatarUri: null,
 			newDisplayName: newName
@@ -45,7 +46,7 @@
 	const onSaveTopic = async (newTopic: string) => {
 		isSaving = true;
 		await defineRoomInformations({
-			roomId: roomStore.state.roomId,
+			roomId,
 			topic: newTopic,
 			newAvatarUri: null,
 			newDisplayName: null
@@ -61,7 +62,7 @@
 		isSaving = true;
 		try {
 			await defineRoomInformations({
-				roomId: roomStore.state.roomId,
+				roomId,
 				topic: null,
 				newAvatarUri: uri,
 				newDisplayName: null
@@ -74,7 +75,7 @@
 		}
 	};
 
-	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomStore.state.roomId].isDirect);
+	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomId].isDirect);
 </script>
 
 <Dialog.Root bind:open={actionRoomDetailsOpen}>

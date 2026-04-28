@@ -3,11 +3,7 @@ import type { RoomMessageEventContent } from './RoomMessageEventContent.js';
 
 export type SendMessagePayload = {
 	roomId: string;
+	threadRootEventId: string | null;
 	message: RoomMessageEventContent;
 	replyToId: string | null;
-	/**
-	 * If set, the timeline used to send this message will be thread-focused
-	 * on the given event id.
-	 */
-	threadRootId: string | null;
 };

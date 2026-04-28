@@ -6,7 +6,6 @@
 	import Item from './items/item.svelte';
 	import { ScrollState } from 'runed';
 	import { useDebounce } from 'runed';
-	import RoomHeader from './room-header.svelte';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import { tick } from 'svelte';
 	import { cn } from '$lib/utils.svelte';
@@ -31,8 +30,9 @@
 	type Props = {
 		roomId: string;
 		roomAvatarUrl: string | null;
+		threadRoot: string | null;
 	};
-	let { roomId, roomAvatarUrl }: Props = $props();
+	let { roomId, roomAvatarUrl, threadRoot }: Props = $props();
 
 	if (import.meta.env.DEV) {
 		// eslint-disable-next-line svelte/no-inspect
@@ -66,7 +66,8 @@
 				roomsCollection.state.allJoinedRooms[roomId].numUnreadMessages > 0
 			) {
 				const request = createMatrixRequest.markRoomAsRead({
-					roomId
+					roomId,
+					threadRootEventId: threadRoot
 				});
 				submitAsyncRequest(request);
 			}
@@ -80,7 +81,8 @@
 		if (
 			isLoadingMore ||
 			roomStore.state.tlState?.fullyPaginated ||
-			(roomStore.state.tlState?.items[0].kind === 'virtual' &&
+			(roomStore.state.timelineKind?.kind == 'mainRoom' &&
+				roomStore.state.tlState?.items[0].kind === 'virtual' &&
 				roomStore.state.tlState?.items[0].data.kind === 'timelineStart')
 		)
 			return;
@@ -90,8 +92,9 @@
 		console.log('Loading more messages !');
 
 		try {
-			const request = createMatrixRequest.paginateRoomTimeline({
+			const request = createMatrixRequest.paginateTimeline({
 				roomId,
+				threadRootEventId: threadRoot,
 				numEvents: 20,
 				direction: 'backwards'
 			});
@@ -158,21 +161,6 @@
 		) {
 			tick().then(() => {
 				scroll.scrollTo(0, viewportElement.scrollHeight);
-			});
-		}
-	});
-
-	let roomItems = $derived.by(() => {
-		if (!roomStore.state.tlState) {
-			return null;
-		} else {
-			return roomStore.state.tlState.items.filter((i) => {
-				// Filter items with a thread root
-				if (i.kind === 'msgLike') {
-					return !i.data.threadRoot;
-				} else {
-					return true;
-				}
 			});
 		}
 	});
@@ -266,7 +254,7 @@
 						: null
 			} as RoomMessageEventContent, // TODO: Remove assertion
 			replyToId: replyingTo?.eventId ?? null,
-			threadRootId: null // We cannot send thread messages from here
+			threadRootEventId: threadRoot // We cannot send thread messages from here
 		});
 
 		await submitAsyncRequest(request);
@@ -304,59 +292,65 @@
 	};
 </script>
 
-<div class="bg-background pb-tauri-bottom-safe relative flex h-full flex-col">
-	<RoomHeader {roomStore} initialAvatarUrl={roomAvatarUrl} />
-	{#if roomStore.state.tlState}
-		<div class={cn('w-full flex-1 overflow-hidden')}>
-			<ScrollArea bind:viewportRef={viewportElement} class="h-full bg-white">
-				<div class="flex flex-col gap-4 p-4 pb-2">
-					{#if isLoadingMore}
-						<div class="flex justify-center py-2" transition:fade|local>
-							<LoaderIcon class="text-muted-foreground h-6 w-6 animate-spin" />
-						</div>
-					{/if}
-					{#each roomItems as item (item.uniqueId)}
-						<div transition:fade|local>
-							<Item
-								{item}
-								{roomId}
-								currentUserId={loginStore.state.userId ?? 'shouldbedefined'}
-								onReply={handleReplyTo}
-								onScrollToMessage={scrollToMessage}
-								repliedToMessage={item.kind === 'msgLike' && item.data.inReplyToId !== null
-									? roomStore.state.tlState?.items.find((i) => i.eventId === item.data.inReplyToId)
-									: undefined}
-								{handleOpenMediaViewMode}
-								roomAvatar={roomAvatarUrl}
-								roomMembers={roomStore.state.members}
-							/>
-						</div>
-					{/each}
-					<div id="bottomscroll"></div>
-				</div>
-			</ScrollArea>
-		</div>
-
-		{#if showScrollButton && !replyingTo}
-			<div transition:fade class="absolute right-4 bottom-32 z-10">
-				<Button
-					size="icon"
-					variant="secondary"
-					onclick={() => scroll.scrollToBottom()}
-					class="rounded-full shadow-lg"
-				>
-					<ArrowDownIcon class="h-4 w-4" />
-				</Button>
+{#if roomStore.state.tlState}
+	<div class={cn('w-full flex-1 overflow-hidden')}>
+		<ScrollArea bind:viewportRef={viewportElement} class="h-full bg-white">
+			<div class="flex flex-col gap-4 p-4 pb-2">
+				{#if isLoadingMore}
+					<div class="flex justify-center py-2" transition:fade|local>
+						<LoaderIcon class="text-muted-foreground h-6 w-6 animate-spin" />
+					</div>
+				{/if}
+				{#each roomStore.state.tlState.items as item (item.uniqueId)}
+					<div transition:fade|local>
+						<Item
+							{item}
+							{roomId}
+							currentUserId={loginStore.state.userId ?? 'shouldbedefined'}
+							onReply={handleReplyTo}
+							onScrollToMessage={scrollToMessage}
+							repliedToMessage={item.kind === 'msgLike' && item.data.inReplyToId !== null
+								? roomStore.state.tlState?.items.find((i) => i.eventId === item.data.inReplyToId)
+								: undefined}
+							{handleOpenMediaViewMode}
+							roomAvatar={roomAvatarUrl}
+							roomMembers={roomStore.state.members}
+							threadRootEventId={threadRoot}
+						/>
+					</div>
+				{:else}
+					<p>No items yet</p>
+				{/each}
+				<div id="bottomscroll"></div>
 			</div>
-		{/if}
+		</ScrollArea>
+	</div>
 
-		<RoomInput {roomStore} bind:replyingTo {handleOpenMediaSendMode} {handleSendAudioMessage} />
-	{:else}
-		<div class="m-auto">
-			<Spinner class="size-8" />
+	{#if showScrollButton && !replyingTo}
+		<div transition:fade class="absolute right-4 bottom-32 z-10">
+			<Button
+				size="icon"
+				variant="secondary"
+				onclick={() => scroll.scrollToBottom()}
+				class="rounded-full shadow-lg"
+			>
+				<ArrowDownIcon class="h-4 w-4" />
+			</Button>
 		</div>
 	{/if}
-</div>
+
+	<RoomInput
+		{roomId}
+		bind:replyingTo
+		{handleOpenMediaSendMode}
+		{handleSendAudioMessage}
+		threadRootEventId={threadRoot}
+	/>
+{:else}
+	<div class="m-auto">
+		<Spinner class="size-8" />
+	</div>
+{/if}
 
 {#if showMediaViewer && mediaViewerSrc}
 	<MediaViewer
