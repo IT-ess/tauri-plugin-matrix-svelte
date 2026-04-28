@@ -2,6 +2,7 @@
 import type { InvitedRoomInfo } from './InvitedRoomInfo.js';
 import type { JoinedRoomInfo } from './JoinedRoomInfo.js';
 import type { RoomsCollectionStatus } from './RoomsCollectionStatus.js';
+import type { TimelineKind } from './TimelineKind.js';
 
 /**
  * The struct containing all the data related to the homepage rooms list.
@@ -16,6 +17,14 @@ export type RoomsList = {
 	 * The set of all joined rooms and their cached preview info.
 	 */
 	allJoinedRooms: Record<string, JoinedRoomInfo>;
+	/**
+	 * The list of all room IDs in display order, matching the order from the room list service.
+	 */
+	allKnownRoomsOrder: string[];
+	/**
+	 * Rooms that are explicitly hidden and should never be shown in the rooms list.
+	 */
+	hiddenRooms: Array<string>;
 	/**
 	 * The latest keywords entered into the `RoomFilterInputBar`.
 	 *
@@ -50,9 +59,9 @@ export type RoomsList = {
 	 */
 	status: RoomsCollectionStatus;
 	/**
-	 * The ID of the currently-selected room.
+	 * The ID of the currently-selected timeline.
 	 */
-	currentActiveRoom: string | null;
+	currentActiveRoom: TimelineKind | null;
 	/**
 	 * The maximum number of rooms that will ever be loaded.
 	 */

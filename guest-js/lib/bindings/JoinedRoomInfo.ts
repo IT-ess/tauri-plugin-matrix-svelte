@@ -29,6 +29,10 @@ export type JoinedRoomInfo = {
 	 */
 	numUnreadMentions: number;
 	/**
+	 * Whether the room is manually marked as unread.
+	 */
+	isMarkedUnread: boolean;
+	/**
 	 * The canonical alias for this room, if any.
 	 */
 	canonicalAlias: string | null;

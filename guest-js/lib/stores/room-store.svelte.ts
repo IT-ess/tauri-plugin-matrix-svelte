@@ -15,8 +15,9 @@ export class RoomStore extends RuneStore<RoomScreen> {
 			timelineKind: null,
 			roomName: 'Not known yet',
 			tlState: null,
-			doneLoading: false,
-			typingUsers: [],
+			allRoomsLoaded: false,
+			isLoaded: false,
+			pinnedEvents: [],
 			members: {}
 		};
 
