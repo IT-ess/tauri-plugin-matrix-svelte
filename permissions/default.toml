@@ -28,6 +28,7 @@ permissions = [
     "allow-get-dm-room-id-or-create-it",
     "allow-write-media-to-selected-folder",
     "allow-silent-save-matrix-media-to-cache-dir",
+    "allow-get-event-from-main-timeline",
     "allow-android-share-matrix-media",
     "allow-register-notifications",
 ]

@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use matrix_ui_serializable::commands::VerifyDeviceEvent;
+use matrix_ui_serializable::commands::{OwnedEventId, VerifyDeviceEvent};
 use matrix_ui_serializable::models::events::{
     FrontendDevice, MatrixLoginPayload, MediaStreamEvent,
 };
@@ -8,8 +8,8 @@ use matrix_ui_serializable::models::misc::{
 };
 use matrix_ui_serializable::models::profile::ProfileModel;
 use matrix_ui_serializable::{
-    FrontendVerificationState, MatrixRequest, MediaRequestParameters, OwnedDeviceId, OwnedMxcUri,
-    OwnedRoomId, OwnedUserId, UserProfile, oneshot,
+    FrontendTimelineItem, FrontendVerificationState, MatrixRequest, MediaRequestParameters,
+    OwnedDeviceId, OwnedMxcUri, OwnedRoomId, OwnedUserId, UserProfile, oneshot,
 };
 use mime_serde_shim::Wrapper as MimeWrapper;
 use std::path::Path;
@@ -472,6 +472,19 @@ pub(crate) async fn android_share_matrix_media<R: Runtime>(
         .share_file(&file_uri)
         .await
         .map_err(|e| Error::Anyhow(anyhow::Error::from(e)))
+}
+
+#[command(async)]
+/// Get or fetch an event from a room's main timeline
+/// This can be used to get the thread root event when displaying
+/// a thread timeline.
+pub(crate) async fn get_event_from_main_timeline(
+    room_id: OwnedRoomId,
+    event_id: OwnedEventId,
+) -> Result<FrontendTimelineItem> {
+    matrix_ui_serializable::commands::get_event_from_main_timeline(room_id, event_id)
+        .await
+        .map_err(Into::into)
 }
 
 #[command]

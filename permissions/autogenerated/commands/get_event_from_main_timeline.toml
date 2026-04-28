@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-event-from-main-timeline"
+description = "Enables the get_event_from_main_timeline command without any pre-configured scope."
+commands.allow = ["get_event_from_main_timeline"]
+
+[[permission]]
+identifier = "deny-get-event-from-main-timeline"
+description = "Denies the get_event_from_main_timeline command without any pre-configured scope."
+commands.deny = ["get_event_from_main_timeline"]

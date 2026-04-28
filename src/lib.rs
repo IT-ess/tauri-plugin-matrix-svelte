@@ -93,6 +93,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
             commands::get_dm_room_id_or_create_it,
             commands::write_media_to_selected_folder,
             commands::silent_save_matrix_media_to_cache_dir,
+            commands::get_event_from_main_timeline,
             #[cfg(target_os = "android")]
             commands::android_share_matrix_media,
             commands::register_notifications

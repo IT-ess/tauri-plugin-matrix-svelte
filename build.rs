@@ -26,6 +26,7 @@ const COMMANDS: &[&str] = &[
     "get_dm_room_id_or_create_it",
     "write_media_to_selected_folder",
     "silent_save_matrix_media_to_cache_dir",
+    "get_event_from_main_timeline",
     "android_share_matrix_media",
     "register_notifications",
 ];
