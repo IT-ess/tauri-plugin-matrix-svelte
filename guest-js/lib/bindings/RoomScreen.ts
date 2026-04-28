@@ -25,11 +25,15 @@ export type RoomScreen = {
 	 */
 	members: Record<string, FrontendRoomMember>;
 	/**
-	 * The users of this room that are currently typing a message
+	 * The set of pinned events in this room.
 	 */
-	typingUsers: Array<string>;
+	pinnedEvents: Array<string>;
 	/**
-	 * Wether this room is still loading or not
+	 * Whether this room has been successfully loaded (received from the homeserver).
 	 */
-	doneLoading: boolean;
+	isLoaded: boolean;
+	/**
+	 * Whether or not all rooms have been loaded (received from the homeserver).
+	 */
+	allRoomsLoaded: boolean;
 };
