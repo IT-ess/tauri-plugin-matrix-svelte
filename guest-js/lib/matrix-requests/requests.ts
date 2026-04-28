@@ -152,6 +152,7 @@ interface ToggleReactionRequest {
 	event: 'toggleReaction';
 	payload: {
 		roomId: RoomId;
+		threadRootEventId: string | null;
 		timelineEventId: TimelineEventItemId;
 		reaction: string;
 	};
