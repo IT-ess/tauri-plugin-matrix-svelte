@@ -120,6 +120,7 @@
 		const request = createMatrixRequest.toggleReaction({
 			reaction: emoji,
 			roomId,
+			threadRootEventId,
 			timelineEventId: eventId
 		});
 		await submitAsyncRequest(request);

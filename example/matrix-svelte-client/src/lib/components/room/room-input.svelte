@@ -65,8 +65,7 @@
 	// Handle sending new message
 	const handleSendTextMessage = async () => {
 		if (!newMessage.trim()) return;
-
-		const request = createMatrixRequest.sendTextMessage(roomId, newMessage, threadRootEventId, {
+		const request = createMatrixRequest.sendTextMessage(roomId, threadRootEventId, newMessage, {
 			replyToId: replyingTo?.eventId
 		});
 

@@ -16,8 +16,8 @@ export const sendMessage = (payload: SendMessageRequest['payload']): SendMessage
 
 export const sendTextMessage = (
 	roomId: RoomId,
-	body: string,
 	threadRootEventId: EventId | null,
+	body: string,
 	options?: {
 		replyToId?: EventId;
 		// formatted?: FormattedBody; TODO: support formatted messages
