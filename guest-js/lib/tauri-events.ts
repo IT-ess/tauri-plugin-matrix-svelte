@@ -12,6 +12,7 @@ export type VerificationResultEventType = {
 
 export type UpdateCurrentActiveRoom = {
 	roomId: string;
+	threadRootEventId: string | null;
 	roomName: string;
 };
 

@@ -16,10 +16,11 @@ import { sendMessage, type SendMessageRequest, sendTextMessage } from './message
 type PaginationDirection = 'backwards' | 'forwards';
 
 // Individual request types matching the Rust enum variants
-interface PaginateRoomTimelineRequest {
-	event: 'paginateRoomTimeline';
+interface PaginateTimelineRequest {
+	event: 'paginateTimeline';
 	payload: {
 		roomId: RoomId;
+		threadRootEventId: string | null;
 		numEvents: number;
 		direction: PaginationDirection;
 	};
@@ -29,6 +30,7 @@ interface EditMessageRequest {
 	event: 'editMessage';
 	payload: {
 		roomId: RoomId;
+		threadRootEventId: string | null;
 		timelineEventItemId: { timelineItemId: string; isLocal: boolean };
 		editedContent: RoomMessageEventContentWithoutRelation;
 	};
@@ -38,6 +40,7 @@ interface FetchDetailsForEventRequest {
 	event: 'fetchDetailsForEvent';
 	payload: {
 		roomId: RoomId;
+		threadRootEventId: string | null;
 		eventId: EventId;
 	};
 }
@@ -46,6 +49,7 @@ interface SyncRoomMemberListRequest {
 	event: 'syncRoomMemberList';
 	payload: {
 		roomId: RoomId;
+		threadRootEventId: string | null;
 	};
 }
 
@@ -76,6 +80,7 @@ interface GetNumberUnreadMessagesRequest {
 	event: 'getNumberUnreadMessages';
 	payload: {
 		roomId: RoomId;
+		threadRootEventId: string | null;
 	};
 }
 
@@ -113,6 +118,7 @@ interface SubscribeToOwnUserReadReceiptsChangedRequest {
 	event: 'subscribeToOwnUserReadReceiptsChanged';
 	payload: {
 		roomId: RoomId;
+		threadRootEventId: string | null;
 		subscribe: boolean;
 	};
 }
@@ -121,7 +127,9 @@ interface ReadReceiptRequest {
 	event: 'readReceipt';
 	payload: {
 		roomId: RoomId;
+		threadRootEventId: string | null;
 		eventId: EventId;
+		receiptType: 'm.read' | 'm.read.private' | 'm.fully_read';
 	};
 }
 
@@ -129,6 +137,7 @@ interface MarkRoomAsReadRequest {
 	event: 'markRoomAsRead';
 	payload: {
 		roomId: RoomId;
+		threadRootEventId: string | null;
 	};
 }
 
@@ -198,7 +207,7 @@ interface KickOrBanUserFromRoomRequest {
 
 // Union type combining all request types
 export type MatrixRequest =
-	| PaginateRoomTimelineRequest
+	| PaginateTimelineRequest
 	| EditMessageRequest
 	| FetchDetailsForEventRequest
 	// | SyncRoomMemberListRequest
@@ -226,7 +235,7 @@ export type MatrixRequest =
 
 // Export individual types as well for convenience
 export type {
-	PaginateRoomTimelineRequest,
+	PaginateTimelineRequest,
 	EditMessageRequest,
 	FetchDetailsForEventRequest,
 	// SyncRoomMemberListRequest,
@@ -255,10 +264,8 @@ export type {
 
 // Helper function to create type-safe requests
 export const createMatrixRequest = {
-	paginateRoomTimeline: (
-		payload: PaginateRoomTimelineRequest['payload']
-	): PaginateRoomTimelineRequest => ({
-		event: 'paginateRoomTimeline',
+	paginateTimeline: (payload: PaginateTimelineRequest['payload']): PaginateTimelineRequest => ({
+		event: 'paginateTimeline',
 		payload
 	}),
 

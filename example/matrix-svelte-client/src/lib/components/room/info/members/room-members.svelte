@@ -8,7 +8,11 @@
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import MemberActions from './member-actions.svelte';
 
-	let { avatar, roomStore }: { avatar: string | null; roomStore: RoomStore } = $props();
+	let {
+		roomId,
+		avatar,
+		roomStore
+	}: { roomId: string; avatar: string | null; roomStore: RoomStore } = $props();
 
 	let searchQuery = $state('');
 
@@ -45,7 +49,7 @@
 	<header class="pt-safe bg-background sticky top-0 right-0 left-0 z-50 flex w-full flex-col pl-2">
 		<div class="flex items-center">
 			<button
-				onclick={() => gotoRoomInfo(roomStore.state.roomId, avatar)}
+				onclick={() => gotoRoomInfo(roomId, avatar)}
 				class="hover:bg-accent flex size-10 items-center justify-center rounded-full transition-colors"
 				aria-label="Go back"
 			>
@@ -101,6 +105,6 @@
 <MemberActions
 	bind:openMemberActions
 	clickedUser={clickedUser as ClickedUser}
-	roomId={roomStore.state.roomId}
+	{roomId}
 	userPower={roomStore.state.tlState?.userPower}
 />

@@ -9,17 +9,14 @@
 		roomNameToPlainString
 	} from '$lib/utils.svelte';
 	import { roomsCollection } from '../../../hooks.client';
-	import type { RoomStore } from 'tauri-plugin-matrix-svelte-api';
 
 	let {
-		roomStore,
+		roomId,
 		initialAvatarUrl
 	}: {
-		roomStore: RoomStore;
+		roomId: string;
 		initialAvatarUrl: string | null;
 	} = $props();
-
-	let roomId = $derived(roomStore.state.roomId);
 
 	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomId].isDirect);
 	// It seems that DM rooms avatar behave differently that regular rooms, so we need to use

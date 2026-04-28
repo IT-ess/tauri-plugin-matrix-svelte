@@ -2,17 +2,13 @@ import type { PageLoad } from './$types';
 import { emit } from '@tauri-apps/api/event';
 import { error } from '@sveltejs/kit';
 import { roomNameToPlainString } from '$lib/utils.svelte';
+import { roomsCollection } from '../../hooks.client';
 import {
 	MatrixSvelteEmitEvent,
 	type UpdateCurrentActiveRoom
 } from 'tauri-plugin-matrix-svelte-api';
-import { roomsCollection } from '../../../hooks.client';
 
 export const load: PageLoad = async ({ url }) => {
-	const threadRoot = url.searchParams.get('threadRoot');
-	if (threadRoot === null) {
-		error(500, 'The current thread root has not been set properly');
-	}
 	const roomId = url.searchParams.get('id');
 	const avatarUri = url.searchParams.get('avatar');
 	if (roomId === null) {
@@ -20,12 +16,12 @@ export const load: PageLoad = async ({ url }) => {
 	}
 	const payload: UpdateCurrentActiveRoom = {
 		roomId,
-		threadRootEventId: threadRoot,
+		threadRootEventId: null,
 		// Kinda weird, but otherwise the room name is never initiated or
 		// requires an additional fetch from the backend
 		roomName: roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId].roomName ?? '')
 	};
 	emit(MatrixSvelteEmitEvent.UpdateCurrentActiveRoom, payload);
 
-	return { roomId, avatarUri, threadRoot };
+	return { roomId, avatarUri };
 };

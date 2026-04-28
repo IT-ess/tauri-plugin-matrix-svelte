@@ -61,4 +61,4 @@ export type TimelineUiState = {
 	 */
 	scrolledPastReadMarker: boolean;
 	latestOwnUserReceipt: { ts: number };
-};
+} & ({ timelineKind: 'thread'; threadRootEventId: string } | { timelineKind: 'mainRoom' });

@@ -13,11 +13,15 @@
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import RoomDetails from './room-details.svelte';
 
-	let { avatar, roomStore }: { avatar: string | null; roomStore: RoomStore } = $props();
+	let {
+		roomId,
+		avatar,
+		roomStore
+	}: { roomId: string; avatar: string | null; roomStore: RoomStore } = $props();
 
-	let roomTopic = $derived(roomsCollection.state.allJoinedRooms[roomStore.state.roomId].topic);
+	let roomTopic = $derived(roomsCollection.state.allJoinedRooms[roomId].topic);
 
-	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomStore.state.roomId].isDirect);
+	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomId].isDirect);
 
 	let actionInviteMembersOpen = $state(false);
 	let actionLeaveRoomOpen = $state(false);
@@ -33,7 +37,7 @@
 <div class="bg-background flex h-full w-full flex-col">
 	<div class="pt-safe sticky top-0 right-0 left-0 z-50 w-full pl-2">
 		<button
-			onclick={() => gotoRoom(roomStore.state.roomId, avatar)}
+			onclick={() => gotoRoom(roomId, avatar)}
 			class="hover:bg-accent flex size-10 items-center justify-center rounded-full transition-colors"
 			aria-label="Go back"
 		>
@@ -82,7 +86,7 @@
 	<Item.Root>
 		{#snippet child({ props })}
 			<a
-				href={`/room/info/members?id=${encodeURIComponent(roomStore.state.roomId)}${avatar ? '&avatar=' + encodeURIComponent(avatar) : ''}`}
+				href={`/room/info/members?id=${encodeURIComponent(roomId)}${avatar ? '&avatar=' + encodeURIComponent(avatar) : ''}`}
 				{...props}
 			>
 				<Item.Media>
@@ -113,10 +117,6 @@
 	</Item.Root>
 </div>
 
-<InviteMembers
-	bind:actionInviteMembersOpen
-	roomId={roomStore.state.roomId}
-	previousUsersIdsList={membersIds}
-/>
-<LeaveRoom bind:open={actionLeaveRoomOpen} roomId={roomStore.state.roomId} {isDirect} />
-<RoomDetails bind:actionRoomDetailsOpen {roomStore} avatarUrl={avatar} />
+<InviteMembers bind:actionInviteMembersOpen {roomId} previousUsersIdsList={membersIds} />
+<LeaveRoom bind:open={actionLeaveRoomOpen} {roomId} {isDirect} />
+<RoomDetails {roomId} bind:actionRoomDetailsOpen {roomStore} avatarUrl={avatar} />

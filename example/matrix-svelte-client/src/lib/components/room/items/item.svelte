@@ -25,7 +25,7 @@
 			},
 			mediaSource: MediaRequestParameters['source']
 		) => void;
-		isInThread?: boolean;
+		threadRootEventId: string | null;
 		roomAvatar: string | null;
 		roomMembers: Record<string, FrontendRoomMember>;
 	};
@@ -38,7 +38,7 @@
 		repliedToMessage,
 		onScrollToMessage,
 		handleOpenMediaViewMode,
-		isInThread,
+		threadRootEventId,
 		roomAvatar,
 		roomMembers
 	}: Props = $props();
@@ -61,7 +61,7 @@
 			repliedToMessage={repliedToMessage?.kind === 'msgLike' ? repliedToMessage.data : undefined}
 			abilities={item.abilities}
 			{handleOpenMediaViewMode}
-			{isInThread}
+			{threadRootEventId}
 			{roomAvatar}
 			{roomMembers}
 		/>

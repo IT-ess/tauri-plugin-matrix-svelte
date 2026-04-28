@@ -12,7 +12,7 @@ export class RoomStore extends RuneStore<RoomScreen> {
 	constructor() {
 		// Initialize with default empty Room state
 		const defaultRoom: RoomScreen = {
-			roomId: 'Not known yet',
+			timelineKind: null,
 			roomName: 'Not known yet',
 			tlState: null,
 			doneLoading: false,

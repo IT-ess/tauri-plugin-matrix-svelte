@@ -2,11 +2,11 @@ import type { LayoutLoad } from './$types';
 import { emit } from '@tauri-apps/api/event';
 import { error } from '@sveltejs/kit';
 import { roomNameToPlainString } from '$lib/utils.svelte';
-import { roomsCollection } from '../../hooks.client';
 import {
 	MatrixSvelteEmitEvent,
 	type UpdateCurrentActiveRoom
 } from 'tauri-plugin-matrix-svelte-api';
+import { roomsCollection } from '../../../hooks.client';
 
 export const load: LayoutLoad = async ({ url }) => {
 	const roomId = url.searchParams.get('id');
@@ -16,6 +16,7 @@ export const load: LayoutLoad = async ({ url }) => {
 	}
 	const payload: UpdateCurrentActiveRoom = {
 		roomId,
+		threadRootEventId: null,
 		// Kinda weird, but otherwise the room name is never initiated or
 		// requires an additional fetch from the backend
 		roomName: roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId].roomName ?? '')

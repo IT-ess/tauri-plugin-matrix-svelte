@@ -11,12 +11,11 @@
 	import {
 		createMatrixRequest,
 		submitAsyncRequest,
-		uploadMedia,
-		type RoomStore
+		uploadMedia
 	} from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {
-		roomStore: RoomStore;
+		roomId: string;
 		// Only for the small timeline in a Ref details
 		replyingTo: {
 			eventId: string;
@@ -44,10 +43,10 @@
 			duration: number,
 			waveform: number[] | null
 		) => Promise<void>;
-		threadRootEventId?: string;
+		threadRootEventId: string | null;
 	};
 	let {
-		roomStore,
+		roomId,
 		replyingTo = $bindable(null),
 		handleOpenMediaSendMode,
 		handleSendAudioMessage,
@@ -67,9 +66,8 @@
 	const handleSendTextMessage = async () => {
 		if (!newMessage.trim()) return;
 
-		const request = createMatrixRequest.sendTextMessage(roomStore.state.roomId, newMessage, {
-			replyToId: replyingTo?.eventId,
-			threadRootId: threadRootEventId
+		const request = createMatrixRequest.sendTextMessage(roomId, newMessage, threadRootEventId, {
+			replyToId: replyingTo?.eventId
 		});
 
 		await submitAsyncRequest(request);

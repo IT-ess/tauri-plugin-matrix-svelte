@@ -6,4 +6,4 @@
 	let { data }: PageProps = $props();
 </script>
 
-<RoomInfo avatar={data.avatarUri} {roomStore} />
+<RoomInfo roomId={data.roomId} avatar={data.avatarUri} {roomStore} />
