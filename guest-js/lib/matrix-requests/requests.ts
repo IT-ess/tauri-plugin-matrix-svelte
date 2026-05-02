@@ -10,7 +10,7 @@ import type {
 	TimelineEventItemId,
 	MxcUri
 } from './common.js';
-import { sendMessage, type SendMessageRequest, sendTextMessage } from './message-text.js';
+import { type SendTextMessageRequest, sendTextMessage } from './message-text.js';
 
 // Enums and other types
 type PaginationDirection = 'backwards' | 'forwards';
@@ -219,7 +219,7 @@ export type MatrixRequest =
 	| GetNumberUnreadMessagesRequest
 	// | IgnoreUserRequest
 	| ResolveRoomAliasRequest
-	| SendMessageRequest
+	| SendTextMessageRequest
 	| SendTypingNoticeRequest
 	| SubscribeToTypingNoticesRequest
 	| SubscribeToOwnUserReadReceiptsChangedRequest
@@ -247,7 +247,7 @@ export type {
 	GetNumberUnreadMessagesRequest,
 	// IgnoreUserRequest,
 	ResolveRoomAliasRequest,
-	SendMessageRequest,
+	SendTextMessageRequest,
 	SendTypingNoticeRequest,
 	SubscribeToTypingNoticesRequest,
 	SubscribeToOwnUserReadReceiptsChangedRequest,
@@ -320,8 +320,6 @@ export const createMatrixRequest = {
 		event: 'resolveRoomAlias',
 		payload
 	}),
-
-	sendMessage,
 
 	/**
   Send message with type m.text

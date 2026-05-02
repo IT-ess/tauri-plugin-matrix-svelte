@@ -32,6 +32,7 @@ Default permissions for the plugin
 - `allow-write-media-to-selected-folder`
 - `allow-silent-save-matrix-media-to-cache-dir`
 - `allow-get-event-from-main-timeline`
+- `allow-send-media-message`
 - `allow-android-share-matrix-media`
 - `allow-register-notifications`
 
@@ -716,6 +717,32 @@ Enables the search_users command without any pre-configured scope.
 <td>
 
 Denies the search_users command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-send-media-message`
+
+</td>
+<td>
+
+Enables the send_media_message command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-send-media-message`
+
+</td>
+<td>
+
+Denies the send_media_message command without any pre-configured scope.
 
 </td>
 </tr>

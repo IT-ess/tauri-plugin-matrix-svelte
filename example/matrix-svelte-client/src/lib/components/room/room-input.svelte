@@ -8,11 +8,8 @@
 	import AudioRecorder from '$lib/components/audio/audio-recorder.svelte';
 	import { getMediaFromFSPath, getThumbnailInfoFromBlob } from '$lib/utils.svelte';
 	import AddMediaDrawer from '../media/add-media-drawer.svelte';
-	import {
-		createMatrixRequest,
-		submitAsyncRequest,
-		uploadMedia
-	} from 'tauri-plugin-matrix-svelte-api';
+	import { createMatrixRequest, submitAsyncRequest } from 'tauri-plugin-matrix-svelte-api';
+	import { type MediaViewerInfo } from '../media/utils';
 
 	type Props = {
 		roomId: string;
@@ -25,18 +22,8 @@
 		handleOpenMediaSendMode: (
 			type: 'image' | 'video' | 'file',
 			src: string,
-			mxcUri: Promise<string>,
-			info: {
-				filename?: string;
-				body?: string;
-				mimeType?: string;
-				size: number;
-				thumbnailInfo?: Promise<{
-					blob: Blob | null;
-					w: number;
-					h: number;
-				}>;
-			}
+			buffer: ArrayBuffer,
+			info: MediaViewerInfo
 		) => void;
 		handleSendAudioMessage: (
 			blob: Blob,
@@ -65,9 +52,12 @@
 	// Handle sending new message
 	const handleSendTextMessage = async () => {
 		if (!newMessage.trim()) return;
-		const request = createMatrixRequest.sendTextMessage(roomId, threadRootEventId, newMessage, {
-			replyToId: replyingTo?.eventId
-		});
+		const request = createMatrixRequest.sendTextMessage(
+			roomId,
+			threadRootEventId,
+			newMessage,
+			replyingTo?.eventId
+		);
 
 		await submitAsyncRequest(request);
 
@@ -100,33 +90,31 @@
 	};
 
 	const handleMediaSendFromPath = async (path: string) => {
-		const { filename, mediaSrc, mediaType, mxcUriPromise, blob, mime } =
-			await getMediaFromFSPath(path);
+		const { filename, mediaSrc, mediaType, blob, mime } = await getMediaFromFSPath(path);
 
-		handleOpenMediaSendMode(mediaType, mediaSrc, mxcUriPromise, {
+		handleOpenMediaSendMode(mediaType, mediaSrc, await blob.arrayBuffer(), {
 			body: newMessage,
 			filename,
 			mimeType: mime,
 			size: blob.size,
-			thumbnailInfo: getThumbnailInfoFromBlob(mediaType, blob) ?? undefined
+			thumbnailInfo: getThumbnailInfoFromBlob(mediaType, blob)
 		});
 	};
 
 	const handleMediaSendBlob = async (file: File) => {
 		const mediaSrc = URL.createObjectURL(file);
-		const mxcUriPromise = uploadMedia(file.type, await file.arrayBuffer());
 		const mediaType = file.type.includes('video')
 			? 'video'
 			: file.type.includes('image')
 				? 'image'
 				: 'file';
 
-		handleOpenMediaSendMode(mediaType, mediaSrc, mxcUriPromise, {
+		handleOpenMediaSendMode(mediaType, mediaSrc, await file.arrayBuffer(), {
 			body: newMessage,
 			filename: file.name,
 			mimeType: file.type,
 			size: file.size,
-			thumbnailInfo: getThumbnailInfoFromBlob(mediaType, file) ?? undefined
+			thumbnailInfo: getThumbnailInfoFromBlob(mediaType, file)
 		});
 	};
 

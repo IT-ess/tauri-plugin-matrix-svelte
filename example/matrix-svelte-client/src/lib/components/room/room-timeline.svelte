@@ -16,16 +16,13 @@
 	import { Spinner } from '../ui/spinner';
 	import {
 		createMatrixRequest,
-		isVideoOrImageInfo,
+		sendMediaMessage,
 		submitAsyncRequest,
-		uploadMedia,
-		type AudioInfo,
-		type FileInfo,
-		type ImageInfo,
-		type MediaRequestParameters,
-		type RoomMessageEventContent,
-		type VideoInfo
+		type AttachmentInfo,
+		type BaseAudioInfo,
+		type MediaRequestParameters
 	} from 'tauri-plugin-matrix-svelte-api';
+	import { toast } from 'svelte-sonner';
 
 	type Props = {
 		roomId: string;
@@ -168,7 +165,7 @@
 	// Media viewer
 	let showMediaViewer = $state(false);
 	let mediaViewerSrc = $state<string | null>(null);
-	let mediaViewerMxcUri = $state<Promise<string> | undefined>();
+	let mediaViewerBuffer = $state<ArrayBuffer | undefined>();
 	let mediaViewerSource = $state<MediaRequestParameters['source']>();
 	let mediaViewerInfo = $state<MediaViewerInfo | undefined>();
 	let viewerMode: 'send' | 'view' = $state('send');
@@ -176,12 +173,12 @@
 	const handleOpenMediaSendMode = (
 		type: 'image' | 'video' | 'file',
 		src: string,
-		mxcUri: Promise<string>,
+		buffer: ArrayBuffer,
 		info: MediaViewerInfo
 	) => {
 		viewedMediaType = type;
 		mediaViewerSrc = src;
-		mediaViewerMxcUri = mxcUri;
+		mediaViewerBuffer = buffer;
 		mediaViewerInfo = info;
 		viewerMode = 'send';
 		showMediaViewer = true;
@@ -200,69 +197,37 @@
 		viewedMediaType = type;
 		mediaViewerSrc = src;
 
-		mediaViewerInfo = { ...info };
+		mediaViewerInfo = { thumbnailInfo: null, ...info };
 		viewerMode = 'view';
 		mediaViewerSource = mediaSource;
 		showMediaViewer = true;
 	};
 
-	const handleSendMedia = async (
-		msgtype: RoomMessageEventContent['msgtype'],
-		mediaInfo?: AudioInfo | VideoInfo | ImageInfo | FileInfo,
-		additionalInfo?: { message?: string; waveform?: number[] }
-	) => {
-		let completeInfo = mediaInfo;
-		// Consolidate media info from the blob info
-		if (mediaViewerInfo && completeInfo) {
-			completeInfo.size = mediaViewerInfo.size;
-			completeInfo.mimetype = mediaViewerInfo.mimeType ?? null;
-			// If the media supports thumbnails and we successfully generated it,
-			// add them to the message
-			if (isVideoOrImageInfo(completeInfo) && mediaViewerInfo.thumbnailInfo) {
-				let thumbInfo = await mediaViewerInfo.thumbnailInfo;
-				if (thumbInfo.blob) {
-					completeInfo.thumbnail_info = {
-						h: thumbInfo.h,
-						w: thumbInfo.w,
-						mimetype: thumbInfo.blob.type,
-						size: thumbInfo.blob.size
-					};
-					completeInfo.thumbnail_url = await uploadMedia(
-						thumbInfo.blob.type,
-						await thumbInfo.blob.arrayBuffer()
-					);
-				}
-			}
+	const handleSendMedia = async (mediaInfo: AttachmentInfo, caption: string | null) => {
+		if (!mediaViewerBuffer || !mediaViewerInfo?.mimeType) {
+			toast.error('No buffer available to send');
+			return;
 		}
-		if (!mediaViewerMxcUri) throw Error('Missing media URI');
-		let request = createMatrixRequest.sendMessage({
+		console.log('called send media');
+
+		await sendMediaMessage({
 			roomId,
-			message: {
-				msgtype,
-				body: additionalInfo?.message ?? '', // The body must be defined for some reason.
-				// TODO: use those two fields ?
-				'm.mentions': null,
-				filename: mediaViewerInfo?.filename ?? null,
-				info: completeInfo ?? null,
-				url: await mediaViewerMxcUri,
-				'org.matrix.msc1767.audio':
-					msgtype === 'm.audio'
-						? {
-								duration: (completeInfo as AudioInfo).duration ?? 1,
-								waveform: additionalInfo?.waveform
-							}
-						: null
-			} as RoomMessageEventContent, // TODO: Remove assertion
-			replyToId: replyingTo?.eventId ?? null,
-			threadRootEventId: threadRoot // We cannot send thread messages from here
+			inReplyTo: replyingTo?.eventId ?? null,
+			threadRoot,
+			info: mediaInfo,
+			caption,
+			filename: mediaViewerInfo?.filename ?? 'Media',
+			buffer: mediaViewerBuffer,
+			mimeType: mediaViewerInfo.mimeType,
+			thumbnail: mediaViewerInfo?.thumbnailInfo ? await mediaViewerInfo.thumbnailInfo : null
 		});
 
-		await submitAsyncRequest(request);
+		console.log('Sent media !');
 
 		replyingTo = null; // Clear reply state after sending
 		showMediaViewer = false;
 		mediaViewerSrc = null;
-		mediaViewerMxcUri = undefined;
+		mediaViewerBuffer = undefined;
 		mediaViewerInfo = undefined;
 	};
 
@@ -271,20 +236,23 @@
 		duration: number,
 		waveform: number[] | null
 	) => {
-		mediaViewerMxcUri = uploadMedia(blob.type, await blob.arrayBuffer());
+		mediaViewerBuffer = await blob.arrayBuffer();
 		mediaViewerInfo = {
 			filename: 'audio-recording_' + new Date().toISOString() + '.' + blob.type.split('/').pop(),
 			size: blob.size,
-			mimeType: blob.type
+			mimeType: blob.type,
+			thumbnailInfo: null
 		};
-		const info: AudioInfo = {
-			mimetype: blob.type,
+
+		const info: BaseAudioInfo = {
 			size: blob.size,
-			duration: Math.ceil(duration)
+			duration: {
+				secs: Math.floor(duration),
+				nanos: Math.floor((duration % 1) * 1e9)
+			},
+			waveform: waveform?.map((f) => Math.floor(f * 1000)) ?? null
 		};
-		await handleSendMedia('m.audio', info, {
-			waveform: waveform?.map((f) => Math.floor(f * 1000))
-		});
+		await handleSendMedia({ kind: 'voice', info }, null);
 	};
 
 	const handleCloseMediaViewer = () => {
@@ -362,5 +330,6 @@
 		onSend={handleSendMedia}
 		filename={mediaViewerInfo?.filename}
 		mediaSource={mediaViewerSource}
+		mediaSize={mediaViewerInfo?.size ?? 0}
 	/>
 {/if}

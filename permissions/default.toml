@@ -29,6 +29,7 @@ permissions = [
     "allow-write-media-to-selected-folder",
     "allow-silent-save-matrix-media-to-cache-dir",
     "allow-get-event-from-main-timeline",
+    "allow-send-media-message",
     "allow-android-share-matrix-media",
     "allow-register-notifications",
 ]

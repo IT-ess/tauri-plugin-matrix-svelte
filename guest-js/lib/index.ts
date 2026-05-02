@@ -11,7 +11,7 @@ import { createMatrixRequest, type MatrixRequest } from './matrix-requests/reque
 import { LoginStore } from './stores/login-store.svelte.js';
 import { RoomStore } from './stores/room-store.svelte.js';
 import { RoomsCollection } from './stores/rooms-collection.svelte.js';
-import type { MediaRequestParameters } from './matrix-requests/media.js';
+import type { MediaRequestParameters, SendMediaMessageRequest } from './matrix-requests/media.js';
 import type { TimelineItem } from './bindings/TimelineItem.js';
 
 export function submitMatrixLoginRequest(request: MatrixLoginPayload): Promise<null> {
@@ -235,6 +235,15 @@ export function getEventFromMainTimeline(roomId: RoomId, eventId: EventId): Prom
 }
 
 /**
+ * Send a message that contains a media in a room timeline
+ */
+export function sendMediaMessage(request: SendMediaMessageRequest): Promise<void> {
+	return invoke<void>('plugin:matrix-svelte|send_media_message', {
+		...request
+	});
+}
+
+/**
  *
  * Register push notifications on mobile and OS notifications on desktop. On desktop just send empty strings.
  */
@@ -244,8 +253,13 @@ export function registerNotifications(token: string, userLanguage: string): Prom
 
 export { LoginStore, RoomStore, RoomsCollection, createMatrixRequest };
 
+export * from './bindings/AttachementInfo.js';
 export * from './bindings/AudioInfo.js';
 export * from './bindings/AudioMessageEventContent.js';
+export * from './bindings/BaseAudioInfo.js';
+export * from './bindings/BaseFileInfo.js';
+export * from './bindings/BaseImageInfo.js';
+export * from './bindings/BaseVideoInfo.js';
 export * from './bindings/DeviceGuessedType.js';
 export * from './bindings/EditRoomInformationPayload.js';
 export * from './bindings/EditUserInformationPayload.js';
@@ -286,13 +300,14 @@ export * from './bindings/RoomModel.js';
 export * from './bindings/RoomsCollectionStatus.js';
 export * from './bindings/RoomScreen.js';
 export * from './bindings/RoomsList.js';
-export * from './bindings/SendMessagePayload.js';
+export * from './bindings/SendTextMessagePayload.js';
 export * from './bindings/ServerNoticeMessageEventContent.js';
 export * from './bindings/TagInfo.js';
 export * from './bindings/TagName.js';
 export * from './bindings/TextMessageEventContent.js';
 export * from './bindings/Thread.js';
 export * from './bindings/ThreadSummary.js';
+export * from './bindings/Thumbnail.js';
 export * from './bindings/ThumbnailInfo.js';
 export * from './bindings/TimelineItem.js';
 export * from './bindings/TimelineUiState.js';

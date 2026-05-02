@@ -8,15 +8,19 @@ use matrix_ui_serializable::models::misc::{
 };
 use matrix_ui_serializable::models::profile::ProfileModel;
 use matrix_ui_serializable::{
+    AttachmentInfo, BaseAudioInfo, BaseFileInfo, BaseImageInfo, BaseVideoInfo,
     FrontendTimelineItem, FrontendVerificationState, MatrixRequest, MediaRequestParameters,
-    OwnedDeviceId, OwnedMxcUri, OwnedRoomId, OwnedUserId, UserProfile, oneshot,
+    OwnedDeviceId, OwnedMxcUri, OwnedRoomId, OwnedUserId, Thumbnail, UInt, UserProfile, oneshot,
 };
 use mime_serde_shim::Wrapper as MimeWrapper;
+use serde::Deserialize;
 use std::path::Path;
 use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Listener, Runtime, command};
+use tracing::warn;
 use url::Url;
 
 use crate::keyring::clear_session_in_keyring;
@@ -487,6 +491,36 @@ pub(crate) async fn get_event_from_main_timeline(
         .map_err(Into::into)
 }
 
+#[command(async)]
+#[allow(clippy::too_many_arguments)]
+/// Send a media message in a room timeline.
+pub(crate) async fn send_media_message(
+    room_id: OwnedRoomId,
+    thread_root: Option<OwnedEventId>,
+    buffer: Vec<u8>,
+    filename: String,
+    mime_type: MimeWrapper,
+    caption: Option<String>,
+    in_reply_to: Option<OwnedEventId>,
+    info: AttachmentInfoDeserHelper,
+    thumbnail: Option<ThumbnailDeserHelper>,
+) -> Result<()> {
+    warn!("CALLED SNED MEDIA MESSAGE");
+    matrix_ui_serializable::commands::send_media_message(
+        room_id,
+        thread_root,
+        buffer,
+        filename,
+        mime_type.into(),
+        caption,
+        in_reply_to,
+        info.into(),
+        thumbnail.map(Into::into),
+    )
+    .await
+    .map_err(Into::into)
+}
+
 #[command]
 /// For mobile we require a token and the user language (i.e. en or en-EN)
 pub(crate) async fn register_notifications<R: Runtime>(
@@ -505,4 +539,140 @@ pub(crate) async fn register_notifications<R: Runtime>(
     )
     .await
     .map_err(|e| e.into())
+}
+
+//
+// Helpers
+//
+
+// Deser helper for sending media message
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ThumbnailDeserHelper {
+    /// The raw bytes of the thumbnail.
+    pub data: Vec<u8>,
+    /// The type of the thumbnail, this will be used as the content-type header.
+    pub content_type: MimeWrapper,
+    /// The height of the thumbnail in pixels.
+    pub height: UInt,
+    /// The width of the thumbnail in pixels.
+    pub width: UInt,
+    /// The file size of the thumbnail in bytes.
+    pub size: UInt,
+}
+
+impl From<ThumbnailDeserHelper> for Thumbnail {
+    fn from(value: ThumbnailDeserHelper) -> Self {
+        Self {
+            data: value.data,
+            content_type: value.content_type.into(),
+            height: value.height,
+            width: value.width,
+            size: value.size,
+        }
+    }
+}
+
+/// Types of metadata for an attachment.
+#[derive(Debug, Deserialize)]
+#[serde(
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase",
+    tag = "kind",
+    content = "info"
+)]
+pub enum AttachmentInfoDeserHelper {
+    /// The metadata of an image.
+    Image(BaseImageInfoDeserHelper),
+    /// The metadata of a video.
+    Video(BaseVideoInfoDeserHelper),
+    /// The metadata of an audio clip.
+    Audio(BaseAudioInfoDeserHelper),
+    /// The metadata of a file.
+    File(BaseFileInfoDeserHelper),
+    /// The metadata of a voice message
+    Voice(BaseAudioInfoDeserHelper),
+}
+
+impl From<AttachmentInfoDeserHelper> for AttachmentInfo {
+    fn from(value: AttachmentInfoDeserHelper) -> Self {
+        match value {
+            AttachmentInfoDeserHelper::Audio(a) => Self::Audio(BaseAudioInfo {
+                duration: a.duration,
+                size: a.size,
+                waveform: a.waveform,
+            }),
+            AttachmentInfoDeserHelper::File(f) => Self::File(BaseFileInfo { size: f.size }),
+            AttachmentInfoDeserHelper::Image(i) => Self::Image(BaseImageInfo {
+                height: i.height,
+                blurhash: i.blurhash,
+                is_animated: i.is_animated,
+                size: i.size,
+                width: i.width,
+            }),
+            AttachmentInfoDeserHelper::Video(vi) => Self::Video(BaseVideoInfo {
+                blurhash: vi.blurhash,
+                duration: vi.duration,
+                height: vi.height,
+                size: vi.size,
+                width: vi.height,
+            }),
+            AttachmentInfoDeserHelper::Voice(vo) => Self::Voice(BaseAudioInfo {
+                duration: vo.duration,
+                size: vo.size,
+                waveform: vo.waveform,
+            }),
+        }
+    }
+}
+
+/// Base metadata about an image.
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct BaseImageInfoDeserHelper {
+    /// The height of the image in pixels.
+    pub height: Option<UInt>,
+    /// The width of the image in pixels.
+    pub width: Option<UInt>,
+    /// The file size of the image in bytes.
+    pub size: Option<UInt>,
+    /// The [BlurHash](https://blurha.sh/) for this image.
+    pub blurhash: Option<String>,
+    /// Whether this image is animated.
+    pub is_animated: Option<bool>,
+}
+
+/// Base metadata about a video.
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct BaseVideoInfoDeserHelper {
+    /// The duration of the video.
+    pub duration: Option<Duration>,
+    /// The height of the video in pixels.
+    pub height: Option<UInt>,
+    /// The width of the video in pixels.
+    pub width: Option<UInt>,
+    /// The file size of the video in bytes.
+    pub size: Option<UInt>,
+    /// The [BlurHash](https://blurha.sh/) for this video.
+    pub blurhash: Option<String>,
+}
+
+/// Base metadata about an audio clip.
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct BaseAudioInfoDeserHelper {
+    /// The duration of the audio clip.
+    pub duration: Option<Duration>,
+    /// The file size of the audio clip in bytes.
+    pub size: Option<UInt>,
+    /// The waveform of the audio clip.
+    ///
+    /// Must only include values between 0 and 1.
+    pub waveform: Option<Vec<f32>>,
+}
+
+/// Base metadata about a file.
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct BaseFileInfoDeserHelper {
+    /// The size of the file in bytes.
+    pub size: Option<UInt>,
 }

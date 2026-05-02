@@ -22,12 +22,10 @@
 		androidShareMatrixMedia,
 		silentSaveMatrixMediaToCacheDir,
 		writeMediaToSelectedFolder,
-		type FileInfo,
-		type ImageInfo,
-		type MediaRequestParameters,
-		type RoomMessageEventContent,
-		type VideoInfo
+		type AttachmentInfo,
+		type MediaRequestParameters
 	} from 'tauri-plugin-matrix-svelte-api';
+	import { toast } from 'svelte-sonner';
 
 	type MediaType = 'image' | 'video' | 'file';
 	type ViewerMode = 'send' | 'view';
@@ -40,12 +38,9 @@
 		filename?: string;
 		isLoading?: boolean;
 		onClose: () => void;
-		onSend: (
-			msgtype: RoomMessageEventContent['msgtype'],
-			mediaInfo?: VideoInfo | ImageInfo | FileInfo,
-			additionalInfo?: { message?: string; waveform?: number[] }
-		) => Promise<void>;
+		onSend: (mediaInfo: AttachmentInfo, caption: string | null) => Promise<void>;
 		mediaSource?: MediaRequestParameters['source']; // Only required in view mode
+		mediaSize: number;
 	}
 
 	let {
@@ -57,7 +52,8 @@
 		filename,
 		onClose,
 		onSend,
-		mediaSource
+		mediaSource,
+		mediaSize
 	}: Props = $props();
 
 	let messageText = $state('');
@@ -67,78 +63,66 @@
 	const MAX_ZOOM = 4;
 	const ZOOM_STEP = 0.5;
 
-	const msgtypeFromType = (type: MediaType): 'm.image' | 'm.video' | 'm.file' => {
-		switch (type) {
-			case 'image':
-				return 'm.image';
-			case 'video':
-				return 'm.video';
-			case 'file':
-				return 'm.file';
-		}
-	};
-
 	let videoEl = $state<HTMLVideoElement | undefined>();
 	let imgEl = $state<HTMLImageElement | undefined>();
 
-	const mediaInfoFromType = (type: MediaType): ImageInfo | VideoInfo | FileInfo | undefined => {
+	const mediaInfoFromType = (type: MediaType, size: number): AttachmentInfo | undefined => {
 		switch (type) {
 			case 'image': {
 				if (imgEl) {
-					const imageInfo: ImageInfo = {
-						h: imgEl.naturalHeight,
-						w: imgEl.naturalHeight,
-						'xyz.amorgan.blurhash': encodeImageToBlurhash(imgEl) ?? null,
-						// The size, mimetype and thumbnails are retrieved when reading the blob, not here
-						mimetype: null,
-						size: null,
-						thumbnail_info: null,
-						thumbnail_url: '',
-						// Not used
-						'org.matrix.msc4230.is_animated': false,
-						'xyz.amorgan.thumbhash': null
+					return {
+						kind: 'image',
+						info: {
+							blurhash: encodeImageToBlurhash(imgEl) ?? null,
+							height: imgEl.naturalHeight,
+							width: imgEl.naturalWidth,
+							is_animated: false,
+							size
+						}
 					};
-					return imageInfo;
 				}
 				break;
 			}
 			case 'video': {
 				if (videoEl) {
-					const videoInfo: VideoInfo = {
-						h: videoEl.videoHeight,
-						w: videoEl.videoWidth,
-						duration: Math.ceil(videoEl.duration),
-						// The size, mimetype and thumbnails are retrieved when reading the blob, not here
-						mimetype: null,
-						size: null,
-						thumbnail_info: null,
-						thumbnail_url: '',
-						// Not used
-						'xyz.amorgan.blurhash': null,
-						'xyz.amorgan.thumbhash': null
+					const durationForRust = {
+						secs: Math.floor(videoEl.duration),
+						nanos: Math.floor((videoEl.duration % 1) * 1e9)
 					};
-					return videoInfo;
+
+					return {
+						kind: 'video',
+						info: {
+							height: videoEl.videoHeight,
+							width: videoEl.videoWidth,
+							duration: durationForRust,
+							blurhash: null,
+							size
+						}
+					};
 				}
 				break;
 			}
 			case 'file': {
-				const fileInfo: FileInfo = {
-					// The size and mimetypes are retrieved when reading the blob, not here
-					mimetype: null,
-					size: null,
-					// Not used
-					thumbnail_info: null
+				return {
+					kind: 'file',
+					info: {
+						size
+					}
 				};
-				return fileInfo;
 			}
 		}
 	};
 
 	const handleSend = async () => {
 		isLoading = true;
-		await onSend(msgtypeFromType(mediaType), mediaInfoFromType(mediaType), {
-			message: messageText === '' ? undefined : messageText
-		});
+		const mediaInfo = mediaInfoFromType(mediaType, mediaSize);
+		if (!mediaInfo) {
+			toast.error('Cannot gather info about this media before sending it');
+			return;
+		}
+
+		await onSend(mediaInfo, messageText !== '' ? messageText : null);
 		messageText = '';
 		isLoading = false;
 	};

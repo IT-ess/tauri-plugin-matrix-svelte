@@ -9,7 +9,7 @@ import { fileTypeFromBlob } from 'file-type';
 import {
 	type EncryptedFile,
 	type RoomDisplayName,
-	uploadMedia
+	type Thumbnail
 } from 'tauri-plugin-matrix-svelte-api';
 import { platform } from '@tauri-apps/plugin-os';
 
@@ -84,10 +84,7 @@ export async function gotoProfile(matrixUserId: string) {
 	return await goto(`/profile?id=${encodeURIComponent(matrixUserId)}`);
 }
 
-export async function getImageThumbnailBlob(
-	blob: Blob,
-	width = 300
-): Promise<{ blob: Blob | null; w: number; h: number }> {
+export async function getImageThumbnailBlob(blob: Blob, width = 300): Promise<Thumbnail> {
 	const bitmap = await createImageBitmap(blob, {
 		resizeWidth: width,
 		resizeQuality: 'high'
@@ -98,10 +95,21 @@ export async function getImageThumbnailBlob(
 	canvas.height = bitmap.height;
 	const ctx = canvas.getContext('bitmaprenderer');
 	ctx?.transferFromImageBitmap(bitmap);
-	return new Promise<{ blob: Blob | null; w: number; h: number }>((resolve, reject) => {
+	return new Promise<Thumbnail>((resolve, reject) => {
 		try {
 			canvas.toBlob(
-				(blob) => resolve({ blob, w: canvas.width, h: canvas.height }),
+				(blob) => {
+					if (!blob) return reject('Cannot get thumb blob from this image');
+					resolve(
+						(async () => ({
+							data: await blob.arrayBuffer(),
+							height: canvas.height,
+							width: canvas.width,
+							contentType: blob.type,
+							size: blob.size
+						}))()
+					);
+				},
 				'image/webp',
 				0.8
 			);
@@ -111,52 +119,54 @@ export async function getImageThumbnailBlob(
 	});
 }
 
-export async function getVideoThumbnailBlob(
-	videoBlob: Blob,
-	seekTime = 1
-): Promise<{ blob: Blob | null; w: number; h: number; duration: number }> {
-	return new Promise<{ blob: Blob | null; w: number; h: number; duration: number }>(
-		(resolve, reject) => {
-			const url = URL.createObjectURL(videoBlob);
-			const video = document.createElement('video');
-			video.src = url;
-			video.preload = 'metadata';
-			video.muted = true;
+export async function getVideoThumbnailBlob(videoBlob: Blob, seekTime = 1): Promise<Thumbnail> {
+	return new Promise<Thumbnail>((resolve, reject) => {
+		const url = URL.createObjectURL(videoBlob);
+		const video = document.createElement('video');
+		video.src = url;
+		video.preload = 'metadata';
+		video.muted = true;
 
-			video.onloadedmetadata = () => (video.currentTime = seekTime);
+		video.onloadedmetadata = () => (video.currentTime = seekTime);
 
-			video.onseeked = () => {
-				const canvas = document.createElement('canvas');
-				canvas.width = video.videoWidth;
-				canvas.height = video.videoHeight;
-				canvas.getContext('2d')?.drawImage(video, 0, 0);
+		video.onseeked = () => {
+			const canvas = document.createElement('canvas');
+			canvas.width = video.videoWidth;
+			canvas.height = video.videoHeight;
+			canvas.getContext('2d')?.drawImage(video, 0, 0);
 
-				canvas.toBlob(
-					(blob) => {
-						URL.revokeObjectURL(url);
-						video.remove();
-						resolve({ blob, w: canvas.width, h: canvas.height, duration: video.duration });
-					},
-					'image/webp',
-					0.8
-				);
-			};
+			canvas.toBlob(
+				(blob) => {
+					URL.revokeObjectURL(url);
+					video.remove();
+					if (!blob) return reject('cannot get thumbnail blob from this video');
+					resolve(
+						(async () => ({
+							data: await blob.arrayBuffer(),
+							width: canvas.width,
+							height: canvas.height,
+							contentType: blob.type,
+							size: blob.size
+						}))()
+					);
+				},
+				'image/webp',
+				0.8
+			);
+		};
 
-			video.onerror = () => {
-				URL.revokeObjectURL(url);
-				reject('Video error');
-			};
-		}
-	);
+		video.onerror = () => {
+			URL.revokeObjectURL(url);
+			reject('Video error');
+		};
+	});
 }
 
-export function getThumbnailInfoFromBlob(mediaType: 'video' | 'image' | 'file', blob: Blob) {
-	let thumbnailInfo: Promise<{
-		blob: Blob | null;
-		w: number;
-		h: number;
-		duration?: number;
-	}> | null = null;
+export function getThumbnailInfoFromBlob(
+	mediaType: 'video' | 'image' | 'file',
+	blob: Blob
+): Promise<Thumbnail> | null {
+	let thumbnailInfo: Promise<Thumbnail> | null = null;
 
 	switch (mediaType) {
 		case 'video':
@@ -174,7 +184,6 @@ export function getThumbnailInfoFromBlob(mediaType: 'video' | 'image' | 'file', 
 export async function getMediaFromFSPath(path: string): Promise<{
 	filename: string | undefined;
 	mediaSrc: string;
-	mxcUriPromise: Promise<string>;
 	mediaType: 'video' | 'image' | 'file';
 	blob: Blob;
 	mime: string;
@@ -185,13 +194,12 @@ export async function getMediaFromFSPath(path: string): Promise<{
 	const res = await fileTypeFromBlob(blob);
 	const mediaSrc = URL.createObjectURL(blob);
 	if (!res) throw Error("couldn't get filetype for this file");
-	const mxcUriPromise = uploadMedia(res.mime, mediaFile.buffer);
 	const mediaType = res.mime.includes('video')
 		? 'video'
 		: res.mime.includes('image')
 			? 'image'
 			: 'file';
-	return { filename, mediaSrc, mxcUriPromise, mediaType, blob, mime: res.mime };
+	return { filename, mediaSrc, mediaType, blob, mime: res.mime };
 }
 
 export type MediaSource = string | EncryptedFile;
@@ -277,6 +285,7 @@ function adaptBaseUriToPlatform(mxcUri: string): string {
 	}
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const lazyEffect = (deps: () => any[], cb: () => any) => {
 	let first = true;
 
