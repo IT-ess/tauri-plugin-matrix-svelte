@@ -20,7 +20,6 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Listener, Runtime, command};
-use tracing::warn;
 use url::Url;
 
 use crate::keyring::clear_session_in_keyring;
@@ -505,7 +504,6 @@ pub(crate) async fn send_media_message(
     info: AttachmentInfoDeserHelper,
     thumbnail: Option<ThumbnailDeserHelper>,
 ) -> Result<()> {
-    warn!("CALLED SNED MEDIA MESSAGE");
     matrix_ui_serializable::commands::send_media_message(
         room_id,
         thread_root,

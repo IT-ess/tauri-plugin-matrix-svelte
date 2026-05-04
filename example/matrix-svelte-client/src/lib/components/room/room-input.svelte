@@ -75,7 +75,7 @@
 
 	const sendAudio = async () => {
 		if (!audioBlob) return;
-		handleSendAudioMessage(audioBlob, audioDuration * 1000, audioPeaks);
+		handleSendAudioMessage(audioBlob, audioDuration, audioPeaks);
 		isSendingAudioMessage = false;
 	};
 
