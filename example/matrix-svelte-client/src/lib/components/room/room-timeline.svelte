@@ -250,7 +250,7 @@
 				secs: Math.floor(duration),
 				nanos: Math.floor((duration % 1) * 1e9)
 			},
-			waveform: waveform?.map((f) => Math.floor(f * 1000)) ?? null
+			waveform: waveform?.map((val) => val / 256) ?? null
 		};
 		await handleSendMedia({ kind: 'voice', info }, null);
 	};

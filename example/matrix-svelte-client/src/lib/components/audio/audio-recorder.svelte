@@ -56,7 +56,7 @@
 							return audioContext?.decodeAudioData(buffer);
 						}
 					})
-					.then((a) => (peaks = a ? getPeaksForPlaybackWaveform(a) : null));
+					.then((a) => (peaks = a ? generateWaveform(a) : null));
 				audioUrl = URL.createObjectURL(audioBlob);
 				recorderState = 'recorded';
 				audioChunks = [];
@@ -103,31 +103,33 @@
 		animationId = requestAnimationFrame(animateWaveform);
 	};
 
-	function getPeaksForPlaybackWaveform(buffer: AudioBuffer): number[] {
-		if (0 >= buffer.numberOfChannels) {
-			throw new Error(`Channel ${0} does not exist in audio buffer`);
-		}
+	function generateWaveform(audioBuffer: AudioBuffer, targetPoints: number = 100): number[] {
+		// Matrix spec constraints for array length (30 to 120)
+		// See https://github.com/matrix-org/matrix-spec-proposals/blob/travis/msc/audio-waveform/proposals/3246-audio-waveform.md#proposal
+		const points = Math.max(30, Math.min(120, targetPoints));
 
-		const decodedAudioData = buffer.getChannelData(0);
-		const bucketDataSize = Math.floor(decodedAudioData.length / 200);
-		const buckets: number[] = [];
+		const channelData = audioBuffer.getChannelData(0);
+		const bufferLength = channelData.length;
+		const samplesPerBucket = Math.floor(bufferLength / points);
+		const waveform: number[] = [];
 
-		for (let i = 0; i < 200; i++) {
-			const startingPoint = i * bucketDataSize;
-			const endingPoint = startingPoint + bucketDataSize;
+		for (let i = 0; i < points; i++) {
+			const start = i * samplesPerBucket;
+			const end = start + samplesPerBucket;
+			let maxAmplitude = 0;
 
-			let max = 0;
-			for (let j = startingPoint; j < endingPoint; j++) {
-				const absolute = Math.abs(decodedAudioData[j]);
-				if (absolute > max) {
-					max = absolute;
+			for (let j = start; j < end; j++) {
+				const val = Math.abs(channelData[j]);
+				if (val > maxAmplitude) {
+					maxAmplitude = val;
 				}
 			}
 
-			buckets.push(max / 2);
+			const scaledValue = Math.min(256, Math.round(maxAmplitude * 256));
+			waveform.push(scaledValue);
 		}
 
-		return buckets;
+		return waveform;
 	}
 
 	const togglePlayback = () => {
