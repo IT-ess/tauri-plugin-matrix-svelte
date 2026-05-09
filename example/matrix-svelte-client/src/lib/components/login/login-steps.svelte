@@ -1,312 +1,70 @@
 <script lang="ts">
-	import {
-		Card,
-		CardContent,
-		CardDescription,
-		CardHeader,
-		CardTitle
-	} from '$lib/components/ui/card';
-	import { Button, buttonVariants } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import * as InputGroup from '$lib/components/ui/input-group/index.js';
-	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
-	import { InfoIcon, LoaderCircle, LogInIcon, ServerCog, ServerIcon } from '@lucide/svelte';
-	import { fade } from 'svelte/transition';
-	import * as Form from '$lib/components/ui/form/index';
-
-	import {
-		type SuperValidated,
-		type Infer,
-		superForm,
-		setMessage,
-		type ValidationErrors
-	} from 'sveltekit-superforms';
-	import { zod4Client } from 'sveltekit-superforms/adapters';
-	import { loginFormSchema, type LoginFormSchema } from '$lib/schemas/login';
-	import { onMount } from 'svelte';
+	import { Button } from '$lib/components/ui/button';
 	import { m } from '$lib/paraglide/messages';
-	import { listen } from '@tauri-apps/api/event';
-	import { openUrl } from '@tauri-apps/plugin-opener';
-	import { platform } from '@tauri-apps/plugin-os';
-	import {
-		buildClientFromHomeserverUrl,
-		checkHomeserverAuthType,
-		forwardOAuthLoginDeeplink,
-		MatrixSvelteListenEvent,
-		type MatrixLoginPayload
-	} from 'tauri-plugin-matrix-svelte-api';
-	import { authenticate } from 'tauri-plugin-web-auth-api';
-	import matrix from '$lib/assets/matrix.png';
-	import svelte from '$lib/assets/svelte.png';
-	import tauri from '$lib/assets/tauri.webp';
+	import HomeserverSelection from './homeserver-selection.svelte';
+	import type { Infer, SuperValidated } from 'sveltekit-superforms/client';
+	import type { LoginFormSchema } from '$lib/schemas/login';
+	import type { MatrixLoginPayload } from 'tauri-plugin-matrix-svelte-api';
 
 	let {
 		dataForm,
 		onSubmit,
-		hostname,
 		isLoading = $bindable(),
 		awaitUntilLoggedIn,
+		// eslint-disable-next-line no-useless-assignment
 		skipVerification = $bindable()
 	}: {
 		dataForm: SuperValidated<Infer<LoginFormSchema>>;
 		onSubmit: (data: MatrixLoginPayload) => void;
-		hostname: string;
 		isLoading: boolean;
 		awaitUntilLoggedIn: () => Promise<void>;
 		skipVerification: boolean;
 	} = $props();
 
-	onMount(() => {
-		$formData.homeserver = 'matrix.org';
-		$formData.clientName = hostname;
-	});
-
-	let formErrors = $state<
-		| ValidationErrors<{
-				username: string;
-				password: string;
-				homeserver: string;
-				clientName: string;
-		  }>
-		| undefined
-	>();
-	// svelte-ignore state_referenced_locally
-	const form = superForm(dataForm, {
-		SPA: true,
-		validators: zod4Client(loginFormSchema),
-		onUpdate({ form }) {
-			// Form validation
-			if (form.valid) {
-				onSubmit({
-					homeserverUrl: form.data.homeserver,
-					...form.data
-				});
-				setMessage(form, 'Valid data!'); // is that still necessary ?
-			}
-		}
-	});
-
-	const { form: formData, enhance } = form;
+	let isSignup = $state<boolean | undefined>();
 
 	// Step and loading states
-	let currentStep: 'homeserverSelection' | 'login' = $state('homeserverSelection');
+	let currentStep: 'homepage' | 'homeserverSelection' = $state('homepage');
 
-	let authType = $state<'matrix' | 'oauth' | 'wrongUrl'>()!;
-	// Navigate between steps
-	// TODO: add command to rebuild destroy the client and rebuild a new one
-	const goToLoginStep = async (isSignup: boolean) => {
-		authType = await checkHomeserverAuthType();
-		currentStep = 'login';
-		if (authType === 'oauth') {
-			const unlisten = await listen<string>(MatrixSvelteListenEvent.OAuthUrl, async (event) => {
-				const platformName = platform();
-				let url = event.payload;
-				if (isSignup) {
-					// Appending this query param to the auth url will force the creation form
-					// if the user isn't already connected
-					url = url + '&prompt=create';
-					skipVerification = true;
-				}
-				if (platformName === 'ios') {
-					// use the tauri-plugin-web-auth for native handling on ios
-					const res = await authenticate({
-						url,
-						callbackScheme: 'https'
-					});
-					// Then forward the callback url to backend
-					await forwardOAuthLoginDeeplink(res.callbackUrl);
-				} else {
-					// open connection URL in a new window
-					openUrl(url);
-					// Callback url will then be handled by the deeplink
-					// and forwarded to backend through a tauri command.
-				}
-			});
-			await awaitUntilLoggedIn();
-			unlisten();
-		} else {
-			// We replace by a full URL, otherwise the matrix API isn't happy
-			$formData.homeserver = 'https://' + $formData.homeserver;
-			customHomeserverDialogOpen = false;
-		}
+	const goToHomeserverSelection = (signup: boolean) => {
+		currentStep = 'homeserverSelection';
+		isSignup = signup;
 	};
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let customHomeserverError: any = $state()!;
-	let hasSubmittedLogin = $state(false);
-	let hasSubmittedSignup = $state(false);
-	let disableButtons = $derived(hasSubmittedLogin || hasSubmittedSignup);
-	const defineAndCheckHomeserver = async (signup: boolean) => {
-		if (signup) {
-			hasSubmittedSignup = true;
-		} else {
-			hasSubmittedLogin = true;
+	$effect(() => {
+		if (isSignup !== undefined) {
+			skipVerification = isSignup;
 		}
-		try {
-			await buildClientFromHomeserverUrl($formData.homeserver);
-
-			await goToLoginStep(signup);
-
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		} catch (e: any) {
-			customHomeserverError = e;
-			hasSubmittedLogin = false;
-			hasSubmittedSignup = false;
-		}
-	};
-
-	let customHomeserverDialogOpen = $state(false);
+	});
 </script>
 
-<div class="px-safe-offset-4 pb-safe-offset-4 flex h-full w-full flex-col justify-between">
-	{#if currentStep === 'homeserverSelection'}
-		<div class="m-auto flex w-full items-center justify-center gap-4 overflow-hidden p-4 text-4xl">
-			<img src={matrix} alt="matrix" class="size-20 object-contain" />
-			+
-			<img src={tauri} alt="tauri" class="size-20 object-contain" />
-			+
-			<img src={svelte} alt="svelte" class="size-20 object-contain" />
-		</div>
-		<div class="flex flex-col space-y-5 px-8 pb-6">
+<div class="px-safe-offset-4 pb-safe-offset-4 flex h-full w-full flex-col justify-start">
+	{#if currentStep === 'homepage'}
+		<div class="mb-6 flex h-full flex-col gap-8 px-8">
+			<div class="h-full"></div>
 			<Button
-				size="lg"
-				disabled={disableButtons}
-				onclick={() => defineAndCheckHomeserver(false)}
-				class="text-lg"
-				>{#if hasSubmittedLogin}
-					<LoaderCircle class="animate-spin" />
-				{/if}{m.button_login()} matrix.org</Button
-			>
-			<Button
-				size="lg"
 				variant="secondary"
-				class="text-lg"
-				disabled={disableButtons}
-				onclick={() => defineAndCheckHomeserver(true)}
-				>{#if hasSubmittedSignup}
-					<LoaderCircle class="animate-spin" />
-				{/if}{m.button_signup()} matrix.org</Button
+				class="h-12 text-lg"
+				onclick={() => goToHomeserverSelection(true)}
 			>
-			<Dialog.Root bind:open={customHomeserverDialogOpen}>
-				<Dialog.Trigger
-					disabled={disableButtons}
-					class={buttonVariants({
-						variant: 'link',
-						class: 'text-lg',
-						size: 'lg'
-					})}><ServerCog class="size-7" />Custom homeserver</Dialog.Trigger
-				>
-				<Dialog.Content>
-					<Dialog.Header>
-						<Dialog.Title>{m.login_custom_homeserver()}</Dialog.Title>
-						<Dialog.Description
-							>This client works with
-							<a class="text-blue-500 underline" href="https://matrix.org">Matrix</a>. {m.login_keep_the_default()}</Dialog.Description
-						>
-					</Dialog.Header>
-					<Tooltip.Provider>
-						<InputGroup.Root>
-							<InputGroup.Input
-								bind:value={$formData.homeserver}
-								autocorrect="off"
-								autocapitalize="off"
-							/>
-							<InputGroup.Addon>
-								<ServerIcon />
-							</InputGroup.Addon>
-							<InputGroup.Addon align="inline-end">
-								<Tooltip.Root>
-									<Tooltip.Trigger>
-										{#snippet child({ props })}
-											<InputGroup.Button {...props} class="rounded-full" size="icon-xs">
-												<InfoIcon />
-											</InputGroup.Button>
-										{/snippet}
-									</Tooltip.Trigger>
-									<Tooltip.Content
-										>{m.login_homeserver_tooltip()} (@alice:<mark>matrix.org</mark
-										>)</Tooltip.Content
-									>
-								</Tooltip.Root>
-							</InputGroup.Addon>
-						</InputGroup.Root>
-					</Tooltip.Provider>
-					{#if customHomeserverError}
-						<p class="text-destructive">
-							The selected homeserver isn't valid or reachable. Error: {customHomeserverError}
-						</p>
-					{/if}
-					<Dialog.Footer>
-						<Button
-							disabled={disableButtons}
-							type="submit"
-							onclick={() => defineAndCheckHomeserver(false)}
-						>
-							{#if hasSubmittedLogin}
-								<LoaderCircle class="animate-spin" />
-							{/if}
-							{m.button_login()}</Button
-						>
-					</Dialog.Footer>
-				</Dialog.Content>
-			</Dialog.Root>
+				{m.button_signup()}</Button
+			>
+			<Button onclick={() => goToHomeserverSelection(false)} class="h-12 text-lg">
+				{m.button_login()}</Button
+			>
 		</div>
-	{:else}
-		<div transition:fade>
-			{#if authType === 'matrix'}
-				<Card>
-					<CardHeader>
-						<CardTitle>{m.login_title()}</CardTitle>
-						<CardDescription>{m.login_subtitle()}</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<form method="POST" use:enhance>
-							<div transition:fade class="flex flex-col gap-4">
-								<Form.Field {form} name="username">
-									<Form.Control>
-										{#snippet children({ props })}
-											<Form.Label>{m.login_username()}</Form.Label>
-											<Input {...props} bind:value={$formData.username} />
-										{/snippet}
-									</Form.Control>
-									<Form.FieldErrors />
-								</Form.Field>
-								<Form.Field {form} name="password">
-									<Form.Control>
-										{#snippet children({ props })}
-											<Form.Label>{m.login_password()}</Form.Label>
-											<Input type="password" {...props} bind:value={$formData.password} />
-										{/snippet}
-									</Form.Control>
-									<Form.FieldErrors />
-								</Form.Field>
-							</div>
-							{#if formErrors}
-								<p class="text-destructive">{JSON.stringify(formErrors)}</p>
-							{/if}
-
-							<Form.Button type="submit" class="flex-1" disabled={isLoading}>
-								{#if isLoading}
-									<LoaderCircle class="animate-spin" />
-									{m.button_loading()}
-								{:else}
-									<LogInIcon class="mr-1 h-4 w-4" />
-									{m.button_login()}
-								{/if}
-							</Form.Button>
-						</form>
-					</CardContent>
-				</Card>
-			{:else if authType === 'oauth'}
-				<!-- oauth -->
-				<div class="flex items-center justify-center">
-					<LoaderCircle class="text-primary size-24 animate-spin" />
-				</div>
-			{:else}
-				<!-- wrong url -->
-				<p>Wrong homeserver url</p>
-			{/if}
-		</div>
+	{:else if currentStep == 'homeserverSelection'}
+		<HomeserverSelection
+			isSignup={isSignup as boolean}
+			onBack={() => {
+				currentStep = 'homepage';
+				isSignup = undefined;
+				skipVerification = false;
+			}}
+			{awaitUntilLoggedIn}
+			{dataForm}
+			bind:isLoading
+			{onSubmit}
+		/>
 	{/if}
 </div>

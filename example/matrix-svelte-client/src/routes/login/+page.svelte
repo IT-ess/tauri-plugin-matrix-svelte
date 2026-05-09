@@ -12,11 +12,11 @@
 	} from 'tauri-plugin-matrix-svelte-api';
 	import { gotoRoomsList } from '$lib/utils.svelte';
 	import { resolve } from '$app/paths';
+	import matrix from '$lib/assets/matrix.png';
+	import svelte from '$lib/assets/svelte.png';
+	import tauri from '$lib/assets/tauri.webp';
 
 	let { data }: { data: PageData } = $props();
-
-	// svelte-ignore state_referenced_locally
-	let { form, host } = data;
 
 	let isLoading = $state(false);
 	let skipVerification = $state(false);
@@ -74,11 +74,19 @@
 	});
 </script>
 
-<main class="pb-safe relative flex h-full w-full flex-col items-center justify-baseline space-y-10">
+<main class="pb-safe relative flex h-full w-full flex-col items-center justify-evenly gap-6">
+	<div
+		class="mt-safe-offset-16 m-auto flex w-full items-center justify-center gap-4 overflow-hidden p-4 text-4xl"
+	>
+		<img src={matrix} alt="matrix" class="size-20 object-contain" />
+		+
+		<img src={tauri} alt="tauri" class="size-20 object-contain" />
+		+
+		<img src={svelte} alt="svelte" class="size-20 object-contain" />
+	</div>
 	<LoginSteps
-		dataForm={form}
+		dataForm={data.form}
 		{onSubmit}
-		hostname={host}
 		bind:isLoading
 		{awaitUntilLoggedIn}
 		bind:skipVerification
