@@ -21,7 +21,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { platform } from '@tauri-apps/plugin-os';
 	import DesktopActions from './item-actions/desktop-actions.svelte';
-	import { press, swipe, type GestureCustomEvent } from 'svelte-gestures';
+	import { usePress, useSwipe, type GestureCustomEvent } from 'svelte-gestures';
 	import {
 		DropdownMenu,
 		DropdownMenuContent,
@@ -261,15 +261,23 @@
 	<div
 		onmouseenter={() => (showActions = true)}
 		onmouseleave={() => (showActions = false)}
-		use:press={() => ({ timeframe: 300, triggerBeforeFinished: true })}
-		onpress={() => {
-			showDropdown = true;
-		}}
+		{...usePress(
+			() => (showDropdown = true),
+			() => ({
+				timeframe: 300,
+				triggerBeforeFinished: true
+			})
+		)}
+		{...useSwipe(
+			() => {},
+			() => ({ timeframe: 300, minSwipeDistance: 50, touchAction: 'pan-y' }),
+			{
+				onswipeup: handleSwipeEnd,
+				onswipedown: handleSwipeStart,
+				onswipemove: handleSwipeMove
+			}
+		)}
 		style="transform: translateX({swipeOffset.current}px)"
-		use:swipe={() => ({ timeframe: 300, minSwipeDistance: 60, touchAction: 'pan-y' })}
-		onswipedown={handleSwipeStart}
-		onswipemove={handleSwipeMove}
-		onswipeup={handleSwipeEnd}
 		class={cn(
 			'group flex gap-1 transition-transform duration-200',
 			isOwn && 'flex-row-reverse',

@@ -31,7 +31,7 @@ tauri-plugin-clipboard-manager = "2.3.2"
 tauri-plugin-dialog = "2.7.0"
 tauri-plugin-deep-link = "2"
 tauri-plugin-fs = "2.5.0"
-tauri-plugin-notifications = { version = "0.4.5", features = ["push-notifications"] }
+tauri-plugin-notifications = { version = "0.4.6", features = ["push-notifications"] }
 tauri-plugin-opener = "2.5.3"
 tauri-plugin-os = "2.3.2"
 tauri-plugin-persisted-scope = "2.3.5"
