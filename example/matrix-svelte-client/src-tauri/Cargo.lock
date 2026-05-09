@@ -3862,7 +3862,7 @@ dependencies = [
 
 [[package]]
 name = "matrix-svelte-client"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "mime_serde_shim",
@@ -3895,8 +3895,9 @@ dependencies = [
 
 [[package]]
 name = "matrix-ui-serializable"
-version = "0.2.0"
-source = "git+https://github.com/IT-ess/matrix-ui-serializable#79dec288abc10ae5cc3578a16b4ebdc9e5dd894d"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da9cd4c91e781da0c547ac21e2da4e38e477ffc016c0583f833e41201d1e21e2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6962,7 +6963,7 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-matrix-svelte"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "android-native-keyring-store",
  "anyhow",

@@ -51,8 +51,8 @@ targets:
           - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
-        CFBundleShortVersionString: 0.3.0
-        CFBundleVersion: "0.3.0"
+        CFBundleShortVersionString: 0.4.0
+        CFBundleVersion: "0.4.0"
     entitlements:
       path: matrix-svelte-client_iOS/matrix-svelte-client_iOS.entitlements
     scheme:

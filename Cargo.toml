@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-matrix-svelte"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["IT-ess"]
 description = "A Tauri plugin that exposes high level Matrix data through Svelte Rune stores"
 edition = "2024"
@@ -32,7 +32,7 @@ tauri-plugin-svelte = { version = "3.2.0", features = ["marshaler-cbor"] }
 tauri-plugin-notifications = { version = "0.4.6", features = ["push-notifications"] }
 tracing = "0.1.43"
 infer = { version = "0.19", default-features = false }
-matrix-ui-serializable = { git = "https://github.com/IT-ess/matrix-ui-serializable" }
+matrix-ui-serializable = { version = "0.4.0" }
 # matrix-ui-serializable = { path = "../matrix-ui-serializable" }
 
 [build-dependencies]
