@@ -3435,8 +3435,7 @@ dependencies = [
 [[package]]
 name = "matrix-ui-serializable"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da9cd4c91e781da0c547ac21e2da4e38e477ffc016c0583f833e41201d1e21e2"
+source = "git+https://github.com/IT-ess/matrix-ui-serializable#af056e555d6bc299c905aabf4fce545646820096"
 dependencies = [
  "anyhow",
  "async-trait",

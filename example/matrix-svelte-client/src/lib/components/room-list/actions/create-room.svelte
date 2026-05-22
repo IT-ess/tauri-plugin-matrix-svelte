@@ -19,6 +19,7 @@
 		submitAsyncRequest,
 		MatrixSvelteListenEvent
 	} from 'tauri-plugin-matrix-svelte-api';
+	import { Switch } from '$lib/components/ui/switch/index.js';
 
 	type Props = {
 		actionCreateRoomOpen: boolean;
@@ -28,6 +29,7 @@
 	let groupName = $state('');
 	let groupTopic = $state('');
 	let isLoading = $state(false);
+	let isPrivate = $state(false);
 	let selectedRoomsIds = $state<string[]>([]);
 
 	let definedAvatarUri = $state<string | undefined>();
@@ -53,7 +55,8 @@
 				roomName: groupName,
 				topic: groupTopic || null,
 				roomAvatar: definedAvatarUri ?? null,
-				invitedUserIds
+				invitedUserIds,
+				isPrivate
 			});
 
 			newRoomUnlistener = await listen<string>(
@@ -152,6 +155,20 @@
 					<InfoIcon class="mt-0.5 size-4 shrink-0 text-blue-600 dark:text-blue-400" />
 					<p class="text-xs text-blue-700 dark:text-blue-300">
 						{m.create_room_add_members_later()}
+					</p>
+				</div>
+
+				<div class="flex flex-col">
+					<div class="flex items-center gap-2">
+						<Switch bind:checked={isPrivate} id="is-private" />
+						<Label for="is-private">{m.create_room_make_room_private()}</Label>
+					</div>
+					<p class="font-light italic">
+						{#if isPrivate}
+							{m.create_room_private_room_desc()}
+						{:else}
+							{m.create_room_public_room_desc()}
+						{/if}
 					</p>
 				</div>
 			</TabsContent>

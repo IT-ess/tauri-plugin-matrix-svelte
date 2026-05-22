@@ -185,6 +185,7 @@ interface CreateRoomRequest {
 		roomAvatar: MxcUri | null;
 		invitedUserIds: UserId[];
 		topic: string | null;
+		isPrivate: boolean;
 	};
 }
 
