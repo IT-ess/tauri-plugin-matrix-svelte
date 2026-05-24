@@ -12,7 +12,7 @@ readme = "README.md"
 license = "Apache-2.0"
 
 [dependencies]
-tauri = "2.10.3"
+tauri = "2.11.2"
 serde = "1.0"
 serde_json = "1.0.142"
 base64 = "0.22.1"
@@ -27,7 +27,7 @@ mime_serde_shim = "0.2"
 futures = "0.3.31"
 futures-util = "0.3.31"
 tauri-plugin-android-fs = { version = "28.1.0", default-features = false }
-tauri-plugin-dialog = "2.7.0"
+tauri-plugin-dialog = "2.7.1"
 tauri-plugin-svelte = { version = "3.2.0", features = ["marshaler-cbor"] }
 tauri-plugin-notifications = { version = "0.4.6", features = ["push-notifications"] }
 tracing = "0.1.43"
@@ -36,7 +36,7 @@ matrix-ui-serializable = { git = "https://github.com/IT-ess/matrix-ui-serializab
 # matrix-ui-serializable = { path = "../matrix-ui-serializable" }
 
 [build-dependencies]
-tauri-plugin = { version = "2.5.4", features = ["build"] }
+tauri-plugin = { version = "2.6.2", features = ["build"] }
 
 [target."cfg(any(target_os = \"macos\", target_os = \"ios\"))".dependencies]
 apple-native-keyring-store = { version = "1.0.0", features = ["protected"] }

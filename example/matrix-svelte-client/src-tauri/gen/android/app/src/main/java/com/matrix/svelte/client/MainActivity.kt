@@ -5,8 +5,10 @@ import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import android.content.Context
 
 class MainActivity : TauriActivity() {
+  private external fun initNdkContext(context: Context)
   override fun onCreate(savedInstanceState: Bundle?) {
   ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { view: View, insets: WindowInsetsCompat ->
             val bottomInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
@@ -15,5 +17,6 @@ class MainActivity : TauriActivity() {
   }
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
+    initNdkContext(this.applicationContext)
   }
 }
