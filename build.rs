@@ -28,6 +28,7 @@ const COMMANDS: &[&str] = &[
     "silent_save_matrix_media_to_cache_dir",
     "get_event_from_main_timeline",
     "send_media_message",
+    "try_get_room_preview_from_address",
     "android_share_matrix_media",
     "register_notifications",
 ];

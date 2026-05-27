@@ -13,6 +13,7 @@ import { RoomStore } from './stores/room-store.svelte.js';
 import { RoomsCollection } from './stores/rooms-collection.svelte.js';
 import type { MediaRequestParameters, SendMediaMessageRequest } from './matrix-requests/media.js';
 import type { TimelineItem } from './bindings/TimelineItem.js';
+import type { RoomPreview } from './bindings/RoomPreview.js';
 
 export function submitMatrixLoginRequest(request: MatrixLoginPayload): Promise<null> {
 	return invoke('plugin:matrix-svelte|submit_matrix_login_request', {
@@ -244,6 +245,16 @@ export function sendMediaMessage(request: SendMediaMessageRequest): Promise<void
 }
 
 /**
+ * Parses a room address input and get its preview if it exists
+ * @returns a tuple of the RoomPreview and the `via` server names
+ * @throws if the format of the address is incorrect or the room doesn't exist
+ */
+export function tryGetRoomPreviewFromAddress(text: string): Promise<[RoomPreview, string[]]> {
+	return invoke<[RoomPreview, string[]]>('plugin:matrix-svelte|try_get_room_preview_from_address', {
+		text
+	});
+}
+/**
  *
  * Register push notifications on mobile and OS notifications on desktop. On desktop just send empty strings.
  */
@@ -278,6 +289,7 @@ export * from './bindings/InvitedRoomInfo.js';
 export * from './bindings/InviterInfo.js';
 export * from './bindings/InviteState.js';
 export * from './bindings/JoinedRoomInfo.js';
+export * from './bindings/JoinRuleSummary.js';
 export * from './bindings/JsonWebKey.js';
 export * from './bindings/LocationMessageEventContent.js';
 export * from './bindings/LoginState.js';
@@ -300,7 +312,9 @@ export * from './bindings/RoomMessageEventContent.js';
 export * from './bindings/RoomMessageEventContentWithoutRelation.js';
 export * from './bindings/RoomModel.js';
 export * from './bindings/RoomsCollectionStatus.js';
+export * from './bindings/RoomPreview.js';
 export * from './bindings/RoomScreen.js';
+export * from './bindings/RoomState.js';
 export * from './bindings/RoomsList.js';
 export * from './bindings/SendTextMessagePayload.js';
 export * from './bindings/ServerNoticeMessageEventContent.js';

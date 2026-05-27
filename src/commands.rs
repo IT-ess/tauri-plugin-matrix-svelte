@@ -1,5 +1,7 @@
 use anyhow::anyhow;
-use matrix_ui_serializable::commands::{OwnedEventId, VerifyDeviceEvent};
+use matrix_ui_serializable::commands::{
+    OwnedEventId, OwnedServerName, SerializableRoomPreview, VerifyDeviceEvent,
+};
 use matrix_ui_serializable::models::events::{
     FrontendDevice, MatrixLoginPayload, MediaStreamEvent,
 };
@@ -537,6 +539,16 @@ pub(crate) async fn register_notifications<R: Runtime>(
     )
     .await
     .map_err(|e| e.into())
+}
+
+/// Parses a room address input and get its preview if it exists
+#[command]
+pub(crate) async fn try_get_room_preview_from_address(
+    text: String,
+) -> Result<(SerializableRoomPreview, Vec<OwnedServerName>)> {
+    matrix_ui_serializable::commands::try_get_room_preview_from_address(&text)
+        .await
+        .map_err(Error::Anyhow)
 }
 
 //

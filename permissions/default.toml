@@ -30,6 +30,7 @@ permissions = [
     "allow-silent-save-matrix-media-to-cache-dir",
     "allow-get-event-from-main-timeline",
     "allow-send-media-message",
+    "allow-try-get-room-preview-from-address",
     "allow-android-share-matrix-media",
     "allow-register-notifications",
 ]

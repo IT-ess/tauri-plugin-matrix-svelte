@@ -6,16 +6,18 @@
 		DropdownMenuTrigger
 	} from '$lib/components/ui/dropdown-menu';
 	import { Button } from '$lib/components/ui/button';
-	import { Plus, UserPen, Users } from '@lucide/svelte';
+	import { Hash, Plus, UserPen, Users } from '@lucide/svelte';
 	import CreateDmRoom from './create-dm-room.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import CreateRoom from './create-room.svelte';
+	import AddRoomByAddress from './add-room-by-address.svelte';
 
 	// Track button rotation state
 	let isActionButtonOpen = $state(false);
 
 	let actionCreateDMRoomOpen = $state(false);
 	let actionCreateRoomOpen = $state(false);
+	let actionAddRoomByAddressOpen = $state(false);
 </script>
 
 <div class="bottom-safe-offset-28 absolute right-6 z-50">
@@ -36,9 +38,13 @@
 			<DropdownMenuItem class="text-md" onSelect={() => (actionCreateRoomOpen = true)}
 				><Users />{m.create_room()}</DropdownMenuItem
 			>
+			<DropdownMenuItem class="text-md" onSelect={() => (actionAddRoomByAddressOpen = true)}
+				><Hash />{m.join_room_from_address()}</DropdownMenuItem
+			>
 		</DropdownMenuContent>
 	</DropdownMenu>
 </div>
 
-<CreateDmRoom {actionCreateDMRoomOpen} />
-<CreateRoom {actionCreateRoomOpen} />
+<CreateDmRoom bind:actionCreateDMRoomOpen />
+<CreateRoom bind:actionCreateRoomOpen />
+<AddRoomByAddress bind:open={actionAddRoomByAddressOpen} />

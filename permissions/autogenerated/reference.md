@@ -33,6 +33,7 @@ Default permissions for the plugin
 - `allow-silent-save-matrix-media-to-cache-dir`
 - `allow-get-event-from-main-timeline`
 - `allow-send-media-message`
+- `allow-try-get-room-preview-from-address`
 - `allow-android-share-matrix-media`
 - `allow-register-notifications`
 
@@ -847,6 +848,32 @@ Enables the submit_matrix_login_request command without any pre-configured scope
 <td>
 
 Denies the submit_matrix_login_request command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-try-get-room-preview-from-address`
+
+</td>
+<td>
+
+Enables the try_get_room_preview_from_address command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-try-get-room-preview-from-address`
+
+</td>
+<td>
+
+Denies the try_get_room_preview_from_address command without any pre-configured scope.
 
 </td>
 </tr>
