@@ -12,11 +12,11 @@ export type RoomsList = {
 	/**
 	 * The list of all rooms that the user has been invited to.
 	 */
-	invitedRooms: Record<string, InvitedRoomInfo>;
+	invitedRooms: { [key in string]?: InvitedRoomInfo };
 	/**
 	 * The set of all joined rooms and their cached preview info.
 	 */
-	allJoinedRooms: Record<string, JoinedRoomInfo>;
+	allJoinedRooms: { [key in string]?: JoinedRoomInfo };
 	/**
 	 * The list of all room IDs in display order, matching the order from the room list service.
 	 */

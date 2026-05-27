@@ -10,7 +10,7 @@
 	import { Spinner } from '$lib/components/ui/spinner';
 	import EditableAvatar from '$lib/components/common/editable-avatar.svelte';
 	import RoomSelector from '$lib/components/room-selector/room-selector.svelte';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { gotoRoom } from '$lib/utils.svelte';
 	import { roomsCollection } from '../../../../hooks.client';
@@ -49,8 +49,8 @@
 
 		try {
 			const invitedUserIds = selectedRoomsIds
-				.map((id) => roomsCollection.state.allJoinedRooms[id].directUserId)
-				.filter((userId) => userId !== null);
+				.map((id) => roomsCollection.state.allJoinedRooms[id]?.directUserId)
+				.filter((userId) => typeof userId == 'string');
 			let request = createMatrixRequest.createRoom({
 				roomName: groupName,
 				topic: groupTopic || null,

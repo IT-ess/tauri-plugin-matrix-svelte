@@ -8,7 +8,7 @@
 	import { cn, lazyEffect, roomNameToPlainString } from '$lib/utils.svelte';
 	import SearchRooms from '$lib/components/room-list/search-rooms.svelte';
 	import { roomsCollection } from '../../../hooks.client';
-	import { filterRoomList } from 'tauri-plugin-matrix-svelte-api';
+	import { filterRoomList, type JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
 
 	let {
 		selectedRoomsIds = $bindable([]),
@@ -51,7 +51,7 @@
 				{#each selectedRoomsIds as id (id)}
 					<Badge variant="secondary" class="flex items-center gap-2 pl-2">
 						<span class="text-xs"
-							>{roomNameToPlainString(roomsCollection.state.allJoinedRooms[id].roomName)}</span
+							>{roomNameToPlainString(roomsCollection.state.allJoinedRooms[id]?.roomName)}</span
 						>
 						<button onclick={() => removeMember(id)} class="hover:text-destructive ml-1">
 							<XIcon class="size-3" />
@@ -68,7 +68,7 @@
 				roomsCollection.state.displayedDirectRooms.filter(
 					(id) =>
 						!hideDirectUsersList.includes(
-							roomsCollection.state.allJoinedRooms[id].directUserId ?? ''
+							roomsCollection.state.allJoinedRooms[id]?.directUserId ?? ''
 						)
 				)
 			)}
@@ -100,7 +100,11 @@
 		<SearchRooms bind:searchQuery />
 		<ScrollArea class={cn('rounded-lg border', `h-${height ?? 48}`)}>
 			{#each roomIds as id (id)}
-				<SelectableRoomItem room={roomsCollection.state.allJoinedRooms[id]} {toggleItem} />
+				<!-- Assertion should be ok, room id list is managed by the backend -->
+				<SelectableRoomItem
+					room={roomsCollection.state.allJoinedRooms[id] as JoinedRoomInfo}
+					{toggleItem}
+				/>
 			{/each}
 		</ScrollArea>
 	</div>

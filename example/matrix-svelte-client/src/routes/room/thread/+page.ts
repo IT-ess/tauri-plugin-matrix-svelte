@@ -23,7 +23,7 @@ export const load: PageLoad = async ({ url }) => {
 		threadRootEventId: threadRoot,
 		// Kinda weird, but otherwise the room name is never initiated or
 		// requires an additional fetch from the backend
-		roomName: roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId].roomName ?? '')
+		roomName: roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId]?.roomName)
 	};
 	emit(MatrixSvelteEmitEvent.UpdateCurrentActiveRoom, payload);
 

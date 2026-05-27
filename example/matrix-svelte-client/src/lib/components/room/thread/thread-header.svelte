@@ -18,15 +18,15 @@
 		initialAvatarUrl: string | null;
 	} = $props();
 
-	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomId].isDirect);
+	let isDirect = $derived(!!roomsCollection.state.allJoinedRooms[roomId]?.isDirect);
 	// It seems that DM rooms avatar behave differently that regular rooms, so we need to use
 	// the user's avatar for direct rooms, and use the reactive one for regular rooms
 	let avatarUrl = $derived(
 		getCustomMxcUriFromOriginal(
-			isDirect ? initialAvatarUrl : roomsCollection.state.allJoinedRooms[roomId].avatar
+			isDirect ? initialAvatarUrl : roomsCollection.state.allJoinedRooms[roomId]?.avatar
 		)
 	);
-	let alt = $derived(roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId].roomName));
+	let alt = $derived(roomNameToPlainString(roomsCollection.state.allJoinedRooms[roomId]?.roomName));
 </script>
 
 <header class="pt-safe sticky top-0 z-50 w-full border-b">

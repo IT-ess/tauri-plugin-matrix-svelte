@@ -10,8 +10,6 @@
 	import Button from '../ui/button/button.svelte';
 	import { roomsCollection } from '../../../hooks.client';
 	import { onMount } from 'svelte';
-	import type { ProfileModel } from 'tauri-plugin-matrix-svelte-api';
-	import { gotoProfile } from '$lib/utils.svelte';
 
 	let {
 		openInviteDrawerOnLoad
@@ -23,6 +21,7 @@
 
 	let userIds = $derived(
 		Object.values(roomsCollection.state.allJoinedRooms)
+			.filter((room) => !!room)
 			.filter((room) => room.directUserId && !room.isTombstoned)
 			.map((room) => room.directUserId as string)
 	);
@@ -37,7 +36,9 @@
 		return userIds.filter((id) => id.toLowerCase().includes(searchQuery.toLowerCase()));
 	});
 
-	let invitedRooms = $derived(Object.values(roomsCollection.state.invitedRooms));
+	let invitedRooms = $derived(
+		Object.values(roomsCollection.state.invitedRooms).filter((room) => !!room)
+	);
 
 	let openInviteDrawer = $state(false);
 

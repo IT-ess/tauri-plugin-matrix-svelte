@@ -19,9 +19,9 @@
 		roomStore
 	}: { roomId: string; avatar: string | null; roomStore: RoomStore } = $props();
 
-	let roomTopic = $derived(roomsCollection.state.allJoinedRooms[roomId].topic);
+	let roomTopic = $derived(roomsCollection.state.allJoinedRooms[roomId]?.topic);
 
-	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomId].isDirect);
+	let isDirect = $derived(!!roomsCollection.state.allJoinedRooms[roomId]?.isDirect);
 
 	let actionInviteMembersOpen = $state(false);
 	let actionLeaveRoomOpen = $state(false);

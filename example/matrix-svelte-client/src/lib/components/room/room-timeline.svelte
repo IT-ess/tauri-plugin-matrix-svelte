@@ -60,6 +60,7 @@
 			if (
 				scroll.arrived.bottom &&
 				roomStore.state.tlState &&
+				roomsCollection.state.allJoinedRooms[roomId] &&
 				roomsCollection.state.allJoinedRooms[roomId].numUnreadMessages > 0
 			) {
 				const request = createMatrixRequest.markRoomAsRead({

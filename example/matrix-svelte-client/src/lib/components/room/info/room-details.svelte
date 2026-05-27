@@ -17,7 +17,7 @@
 	let { roomId, actionRoomDetailsOpen = $bindable(false), roomStore, avatarUrl }: Props = $props();
 
 	let groupName = $derived(roomStore.state.roomName);
-	let groupTopic = $derived(roomsCollection.state.allJoinedRooms[roomId].topic);
+	let groupTopic = $derived(roomsCollection.state.allJoinedRooms[roomId]?.topic);
 	let isSaving = $state(false);
 
 	let isEditingName = $state(false);
@@ -75,7 +75,7 @@
 		}
 	};
 
-	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomId].isDirect);
+	let isDirect = $derived(!!roomsCollection.state.allJoinedRooms[roomId]?.isDirect);
 </script>
 
 <Dialog.Root bind:open={actionRoomDetailsOpen}>

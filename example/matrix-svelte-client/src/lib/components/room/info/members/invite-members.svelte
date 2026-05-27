@@ -27,8 +27,8 @@
 
 		try {
 			const invitedUserIds = selectedRoomsIds
-				.map((id) => roomsCollection.state.allJoinedRooms[id].directUserId)
-				.filter((userId) => userId !== null);
+				.map((id) => roomsCollection.state.allJoinedRooms[id]?.directUserId)
+				.filter((userId) => typeof userId == 'string');
 			let request = createMatrixRequest.inviteUsersInRoom({
 				roomId,
 				invitedUserIds
