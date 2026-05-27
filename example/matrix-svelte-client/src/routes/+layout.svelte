@@ -17,9 +17,11 @@
 		isLoggedIn,
 		MatrixSvelteEmitEvent,
 		MatrixSvelteListenEvent,
+		type MatrixUriIntent,
 		type ToastNotificationEventType,
 		type VerificationEmojisEventType
 	} from 'tauri-plugin-matrix-svelte-api';
+	import { gotoProfile, gotoRoomPreview } from '$lib/utils.svelte';
 
 	let { children }: LayoutProps = $props();
 
@@ -34,8 +36,20 @@
 
 	let emojisUnlistener: UnlistenFn;
 	let toastUnlistener: UnlistenFn;
+	let matrixIntentUnlistener: UnlistenFn;
 
 	onMount(async () => {
+		matrixIntentUnlistener = await listen<MatrixUriIntent>(
+			MatrixSvelteListenEvent.MatrixUriIntent,
+			(event) => {
+				if (event.payload.kind == 'room') {
+					gotoRoomPreview(null, null, event.payload.payload[0]);
+				} else {
+					gotoProfile(event.payload.payload);
+				}
+			}
+		);
+
 		emojisUnlistener = await listen<VerificationEmojisEventType>(
 			MatrixSvelteListenEvent.VerificationStart,
 			(event) => {
@@ -83,8 +97,15 @@
 	});
 
 	onDestroy(() => {
-		emojisUnlistener();
-		toastUnlistener();
+		if (matrixIntentUnlistener) {
+			matrixIntentUnlistener();
+		}
+		if (emojisUnlistener) {
+			emojisUnlistener();
+		}
+		if (toastUnlistener) {
+			toastUnlistener();
+		}
 	});
 </script>
 

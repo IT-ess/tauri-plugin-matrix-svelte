@@ -292,8 +292,16 @@ pub fn run() {
 
             let deeplink_handle = app.app_handle().clone();
 
+            // app.deep_link().get_current()
+
             app.deep_link().on_open_url(move |event| {
                 if let Some(url) = event.urls().first() {
+                    // Matches matrix: URIs
+                    if url.scheme().eq("matrix") {
+                        tauri_plugin_matrix_svelte::handle_matrix_uri(url);
+                        return;
+                    }
+
                     // Matches scheme://auth-callback
                     if url.host_str().is_some_and(|s| s.eq("auth-callback")) {
                         // Wake up the UI (for iOS only)

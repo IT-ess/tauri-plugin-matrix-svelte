@@ -96,7 +96,7 @@ export function fetchUserProfile(userId: UserId, roomId: RoomId | null): Promise
 			userId,
 			roomId
 		}
-	).then((p) => ({ userId: p.userId, avatarUrl: p.avatar, displayName: p.username }));
+	).then((p) => ({ userId, avatarUrl: p.avatar, displayName: p.username }));
 }
 
 export async function getAllUserProfiles(): Promise<ProfileModel[]> {
@@ -293,6 +293,7 @@ export * from './bindings/JoinRuleSummary.js';
 export * from './bindings/JsonWebKey.js';
 export * from './bindings/LocationMessageEventContent.js';
 export * from './bindings/LoginState.js';
+export * from './bindings/MatrixUriIntent.js';
 export * from './bindings/MatrixLoginPayload.js';
 export * from './bindings/MediaSource.js';
 export * from './bindings/Mentions.js';

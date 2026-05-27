@@ -8,6 +8,10 @@
 					"appLink": false
 				},
 				{
+					"scheme": ["matrix"],
+					"appLink": false
+				},
+				{
 					"scheme": ["https"],
 					"host": "mxsvelte.aloiseau.com",
 					"pathPrefix": ["/auth-callback"],
