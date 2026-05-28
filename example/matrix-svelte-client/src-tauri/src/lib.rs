@@ -6,8 +6,8 @@ use tauri::{Emitter, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_matrix_svelte::{
     AUTH_DEEPLINK_SENDER, Base64, CLIENT, EncryptedFile, EncryptedFileHashes, EncryptedFileInfo,
-    MediaFormat, MediaRequestParameters, MediaSource, MediaThumbnailSettings, Method, OwnedMxcUri,
-    Standard, UInt, UrlSafe, V2EncryptedFileInfo,
+    LOGIN_STORE_READY, MediaFormat, MediaRequestParameters, MediaSource, MediaThumbnailSettings,
+    Method, OwnedMxcUri, Standard, UInt, UrlSafe, V2EncryptedFileInfo,
 };
 use tauri_plugin_svelte::CborMarshaler;
 use tracing::{debug, error, trace};
@@ -292,9 +292,20 @@ pub fn run() {
 
             let deeplink_handle = app.app_handle().clone();
 
-            // app.deep_link().get_current()
+            let deeplink_manager = app.deep_link();
 
-            app.deep_link().on_open_url(move |event| {
+            if let Ok(Some(urls)) = deeplink_manager.get_current()
+                && let Some(url) = urls.first().cloned()
+                // Only trigger intent if the user was logged in
+                && tauri_plugin_matrix_svelte::has_session_stored()
+            {
+                tauri::async_runtime::spawn(async move {
+                    LOGIN_STORE_READY.wait();
+                    tauri_plugin_matrix_svelte::handle_matrix_uri(&url);
+                });
+            };
+
+            deeplink_manager.on_open_url(move |event| {
                 if let Some(url) = event.urls().first() {
                     // Matches matrix: URIs
                     if url.scheme().eq("matrix") {
