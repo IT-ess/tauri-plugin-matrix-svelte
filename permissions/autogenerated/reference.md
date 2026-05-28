@@ -34,6 +34,7 @@ Default permissions for the plugin
 - `allow-get-event-from-main-timeline`
 - `allow-send-media-message`
 - `allow-try-get-room-preview-from-address`
+- `allow-fetch-matrix-pill-info`
 - `allow-android-share-matrix-media`
 - `allow-register-notifications`
 
@@ -250,6 +251,32 @@ Enables the edit_user_information command without any pre-configured scope.
 <td>
 
 Denies the edit_user_information command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-fetch-matrix-pill-info`
+
+</td>
+<td>
+
+Enables the fetch_matrix_pill_info command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-fetch-matrix-pill-info`
+
+</td>
+<td>
+
+Denies the fetch_matrix_pill_info command without any pre-configured scope.
 
 </td>
 </tr>

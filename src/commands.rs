@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use matrix_ui_serializable::commands::{
-    OwnedEventId, OwnedServerName, SerializableRoomPreview, VerifyDeviceEvent,
+    MatrixUriPillInfo, OwnedEventId, OwnedServerName, SerializableRoomPreview, VerifyDeviceEvent,
 };
 use matrix_ui_serializable::models::events::{
     FrontendDevice, MatrixLoginPayload, MediaStreamEvent,
@@ -549,6 +549,13 @@ pub(crate) async fn try_get_room_preview_from_address(
     matrix_ui_serializable::commands::try_get_room_preview_from_address(&text)
         .await
         .map_err(Error::Anyhow)
+}
+
+#[command(async)]
+pub(crate) async fn fetch_matrix_pill_info(uri: String) -> Result<MatrixUriPillInfo> {
+    matrix_ui_serializable::commands::fetch_matrix_pill_info(&uri)
+        .await
+        .map_err(Into::into)
 }
 
 //

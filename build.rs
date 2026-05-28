@@ -29,6 +29,7 @@ const COMMANDS: &[&str] = &[
     "get_event_from_main_timeline",
     "send_media_message",
     "try_get_room_preview_from_address",
+    "fetch_matrix_pill_info",
     "android_share_matrix_media",
     "register_notifications",
 ];

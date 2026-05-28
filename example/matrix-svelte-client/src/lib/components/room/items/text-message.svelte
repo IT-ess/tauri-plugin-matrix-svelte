@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages';
+	import { adaptBaseUriToPlatform } from '$lib/utils.svelte';
 	import type { Attachment } from 'svelte/attachments';
-	import type { FrontendTextMessage } from 'tauri-plugin-matrix-svelte-api';
+	import { fetchMatrixPillInfo, type FrontendTextMessage } from 'tauri-plugin-matrix-svelte-api';
 
 	let { textMessage }: { textMessage: FrontendTextMessage } = $props();
 
@@ -23,10 +24,52 @@
 			// Query links inside the freshly injected/updated DOM element
 			const links = element.querySelectorAll<HTMLAnchorElement>('a[href]');
 
-			links.forEach((a) => {
+			links.forEach(async (a) => {
+				// Avoid preloading any data
+				a.setAttribute('data-sveltekit-preload-data', 'off');
+				a.setAttribute('data-sveltekit-preload-code', 'off');
+
 				// Force external links to open in a new tab
 				if (a.href.startsWith('https://matrix.to') || a.href.startsWith('matrix:')) {
-					return; // Skip adding _blank
+					try {
+						const info = await fetchMatrixPillInfo(a.href);
+
+						a.className = `mx-pill mx-pill--${info.kind}`;
+						a.removeAttribute('target'); // Matrix links stay inside or update app state
+						a.removeAttribute('rel');
+						let avatarHtml = '';
+						let nameHtml = '';
+						if (info.kind == 'room') {
+							const [preview, via] = info.payload;
+							avatarHtml = preview.avatar_url
+								? `<img class="mx-pill__avatar" src="${adaptBaseUriToPlatform(preview.avatar_url)}" alt="${preview.name}" />`
+								: `<span class="mx-pill__avatar-fallback">${(preview.name ?? '?').charAt(0)}</span>`;
+							nameHtml = `<span class="mx-pill__name">${preview.name ?? preview.canonical_alias ?? preview.room_id}</span>`;
+
+							if (preview.state && preview.state == 'Joined') {
+								// Point to the room if already joined
+								a.href = `/room?id=${encodeURIComponent(preview.room_id)}${preview.avatar_url ? '&avatar=' + encodeURIComponent(preview.avatar_url) : ''}#bottomscroll`;
+							} else {
+								// display preview instead
+								a.href = `/room-preview?data=${encodeURIComponent(JSON.stringify(preview))}&via=${encodeURIComponent(JSON.stringify(via))}`;
+							}
+						} else {
+							// Point to the user profile
+							a.href = `/profile?id=${encodeURIComponent(info.payload.user_id)}`;
+							avatarHtml = info.payload.avatar_url
+								? `<img class="mx-pill__avatar" src="${adaptBaseUriToPlatform(info.payload.avatar_url)}" alt="${info.payload.username}" />`
+								: `<span class="mx-pill__avatar-fallback">${(info.payload.username ?? '?').charAt(0)}</span>`;
+							nameHtml = `<span class="mx-pill__name">${info.payload.username ?? info.payload.user_id}</span>`;
+						}
+
+						// Swap the content smoothly without breaking browser node flows
+						a.innerHTML = `${avatarHtml}${nameHtml}`;
+
+						return; // Skip adding _blank
+					} catch (err) {
+						console.error(err);
+					}
+					// fallback to normal URL
 				}
 
 				a.target = '_blank';
@@ -176,5 +219,100 @@
 		border-left: 4px solid var(--color-accent);
 		color: var(--text-muted, #a0a0a0);
 		font-style: italic;
+	}
+
+	/* Base Pill Styling */
+	.matrix-message :global(.mx-pill) {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0 0.6rem 0 0.25rem;
+
+		/* Using theme radius token */
+		border-radius: var(--radius);
+
+		font-weight: 500;
+		font-size: 0.85rem;
+		line-height: 1.4rem;
+		text-decoration: none !important;
+		vertical-align: middle;
+
+		/* Clean transition state mapping */
+		transition:
+			background-color 0.15s ease,
+			color 0.15s ease,
+			border-color 0.15s ease;
+		max-width: 220px;
+		border: 1px solid transparent;
+	}
+
+	/* Hover Interaction: Switches safely to your system's accent tokens */
+	.matrix-message :global(.mx-pill:hover) {
+		background-color: var(--accent);
+		color: var(--accent-foreground);
+		border-color: var(--border);
+	}
+
+	/* 1. User Pills (Uses your colorful Primary token) */
+	.matrix-message :global(.mx-pill--user) {
+		/* Mixes 12% of primary color with transparency for a modern translucent tag look */
+		background-color: color-mix(in oklch, var(--primary) 12%, transparent);
+		color: var(--primary);
+	}
+
+	/* 2. Room Pills (Uses your elegant structural Secondary token) */
+	.matrix-message :global(.mx-pill--room) {
+		background-color: var(--secondary);
+		color: var(--secondary-foreground);
+		border-color: var(--border);
+	}
+
+	/* 3. Space Pills (Uses Muted structural tokens to feel like a folder/utility) */
+	.matrix-message :global(.mx-pill--space) {
+		background-color: var(--muted);
+		color: var(--muted-foreground);
+		border-color: var(--border);
+	}
+
+	/* Avatar Layout */
+	.matrix-message :global(.mx-pill__avatar) {
+		width: 16px;
+		height: 16px;
+		/* Nested border-radius calculation for perfect visual harmony */
+		border-radius: calc(var(--radius) - 2px);
+		object-fit: cover;
+		display: inline-block;
+	}
+
+	/* Fallback Initials Avatar */
+	.matrix-message :global(.mx-pill__avatar-fallback) {
+		width: 16px;
+		height: 16px;
+		border-radius: calc(var(--radius) - 2px);
+		font-size: 0.65rem;
+		font-weight: 700;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		text-transform: uppercase;
+	}
+
+	/* Context-aware colors for fallback avatars to ensure high contrast */
+	.matrix-message :global(.mx-pill--user .mx-pill__avatar-fallback) {
+		background-color: var(--primary);
+		color: var(--primary-foreground);
+	}
+
+	.matrix-message :global(.mx-pill--room .mx-pill__avatar-fallback),
+	.matrix-message :global(.mx-pill--space .mx-pill__avatar-fallback) {
+		background-color: var(--foreground);
+		color: var(--background);
+	}
+
+	/* Truncated Name Text */
+	.matrix-message :global(.mx-pill__name) {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 </style>

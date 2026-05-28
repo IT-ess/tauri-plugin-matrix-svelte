@@ -31,6 +31,7 @@ permissions = [
     "allow-get-event-from-main-timeline",
     "allow-send-media-message",
     "allow-try-get-room-preview-from-address",
+    "allow-fetch-matrix-pill-info",
     "allow-android-share-matrix-media",
     "allow-register-notifications",
 ]

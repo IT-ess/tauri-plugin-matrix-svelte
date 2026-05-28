@@ -14,6 +14,7 @@ import { RoomsCollection } from './stores/rooms-collection.svelte.js';
 import type { MediaRequestParameters, SendMediaMessageRequest } from './matrix-requests/media.js';
 import type { TimelineItem } from './bindings/TimelineItem.js';
 import type { RoomPreview } from './bindings/RoomPreview.js';
+import type { MatrixUriPillInfo } from './bindings/MatrixUriPillInfo.js';
 
 export function submitMatrixLoginRequest(request: MatrixLoginPayload): Promise<null> {
 	return invoke('plugin:matrix-svelte|submit_matrix_login_request', {
@@ -254,6 +255,18 @@ export function tryGetRoomPreviewFromAddress(text: string): Promise<[RoomPreview
 		text
 	});
 }
+
+/**
+ * Fetches some info to display a rich pill
+ * @returns MatrixUriPillInfo
+ * @throws if the format of the address is incorrect or the room doesn't exist
+ */
+export function fetchMatrixPillInfo(uri: string): Promise<MatrixUriPillInfo> {
+	return invoke<MatrixUriPillInfo>('plugin:matrix-svelte|fetch_matrix_pill_info', {
+		uri
+	});
+}
+
 /**
  *
  * Register push notifications on mobile and OS notifications on desktop. On desktop just send empty strings.

@@ -298,7 +298,7 @@ export function getOptionalQueryParams(info: {
  * media requires to use the http protocol. So our uri should
  * look like: http://mxc.localhost/...
  */
-function adaptBaseUriToPlatform(mxcUri: string): string {
+export function adaptBaseUriToPlatform(mxcUri: string): string {
 	const currentPlatform = platform();
 	if (currentPlatform == 'android' || currentPlatform == 'windows') {
 		const path = mxcUri.slice(6);
