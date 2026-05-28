@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages';
-	import type { Action } from 'svelte/action';
+	import type { Attachment } from 'svelte/attachments';
 	import type { FrontendTextMessage } from 'tauri-plugin-matrix-svelte-api';
 
 	let { textMessage }: { textMessage: FrontendTextMessage } = $props();
@@ -17,41 +17,35 @@
 
 	// Small AI generated utility that checks the presence of anchor elements,
 	// and add _blank target to it.
-	const handleMatrixLinks: Action<HTMLElement, string | undefined> = (
-		node,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		formattedBody
-	) => {
-		const updateLinks = (): void => {
-			// Query only anchor tags that have an href attribute
-			const links = node.querySelectorAll<HTMLAnchorElement>('a[href]');
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	export function handleMatrixLinks(formattedBody: string | undefined): Attachment<HTMLElement> {
+		return (element) => {
+			// Query links inside the freshly injected/updated DOM element
+			const links = element.querySelectorAll<HTMLAnchorElement>('a[href]');
 
 			links.forEach((a) => {
 				// Force external links to open in a new tab
+				if (a.href.startsWith('https://matrix.to') || a.href.startsWith('matrix:')) {
+					return; // Skip adding _blank
+				}
+
 				a.target = '_blank';
 
-				// Security best practice for target="_blank"
-				// Prevents the new page from accessing window.opener
+				// Security best practices for target="_blank"
 				a.rel = 'noopener noreferrer';
 			});
-		};
 
-		// Initial run
-		updateLinks();
-
-		return {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			update(newBody) {
-				// Re-run when the content of the message changes
-				updateLinks();
-			}
+			// Optional: return a cleanup function if needed when the element unmounts
+			return () => {
+				// Nothing to tear down manually since we only changed attributes
+			};
 		};
-	};
+	}
 </script>
 
 <div class="mt-1">
 	{#if textMessage.format == 'org.matrix.custom.html' && textMessage.formatted_body}
-		<div class="matrix-message" use:handleMatrixLinks>
+		<div class="matrix-message" {@attach handleMatrixLinks(textMessage.formatted_body)}>
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 			{@html textMessage.formatted_body}
 		</div>
