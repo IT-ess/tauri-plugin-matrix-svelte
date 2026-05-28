@@ -3,13 +3,12 @@ import type { PlainMediaSource } from '../matrix-requests/media.js';
 import type { AudioMessageEventContent } from './AudioMessageEventContent.js';
 import type { EmoteMessageEventContent } from './EmoteMessageEventContent.js';
 import type { FileMessageEventContent } from './FileMessageEventContent.js';
+import type { FrontendTextMessage } from './FrontendTextMessage.js';
 import type { ImageInfo } from './ImageInfo.js';
 import type { ImageMessageEventContent } from './ImageMessageEventContent.js';
 import type { LocationMessageEventContent } from './LocationMessageEventContent.js';
-import type { NoticeMessageEventContent } from './NoticeMessageEventContent.js';
 import type { ReactionsByKeyBySender } from './ReactionsByKeyBySender.js';
 import type { ServerNoticeMessageEventContent } from './ServerNoticeMessageEventContent.js';
-import type { TextMessageEventContent } from './TextMessageEventContent.js';
 import type { ThreadSummary } from './ThreadSummary.js';
 import type { VideoMessageEventContent } from './VideoMessageEventContent.js';
 
@@ -53,9 +52,9 @@ export type MsgLikeContent = {
 	| { kind: 'file'; body: FileMessageEventContent }
 	| { kind: 'image'; body: ImageMessageEventContent }
 	| { kind: 'location'; body: LocationMessageEventContent }
-	| { kind: 'notice'; body: NoticeMessageEventContent }
+	| { kind: 'notice'; body: FrontendTextMessage }
 	| { kind: 'serverNotice'; body: ServerNoticeMessageEventContent }
-	| { kind: 'text'; body: TextMessageEventContent }
+	| { kind: 'text'; body: FrontendTextMessage }
 	| { kind: 'video'; body: VideoMessageEventContent }
 	| { kind: 'sticker'; body: StickerEventContent }
 	| { kind: 'poll' }

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import {
+		Copy,
 		MessageSquareReply,
 		MessagesSquare,
 		ReplyIcon,
@@ -21,7 +22,6 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { platform } from '@tauri-apps/plugin-os';
 	import DesktopActions from './item-actions/desktop-actions.svelte';
-	import { usePress, useSwipe, type GestureCustomEvent } from 'svelte-gestures';
 	import {
 		DropdownMenu,
 		DropdownMenuContent,
@@ -39,6 +39,8 @@
 	import TextMessage from './text-message.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import ThreadPreview from '../thread/thread-preview.svelte';
+	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+	import { usePress, useSwipe, type GestureCustomEvent } from 'svelte-gestures';
 	import {
 		createMatrixRequest,
 		submitAsyncRequest,
@@ -146,7 +148,8 @@
 			editedContent: {
 				msgtype: 'm.text',
 				body: newMessage,
-				'm.mentions': null
+				'm.mentions': null,
+				'com.beeper.linkpreviews': null
 			}
 		});
 		submitAsyncRequest(request);
@@ -255,6 +258,8 @@
 			onScrollToMessage(data.inReplyToId);
 		}
 	};
+
+	let canReplyTo = $derived(abilities.includes('canReplyTo'));
 </script>
 
 <Popover bind:open={showDropdown}>
@@ -262,7 +267,9 @@
 		onmouseenter={() => (showActions = true)}
 		onmouseleave={() => (showActions = false)}
 		{...usePress(
-			() => (showDropdown = true),
+			() => {
+				showDropdown = true;
+			},
 			() => ({
 				timeframe: 300,
 				triggerBeforeFinished: true
@@ -285,10 +292,10 @@
 		)}
 		role="button"
 		tabindex="0"
-		aria-label="Swipe right to reply"
+		aria-label="Swipe to reply"
 	>
 		<PopoverTrigger />
-		<Avatar onclick={() => gotoProfile(senderId)} class="border-primary border">
+		<Avatar onclick={() => gotoProfile(senderId)} class="border border-primary">
 			<AvatarImage src={getCustomMxcUriFromOriginal(roomMembers[senderId]?.avatar)} alt={sender} />
 			<AvatarFallback>{getInitials(sender ?? '?')}</AvatarFallback>
 		</Avatar>
@@ -312,7 +319,7 @@
 							<p class="text-sm font-medium">{data.sender}</p>
 							<span class="text-xs opacity-70">{formatTime(timestamp ?? 0)}</span>
 						</div>
-						{#if repliedToMessage}
+						{#if repliedToMessage && !threadRootEventId}
 							<div
 								class="relative mt-1 cursor-pointer rounded-lg bg-white p-2 text-sm text-black transition-colors hover:bg-gray-100"
 								onclick={handleReplyClick}
@@ -333,7 +340,7 @@
 									onEdit={onSubmitEditMessage}
 								/>
 							{:else}
-								<TextMessage body={data.body.body} />
+								<TextMessage textMessage={data.body} />
 							{/if}
 						{:else if data.kind === 'emote'}
 							<p class="mt-1 text-sm">
@@ -343,26 +350,56 @@
 						{:else if data.kind === 'image'}
 							<ImageMessage itemContent={data.body} isSticker={false} {handleOpenMediaViewMode} />
 							{#if data.body.body}
-								<TextMessage body={data.body.body} />
+								<TextMessage
+									textMessage={{
+										body: data.body.body,
+										formatted_body: data.body.formatted_body,
+										format: data.body.format,
+										matched_urls: null
+									}}
+								/>
 							{/if}
 						{:else if data.kind === 'audio'}
 							<AudioMessage itemContent={data.body} {isOwn} />
 						{:else if data.kind === 'video'}
 							<VideoMessage itemContent={data.body} {handleOpenMediaViewMode} />
 							{#if data.body.body}
-								<TextMessage body={data.body.body} />
+								<TextMessage
+									textMessage={{
+										body: data.body.body,
+										formatted_body: data.body.formatted_body,
+										format: data.body.format,
+										matched_urls: null
+									}}
+								/>
 							{/if}
 						{:else if data.kind === 'file'}
 							<FileMessage itemContent={data.body} />
 							{#if data.body.body}
-								<TextMessage body={data.body.body} />
+								<TextMessage
+									textMessage={{
+										body: data.body.body,
+										formatted_body: data.body.formatted_body,
+										format: data.body.format,
+										matched_urls: null
+									}}
+								/>
 							{/if}
+						{:else if data.kind === 'notice'}
+							<TextMessage textMessage={data.body} />
+						{:else if data.kind === 'serverNotice'}
+							<TextMessage
+								textMessage={{
+									body: data.body.body,
+									matched_urls: null
+								}}
+							/>
 						{:else if data.kind === 'redacted'}
 							<Badge variant="destructive">{m.message_has_been_deleted()}</Badge>
 						{:else if data.kind === 'unableToDecrypt'}
 							<Badge variant={isOwn ? 'secondary' : 'default'}>{m.message_encrypted()}</Badge>
 						{:else}
-							<p class="text-muted text-sm">
+							<p class="text-sm text-muted">
 								The message type: {data.kind} is not supported yet
 							</p>
 						{/if}
@@ -397,21 +434,25 @@
 			{/if}
 			<DropdownMenuContent
 				customAnchor={reactionsPopoverAnchor}
-				align={isOwn ? 'start' : 'end'}
+				align={isOwn ? 'end' : 'start'}
 				side="bottom"
 			>
-				{#if abilities.includes('canReplyTo')}
+				{#if canReplyTo}
 					<DropdownMenuItem onclick={handleReply} class="text-md">
 						<ReplyIcon class="size-4" />
 						{m.button_reply()}</DropdownMenuItem
 					>
-					{#if !threadRootEventId}
-						<DropdownMenuItem
-							class="text-md"
-							onclick={() => gotoThread(roomId, eventId, roomAvatar)}
-							><MessagesSquare class="size-4" />{m.button_reply_in_thread()}</DropdownMenuItem
-						>
-					{/if}
+				{/if}
+				{#if !threadRootEventId && canReplyTo}
+					<DropdownMenuItem class="text-md" onclick={() => gotoThread(roomId, eventId, roomAvatar)}
+						><MessagesSquare class="size-4" />{m.button_reply_in_thread()}</DropdownMenuItem
+					>
+				{/if}
+				{#if data.kind == 'text'}
+					<DropdownMenuItem onclick={() => writeText(data.body.body)} class="text-md">
+						<Copy class="size-4" />
+						{m.button_copy()}</DropdownMenuItem
+					>
 				{/if}
 				{#if abilities.includes('canEdit')}
 					<DropdownMenuItem onclick={() => (isEditing = true)} class="text-md">
