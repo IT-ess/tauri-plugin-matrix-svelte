@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use anyhow::anyhow;
 use mime_serde_shim::Wrapper as MimeWrapper;
 use serde::Deserialize;
@@ -301,6 +303,8 @@ pub fn run() {
             {
                 tauri::async_runtime::spawn(async move {
                     LOGIN_STORE_READY.wait();
+                    // Sleep a bit so the frontend event listener is set up
+                    tauri_plugin_matrix_svelte::sleep(Duration::from_millis(200)).await;
                     tauri_plugin_matrix_svelte::handle_matrix_uri(&url);
                 });
             };
