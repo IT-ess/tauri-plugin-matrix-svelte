@@ -142,7 +142,7 @@ pub(crate) async fn fetch_user_profile(
 ) -> Result<UserProfile> {
     matrix_ui_serializable::commands::fetch_user_profile(user_id, room_id.as_ref())
         .await
-        .map_err(Error::MatrixLib)
+        .map_err(Into::into)
 }
 
 #[command]

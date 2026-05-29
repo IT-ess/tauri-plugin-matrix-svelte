@@ -4,4 +4,4 @@ import type { UserProfile } from './UserProfile.js';
 
 export type MatrixUriPillInfo =
 	| { kind: 'room'; payload: [RoomPreview, Array<string>] }
-	| { kind: 'user'; payload: UserProfile };
+	| { kind: 'user'; payload: UserProfile | null };

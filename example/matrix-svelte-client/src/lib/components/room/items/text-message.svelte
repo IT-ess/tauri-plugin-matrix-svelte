@@ -53,7 +53,7 @@
 								// display preview instead
 								a.href = `/room-preview?data=${encodeURIComponent(JSON.stringify(preview))}&via=${encodeURIComponent(JSON.stringify(via))}`;
 							}
-						} else {
+						} else if (info.payload) {
 							// Point to the user profile
 							a.href = `/profile?id=${encodeURIComponent(info.payload.user_id)}`;
 							avatarHtml = info.payload.avatar_url
