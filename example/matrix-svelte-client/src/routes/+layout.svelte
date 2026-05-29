@@ -8,12 +8,13 @@
 	import { Toaster, toast } from 'svelte-sonner';
 	import { MediaQuery } from 'svelte/reactivity';
 	import type { LayoutProps } from './$types';
-	import { goto } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import { m } from '$lib/paraglide/messages';
 	import '@saurl/tauri-plugin-safe-area-insets-css-api';
 	import { loginStore } from '../hooks.client';
 	import { platform } from '@tauri-apps/plugin-os';
 	import {
+		handleMatrixUri,
 		isLoggedIn,
 		MatrixSvelteEmitEvent,
 		MatrixSvelteListenEvent,
@@ -105,6 +106,13 @@
 		}
 		if (toastUnlistener) {
 			toastUnlistener();
+		}
+	});
+
+	beforeNavigate(({ cancel, to }) => {
+		if (to && (to.url.protocol == 'matrix:' || to.url.hostname == 'matrix.to')) {
+			cancel();
+			handleMatrixUri(to.url.toString());
 		}
 	});
 </script>

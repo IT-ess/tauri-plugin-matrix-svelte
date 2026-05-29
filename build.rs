@@ -30,6 +30,7 @@ const COMMANDS: &[&str] = &[
     "send_media_message",
     "try_get_room_preview_from_address",
     "fetch_matrix_pill_info",
+    "handle_matrix_uri_command",
     "android_share_matrix_media",
     "register_notifications",
 ];

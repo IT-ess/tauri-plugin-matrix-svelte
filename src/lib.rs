@@ -97,6 +97,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
             commands::send_media_message,
             commands::try_get_room_preview_from_address,
             commands::fetch_matrix_pill_info,
+            commands::handle_matrix_uri_command,
             #[cfg(target_os = "android")]
             commands::android_share_matrix_media,
             commands::register_notifications

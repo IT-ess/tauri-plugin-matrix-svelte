@@ -35,6 +35,7 @@ Default permissions for the plugin
 - `allow-send-media-message`
 - `allow-try-get-room-preview-from-address`
 - `allow-fetch-matrix-pill-info`
+- `allow-handle-matrix-uri-command`
 - `allow-android-share-matrix-media`
 - `allow-register-notifications`
 
@@ -485,6 +486,32 @@ Enables the get_event_from_main_timeline command without any pre-configured scop
 <td>
 
 Denies the get_event_from_main_timeline command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-handle-matrix-uri-command`
+
+</td>
+<td>
+
+Enables the handle_matrix_uri_command command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-handle-matrix-uri-command`
+
+</td>
+<td>
+
+Denies the handle_matrix_uri_command command without any pre-configured scope.
 
 </td>
 </tr>

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-handle-matrix-uri-command"
+description = "Enables the handle_matrix_uri_command command without any pre-configured scope."
+commands.allow = ["handle_matrix_uri_command"]
+
+[[permission]]
+identifier = "deny-handle-matrix-uri-command"
+description = "Denies the handle_matrix_uri_command command without any pre-configured scope."
+commands.deny = ["handle_matrix_uri_command"]

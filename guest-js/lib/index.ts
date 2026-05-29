@@ -268,6 +268,16 @@ export function fetchMatrixPillInfo(uri: string): Promise<MatrixUriPillInfo> {
 }
 
 /**
+ * Manually triggers an intent to navigate with a Matrix URI (matrix.to | matrix:)
+ * This intent should be caught by the frontend listener afterwards.
+ */
+export function handleMatrixUri(uri: string): Promise<void> {
+	return invoke('plugin:matrix-svelte|handle_matrix_uri_command', {
+		uri
+	});
+}
+
+/**
  *
  * Register push notifications on mobile and OS notifications on desktop. On desktop just send empty strings.
  */

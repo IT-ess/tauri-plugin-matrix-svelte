@@ -320,6 +320,11 @@ async fn get_media_and_infer_filename<'a>(
     Ok((contents, kind, mimetype, filename))
 }
 
+#[command]
+pub(crate) fn handle_matrix_uri_command(uri: Url) {
+    crate::handle_matrix_uri(&uri)
+}
+
 #[command(async)]
 pub(crate) async fn write_media_to_selected_folder<R: Runtime>(
     app_handle: AppHandle<R>,
