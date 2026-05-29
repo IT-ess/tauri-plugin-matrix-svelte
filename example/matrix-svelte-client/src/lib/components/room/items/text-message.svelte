@@ -29,14 +29,14 @@
 				a.setAttribute('data-sveltekit-preload-data', 'off');
 				a.setAttribute('data-sveltekit-preload-code', 'off');
 
-				// Force external links to open in a new tab
 				if (a.href.startsWith('https://matrix.to') || a.href.startsWith('matrix:')) {
 					try {
 						const info = await fetchMatrixPillInfo(a.href);
 
 						a.className = `mx-pill mx-pill--${info.kind}`;
-						a.removeAttribute('target'); // Matrix links stay inside or update app state
-						a.removeAttribute('rel');
+						// Matrix links are already found by the backend and should not have target or rel attributes
+						// a.removeAttribute('target'); // Matrix links stay inside or update app state
+						// a.removeAttribute('rel');
 						let avatarHtml = '';
 						let nameHtml = '';
 						if (info.kind == 'room') {
@@ -69,19 +69,8 @@
 					} catch (err) {
 						console.error(err);
 					}
-					// fallback to normal URL
 				}
-
-				a.target = '_blank';
-
-				// Security best practices for target="_blank"
-				a.rel = 'noopener noreferrer';
 			});
-
-			// Optional: return a cleanup function if needed when the element unmounts
-			return () => {
-				// Nothing to tear down manually since we only changed attributes
-			};
 		};
 	}
 </script>
