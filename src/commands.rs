@@ -547,7 +547,7 @@ pub(crate) async fn register_notifications<R: Runtime>(
 }
 
 /// Parses a room address input and get its preview if it exists
-#[command]
+#[command(async)]
 pub(crate) async fn try_get_room_preview_from_address(
     text: String,
 ) -> Result<(SerializableRoomPreview, Vec<OwnedServerName>)> {
