@@ -157,7 +157,7 @@
 
 	/* Links */
 	.matrix-message :global(a) {
-		color: var(--accent);
+		color: var(--color-blue-600);
 		text-decoration: none;
 	}
 
@@ -246,6 +246,7 @@
 	.matrix-message :global(.mx-pill--user) {
 		background-color: color-mix(in oklch, var(--secondary), transparent);
 		color: var(--secondary-foreground);
+		border-color: var(--border);
 	}
 
 	/* 2. Room Pills (Uses your elegant structural Secondary token) */
