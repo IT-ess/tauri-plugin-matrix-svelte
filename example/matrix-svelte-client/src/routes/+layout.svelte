@@ -110,6 +110,8 @@
 	});
 
 	beforeNavigate(({ cancel, to }) => {
+		// Current bug: `matrix:` URIs aren't supported by the browser so it doesn't
+		// even trigger navigation correctly and this handler isn't reached.
 		if (to && (to.url.protocol == 'matrix:' || to.url.hostname == 'matrix.to')) {
 			cancel();
 			handleMatrixUri(to.url.toString());

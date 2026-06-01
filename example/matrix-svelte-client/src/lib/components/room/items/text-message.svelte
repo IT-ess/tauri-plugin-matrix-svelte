@@ -56,8 +56,8 @@
 						} else if (info.payload) {
 							// Point to the user profile
 							a.href = `/profile?id=${encodeURIComponent(info.payload.user_id)}`;
-							avatarHtml = info.payload.avatar_url
-								? `<img class="mx-pill__avatar" src="${adaptBaseUriToPlatform(info.payload.avatar_url)}" alt="${info.payload.username}" />`
+							avatarHtml = info.payload.avatar
+								? `<img class="mx-pill__avatar" src="${adaptBaseUriToPlatform(info.payload.avatar)}" alt="${info.payload.username}" />`
 								: `<span class="mx-pill__avatar-fallback">${(info.payload.username ?? '?').charAt(0)}</span>`;
 							nameHtml = `<span class="mx-pill__name">${info.payload.username ?? info.payload.user_id}</span>`;
 						}
@@ -244,9 +244,8 @@
 
 	/* 1. User Pills (Uses your colorful Primary token) */
 	.matrix-message :global(.mx-pill--user) {
-		/* Mixes 12% of primary color with transparency for a modern translucent tag look */
-		background-color: color-mix(in oklch, var(--primary) 12%, transparent);
-		color: var(--primary);
+		background-color: color-mix(in oklch, var(--secondary), transparent);
+		color: var(--secondary-foreground);
 	}
 
 	/* 2. Room Pills (Uses your elegant structural Secondary token) */

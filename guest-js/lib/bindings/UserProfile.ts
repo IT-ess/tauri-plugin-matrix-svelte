@@ -11,5 +11,5 @@ export type UserProfile = {
 	 * so this should be considered a fallback.
 	 */
 	username: string | null;
-	avatar_url: string | null;
+	avatar: string | null;
 };
