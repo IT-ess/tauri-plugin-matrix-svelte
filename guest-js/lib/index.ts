@@ -278,6 +278,16 @@ export function handleMatrixUri(uri: string): Promise<void> {
 }
 
 /**
+ * Get the matrix.to permalink for this room so you can easily share it
+ * to anyone.
+ */
+export function getMatrixToPermalinkForRoom(roomId: string): Promise<string> {
+	return invoke<string>('plugin:matrix-svelte|get_matrix_to_permalink_for_room', {
+		roomId
+	});
+}
+
+/**
  *
  * Register push notifications on mobile and OS notifications on desktop. On desktop just send empty strings.
  */

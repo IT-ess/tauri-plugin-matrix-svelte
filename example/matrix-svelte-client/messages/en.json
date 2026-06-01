@@ -168,6 +168,7 @@
 	"room_action_menu_invite_members": "Invite members",
 	"room_action_menu_room_info": "Show room info",
 	"room_action_menu_leave_room": "Leave Room",
+	"room_action_copy_link": "Copy link to room",
 	"room_no_more_messages": "No more messages",
 	"leave_room_description": "You will leave this room. You'll need an invitation to join it again.",
 	"room_invite_members_subtitle": "Invite friends in this group",

@@ -169,6 +169,7 @@
 	"room_action_menu_header": "Gérer ce groupe",
 	"room_action_menu_invite_members": "Inviter des membres",
 	"room_action_menu_leave_room": "Quitter la discussion",
+	"room_action_copy_link": "Copier le lien",
 	"room_action_menu_room_info": "Infos du groupe",
 	"leave_room_description": "Vous allez quitter cette discussion. Vous devrez y être invité pour y accéder à nouveau.",
 	"room_invite_members_subtitle": "Inviter des amis dans ce groupe",

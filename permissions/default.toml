@@ -33,6 +33,7 @@ permissions = [
     "allow-try-get-room-preview-from-address",
     "allow-fetch-matrix-pill-info",
     "allow-handle-matrix-uri-command",
+    "allow-get-matrix-to-permalink-for-room",
     "allow-android-share-matrix-media",
     "allow-register-notifications",
 ]

@@ -563,6 +563,14 @@ pub(crate) async fn fetch_matrix_pill_info(uri: String) -> Result<MatrixUriPillI
         .map_err(Into::into)
 }
 
+#[command]
+pub(crate) async fn get_matrix_to_permalink_for_room(room_id: OwnedRoomId) -> Result<String> {
+    matrix_ui_serializable::commands::get_matrix_to_permalink_for_room(room_id)
+        .await
+        .map(|uri| uri.to_string())
+        .map_err(Into::into)
+}
+
 //
 // Helpers
 //

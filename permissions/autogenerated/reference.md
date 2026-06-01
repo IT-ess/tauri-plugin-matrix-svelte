@@ -36,6 +36,7 @@ Default permissions for the plugin
 - `allow-try-get-room-preview-from-address`
 - `allow-fetch-matrix-pill-info`
 - `allow-handle-matrix-uri-command`
+- `allow-get-matrix-to-permalink-for-room`
 - `allow-android-share-matrix-media`
 - `allow-register-notifications`
 
@@ -486,6 +487,32 @@ Enables the get_event_from_main_timeline command without any pre-configured scop
 <td>
 
 Denies the get_event_from_main_timeline command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-get-matrix-to-permalink-for-room`
+
+</td>
+<td>
+
+Enables the get_matrix_to_permalink_for_room command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-get-matrix-to-permalink-for-room`
+
+</td>
+<td>
+
+Denies the get_matrix_to_permalink_for_room command without any pre-configured scope.
 
 </td>
 </tr>
