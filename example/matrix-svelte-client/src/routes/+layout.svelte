@@ -13,6 +13,7 @@
 	import '@saurl/tauri-plugin-safe-area-insets-css-api';
 	import { loginStore } from '../hooks.client';
 	import { platform } from '@tauri-apps/plugin-os';
+	import { getCurrent } from '@tauri-apps/plugin-deep-link';
 	import {
 		handleMatrixUri,
 		isLoggedIn,
@@ -84,6 +85,12 @@
 				}
 			}
 		);
+
+		// We check if the app has been launched with a specific intent (i.e. a deep link)
+		const launchUris = await getCurrent();
+		if (launchUris && launchUris[0] && launchUris[0].startsWith('matrix:')) {
+			handleMatrixUri(launchUris[0]);
+		}
 	});
 
 	$effect(() => {

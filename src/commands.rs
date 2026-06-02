@@ -10,7 +10,7 @@ use matrix_ui_serializable::models::misc::{
 };
 use matrix_ui_serializable::models::profile::ProfileModel;
 use matrix_ui_serializable::{
-    AttachmentInfo, BaseAudioInfo, BaseFileInfo, BaseImageInfo, BaseVideoInfo,
+    AttachmentInfo, BaseAudioInfo, BaseFileInfo, BaseImageInfo, BaseVideoInfo, CLIENT,
     FrontendTimelineItem, FrontendVerificationState, MatrixRequest, MediaRequestParameters,
     OwnedDeviceId, OwnedMxcUri, OwnedRoomId, OwnedUserId, Thumbnail, UInt, UserProfile, oneshot,
 };
@@ -320,9 +320,13 @@ async fn get_media_and_infer_filename<'a>(
     Ok((contents, kind, mimetype, filename))
 }
 
-#[command]
+#[command(async)]
 pub(crate) fn handle_matrix_uri_command(uri: Url) {
-    crate::handle_matrix_uri(&uri)
+    // We only handle matrix-uris if the user is already logged in and client is up
+    if matrix_ui_serializable::commands::has_session_stored() {
+        CLIENT.wait();
+        matrix_ui_serializable::commands::handle_matrix_uri(&uri)
+    }
 }
 
 #[command(async)]

@@ -171,10 +171,10 @@ pub use crate::state_updaters::LOGIN_STATE_STORE_ID;
 pub use matrix_ui_serializable::commands::{
     handle_matrix_uri, has_session_stored, submit_async_request,
 };
+pub use matrix_ui_serializable::oneshot;
 pub use matrix_ui_serializable::{
     Base64, EncryptedFile, EncryptedFileHashes, EncryptedFileInfo, MatrixRequest, MediaFormat,
     MediaRequestParameters, MediaSource, MediaThumbnailSettings, Method, OwnedMxcUri, Standard,
     UInt, UrlSafe, V2EncryptedFileInfo,
 };
 pub use matrix_ui_serializable::{CLIENT, LOGIN_STORE_READY};
-pub use matrix_ui_serializable::{oneshot, sleep};

@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use anyhow::anyhow;
 use mime_serde_shim::Wrapper as MimeWrapper;
 use serde::Deserialize;
@@ -285,29 +283,15 @@ pub fn run() {
 
             // Handle scheme:// deeplink
 
+            let deeplink_manager = app.deep_link();
             #[cfg(any(windows, target_os = "linux"))]
             {
-                app.deep_link()
+                deeplink_manager
                     .register_all()
                     .expect("couldn't register deeplink");
             }
 
             let deeplink_handle = app.app_handle().clone();
-
-            let deeplink_manager = app.deep_link();
-
-            if let Ok(Some(urls)) = deeplink_manager.get_current()
-                && let Some(url) = urls.first().cloned()
-                // Only trigger intent if the user was logged in
-                && tauri_plugin_matrix_svelte::has_session_stored()
-            {
-                tauri::async_runtime::spawn(async move {
-                    LOGIN_STORE_READY.wait();
-                    // Sleep a bit so the frontend event listener is set up
-                    tauri_plugin_matrix_svelte::sleep(Duration::from_millis(200)).await;
-                    tauri_plugin_matrix_svelte::handle_matrix_uri(&url);
-                });
-            };
 
             deeplink_manager.on_open_url(move |event| {
                 if let Some(url) = event.urls().first() {

@@ -65,7 +65,7 @@
 						// Swap the content smoothly without breaking browser node flows
 						a.innerHTML = `${avatarHtml}${nameHtml}`;
 
-						return; // Skip adding _blank
+						return;
 					} catch (err) {
 						console.error(err);
 					}
