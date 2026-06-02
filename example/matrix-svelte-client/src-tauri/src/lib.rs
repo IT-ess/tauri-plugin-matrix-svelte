@@ -10,7 +10,7 @@ use tauri_plugin_matrix_svelte::{
     Method, OwnedMxcUri, Standard, UInt, UrlSafe, V2EncryptedFileInfo,
 };
 use tauri_plugin_svelte::CborMarshaler;
-use tracing::{debug, error, trace};
+use tracing::{error, trace};
 
 mod logging;
 
@@ -179,7 +179,7 @@ pub fn run() {
     #[cfg(desktop)]
     {
         builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
-          debug!("a new app instance was opened with {argv:?} and the deep link event was already triggered");
+          tracing::debug!("a new app instance was opened with {argv:?} and the deep link event was already triggered");
           // when defining deep link schemes at runtime, you must also check `argv` here
 
           let _ = app.get_webview_window("main")
@@ -220,7 +220,7 @@ pub fn run() {
                 .marshaler(Box::new(CborMarshaler))
                 .on_load(|store| {
                     if store.id().to_string() == tauri_plugin_matrix_svelte::LOGIN_STATE_STORE_ID {
-                        tauri_plugin_matrix_svelte::LOGIN_STORE_READY
+                        LOGIN_STORE_READY
                             .set(true)
                             .expect("LOGIN_STORE_READY has already been set !");
                     }
@@ -271,7 +271,7 @@ pub fn run() {
                     .show_menu_on_left_click(true)
                     .on_menu_event(|app, event| match event.id.as_ref() {
                         "quit" => {
-                            debug!("quit menu item was clicked");
+                            tracing::debug!("quit menu item was clicked");
                             app.exit(0);
                         }
                         _ => {
