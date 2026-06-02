@@ -56,6 +56,9 @@ pub async fn event_forwarder<R: Runtime>(
             EmitEvent::NewlyCreatedRoomId(room_id) => {
                 app_handle.emit("matrix-svelte://newly-created-room-id", room_id)?;
             }
+            EmitEvent::MatrixUriIntent(intent) => {
+                app_handle.emit("matrix-svelte://matrix-uri-intent", intent)?;
+            }
         }
     }
     Ok(())

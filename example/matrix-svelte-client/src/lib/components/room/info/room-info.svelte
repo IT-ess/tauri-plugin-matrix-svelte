@@ -1,7 +1,14 @@
 <script lang="ts">
 	import { getCustomMxcUriFromOriginal, getInitials, gotoRoom } from '$lib/utils.svelte';
-	import { ChevronLeft, SquareArrowRightExit, SquarePen, User, UserPlus } from '@lucide/svelte';
-	import { type RoomStore } from 'tauri-plugin-matrix-svelte-api';
+	import {
+		ChevronLeft,
+		Link,
+		SquareArrowRightExit,
+		SquarePen,
+		User,
+		UserPlus
+	} from '@lucide/svelte';
+	import { getMatrixToPermalinkForRoom, type RoomStore } from 'tauri-plugin-matrix-svelte-api';
 	import { roomsCollection } from '../../../../hooks.client';
 	import { m } from '$lib/paraglide/messages';
 	import { Button } from '$lib/components/ui/button';
@@ -12,6 +19,8 @@
 	import LeaveRoom from './leave-room.svelte';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import RoomDetails from './room-details.svelte';
+	import { toast } from 'svelte-sonner';
+	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
 	let {
 		roomId,
@@ -19,9 +28,9 @@
 		roomStore
 	}: { roomId: string; avatar: string | null; roomStore: RoomStore } = $props();
 
-	let roomTopic = $derived(roomsCollection.state.allJoinedRooms[roomId].topic);
+	let roomTopic = $derived(roomsCollection.state.allJoinedRooms[roomId]?.topic);
 
-	let isDirect = $derived(roomsCollection.state.allJoinedRooms[roomId].isDirect);
+	let isDirect = $derived(!!roomsCollection.state.allJoinedRooms[roomId]?.isDirect);
 
 	let actionInviteMembersOpen = $state(false);
 	let actionLeaveRoomOpen = $state(false);
@@ -32,6 +41,16 @@
 	// No need to filter the membership (join, leave...) of each member,
 	// since we already filter it on the backend side.
 	let membersIds = $derived(Object.keys(roomStore.state.members));
+
+	const handleCopyRoomLink = async () => {
+		try {
+			const uri = await getMatrixToPermalinkForRoom(roomId);
+			await writeText(uri);
+		} catch (err) {
+			console.error(err);
+			toast.error(err as string);
+		}
+	};
 </script>
 
 <div class="bg-background flex h-full w-full flex-col">
@@ -99,6 +118,18 @@
 					{membersIds.length}
 				</Item.Actions>
 			</a>
+		{/snippet}
+	</Item.Root>
+	<Item.Root>
+		{#snippet child({ props })}
+			<button onclick={handleCopyRoomLink} {...props}>
+				<Item.Media>
+					<Link class="text-muted-foreground size-6" />
+				</Item.Media>
+				<Item.Content>
+					<Item.Title class="text-base">{m.room_action_copy_link()}</Item.Title>
+				</Item.Content>
+			</button>
 		{/snippet}
 	</Item.Root>
 	<Item.Root>

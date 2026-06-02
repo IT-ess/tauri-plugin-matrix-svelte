@@ -1,5 +1,7 @@
 use anyhow::anyhow;
-use matrix_ui_serializable::commands::{OwnedEventId, VerifyDeviceEvent};
+use matrix_ui_serializable::commands::{
+    MatrixUriPillInfo, OwnedEventId, OwnedServerName, SerializableRoomPreview, VerifyDeviceEvent,
+};
 use matrix_ui_serializable::models::events::{
     FrontendDevice, MatrixLoginPayload, MediaStreamEvent,
 };
@@ -8,7 +10,7 @@ use matrix_ui_serializable::models::misc::{
 };
 use matrix_ui_serializable::models::profile::ProfileModel;
 use matrix_ui_serializable::{
-    AttachmentInfo, BaseAudioInfo, BaseFileInfo, BaseImageInfo, BaseVideoInfo,
+    AttachmentInfo, BaseAudioInfo, BaseFileInfo, BaseImageInfo, BaseVideoInfo, CLIENT,
     FrontendTimelineItem, FrontendVerificationState, MatrixRequest, MediaRequestParameters,
     OwnedDeviceId, OwnedMxcUri, OwnedRoomId, OwnedUserId, Thumbnail, UInt, UserProfile, oneshot,
 };
@@ -140,7 +142,7 @@ pub(crate) async fn fetch_user_profile(
 ) -> Result<UserProfile> {
     matrix_ui_serializable::commands::fetch_user_profile(user_id, room_id.as_ref())
         .await
-        .map_err(Error::MatrixLib)
+        .map_err(Into::into)
 }
 
 #[command]
@@ -316,6 +318,15 @@ async fn get_media_and_infer_filename<'a>(
     let filename_path = Path::new(&filename).with_extension(kind);
     let filename = filename_path.to_str().unwrap_or("refs_file").to_owned();
     Ok((contents, kind, mimetype, filename))
+}
+
+#[command(async)]
+pub(crate) fn handle_matrix_uri_command(uri: Url) {
+    // We only handle matrix-uris if the user is already logged in and client is up
+    if matrix_ui_serializable::commands::has_session_stored() {
+        CLIENT.wait();
+        matrix_ui_serializable::commands::handle_matrix_uri(&uri)
+    }
 }
 
 #[command(async)]
@@ -537,6 +548,31 @@ pub(crate) async fn register_notifications<R: Runtime>(
     )
     .await
     .map_err(|e| e.into())
+}
+
+/// Parses a room address input and get its preview if it exists
+#[command(async)]
+pub(crate) async fn try_get_room_preview_from_address(
+    text: String,
+) -> Result<(SerializableRoomPreview, Vec<OwnedServerName>)> {
+    matrix_ui_serializable::commands::try_get_room_preview_from_address(&text)
+        .await
+        .map_err(Error::Anyhow)
+}
+
+#[command(async)]
+pub(crate) async fn fetch_matrix_pill_info(uri: String) -> Result<MatrixUriPillInfo> {
+    matrix_ui_serializable::commands::fetch_matrix_pill_info(&uri)
+        .await
+        .map_err(Into::into)
+}
+
+#[command]
+pub(crate) async fn get_matrix_to_permalink_for_room(room_id: OwnedRoomId) -> Result<String> {
+    matrix_ui_serializable::commands::get_matrix_to_permalink_for_room(room_id)
+        .await
+        .map(|uri| uri.to_string())
+        .map_err(Into::into)
 }
 
 //

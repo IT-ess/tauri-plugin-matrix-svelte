@@ -13,6 +13,8 @@ import { RoomStore } from './stores/room-store.svelte.js';
 import { RoomsCollection } from './stores/rooms-collection.svelte.js';
 import type { MediaRequestParameters, SendMediaMessageRequest } from './matrix-requests/media.js';
 import type { TimelineItem } from './bindings/TimelineItem.js';
+import type { RoomPreview } from './bindings/RoomPreview.js';
+import type { MatrixUriPillInfo } from './bindings/MatrixUriPillInfo.js';
 
 export function submitMatrixLoginRequest(request: MatrixLoginPayload): Promise<null> {
 	return invoke('plugin:matrix-svelte|submit_matrix_login_request', {
@@ -95,7 +97,7 @@ export function fetchUserProfile(userId: UserId, roomId: RoomId | null): Promise
 			userId,
 			roomId
 		}
-	).then((p) => ({ userId: p.userId, avatarUrl: p.avatar, displayName: p.username }));
+	).then((p) => ({ userId, avatarUrl: p.avatar, displayName: p.username }));
 }
 
 export async function getAllUserProfiles(): Promise<ProfileModel[]> {
@@ -244,6 +246,48 @@ export function sendMediaMessage(request: SendMediaMessageRequest): Promise<void
 }
 
 /**
+ * Parses a room address input and get its preview if it exists
+ * @returns a tuple of the RoomPreview and the `via` server names
+ * @throws if the format of the address is incorrect or the room doesn't exist
+ */
+export function tryGetRoomPreviewFromAddress(text: string): Promise<[RoomPreview, string[]]> {
+	return invoke<[RoomPreview, string[]]>('plugin:matrix-svelte|try_get_room_preview_from_address', {
+		text
+	});
+}
+
+/**
+ * Fetches some info to display a rich pill
+ * @returns MatrixUriPillInfo
+ * @throws if the format of the address is incorrect or the room doesn't exist
+ */
+export function fetchMatrixPillInfo(uri: string): Promise<MatrixUriPillInfo> {
+	return invoke<MatrixUriPillInfo>('plugin:matrix-svelte|fetch_matrix_pill_info', {
+		uri
+	});
+}
+
+/**
+ * Manually triggers an intent to navigate with a Matrix URI (matrix.to | matrix:)
+ * This intent should be caught by the frontend listener afterwards.
+ */
+export function handleMatrixUri(uri: string): Promise<void> {
+	return invoke('plugin:matrix-svelte|handle_matrix_uri_command', {
+		uri
+	});
+}
+
+/**
+ * Get the matrix.to permalink for this room so you can easily share it
+ * to anyone.
+ */
+export function getMatrixToPermalinkForRoom(roomId: string): Promise<string> {
+	return invoke<string>('plugin:matrix-svelte|get_matrix_to_permalink_for_room', {
+		roomId
+	});
+}
+
+/**
  *
  * Register push notifications on mobile and OS notifications on desktop. On desktop just send empty strings.
  */
@@ -278,9 +322,11 @@ export * from './bindings/InvitedRoomInfo.js';
 export * from './bindings/InviterInfo.js';
 export * from './bindings/InviteState.js';
 export * from './bindings/JoinedRoomInfo.js';
+export * from './bindings/JoinRuleSummary.js';
 export * from './bindings/JsonWebKey.js';
 export * from './bindings/LocationMessageEventContent.js';
 export * from './bindings/LoginState.js';
+export * from './bindings/MatrixUriIntent.js';
 export * from './bindings/MatrixLoginPayload.js';
 export * from './bindings/MediaSource.js';
 export * from './bindings/Mentions.js';
@@ -300,7 +346,9 @@ export * from './bindings/RoomMessageEventContent.js';
 export * from './bindings/RoomMessageEventContentWithoutRelation.js';
 export * from './bindings/RoomModel.js';
 export * from './bindings/RoomsCollectionStatus.js';
+export * from './bindings/RoomPreview.js';
 export * from './bindings/RoomScreen.js';
+export * from './bindings/RoomState.js';
 export * from './bindings/RoomsList.js';
 export * from './bindings/SendTextMessagePayload.js';
 export * from './bindings/ServerNoticeMessageEventContent.js';

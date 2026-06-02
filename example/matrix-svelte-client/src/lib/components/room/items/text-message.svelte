@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages';
-	import type { Action } from 'svelte/action';
-	import type { FrontendTextMessage } from 'tauri-plugin-matrix-svelte-api';
+	import { adaptBaseUriToPlatform } from '$lib/utils.svelte';
+	import type { Attachment } from 'svelte/attachments';
+	import { fetchMatrixPillInfo, type FrontendTextMessage } from 'tauri-plugin-matrix-svelte-api';
 
 	let { textMessage }: { textMessage: FrontendTextMessage } = $props();
 
@@ -17,41 +18,66 @@
 
 	// Small AI generated utility that checks the presence of anchor elements,
 	// and add _blank target to it.
-	const handleMatrixLinks: Action<HTMLElement, string | undefined> = (
-		node,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		formattedBody
-	) => {
-		const updateLinks = (): void => {
-			// Query only anchor tags that have an href attribute
-			const links = node.querySelectorAll<HTMLAnchorElement>('a[href]');
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	export function handleMatrixLinks(formattedBody: string | undefined): Attachment<HTMLElement> {
+		return (element) => {
+			// Query links inside the freshly injected/updated DOM element
+			const links = element.querySelectorAll<HTMLAnchorElement>('a[href]');
 
-			links.forEach((a) => {
-				// Force external links to open in a new tab
-				a.target = '_blank';
+			links.forEach(async (a) => {
+				// Avoid preloading any data
+				a.setAttribute('data-sveltekit-preload-data', 'off');
+				a.setAttribute('data-sveltekit-preload-code', 'off');
 
-				// Security best practice for target="_blank"
-				// Prevents the new page from accessing window.opener
-				a.rel = 'noopener noreferrer';
+				if (a.href.startsWith('https://matrix.to') || a.href.startsWith('matrix:')) {
+					try {
+						const info = await fetchMatrixPillInfo(a.href);
+
+						a.className = `mx-pill mx-pill--${info.kind}`;
+						// Matrix links are already found by the backend and should not have target or rel attributes
+						// a.removeAttribute('target'); // Matrix links stay inside or update app state
+						// a.removeAttribute('rel');
+						let avatarHtml = '';
+						let nameHtml = '';
+						if (info.kind == 'room') {
+							const [preview, via] = info.payload;
+							avatarHtml = preview.avatar_url
+								? `<img class="mx-pill__avatar" src="${adaptBaseUriToPlatform(preview.avatar_url)}" alt="${preview.name}" />`
+								: `<span class="mx-pill__avatar-fallback">${(preview.name ?? '?').charAt(0)}</span>`;
+							nameHtml = `<span class="mx-pill__name">${preview.name ?? preview.canonical_alias ?? preview.room_id}</span>`;
+
+							if (preview.state && preview.state == 'Joined') {
+								// Point to the room if already joined
+								a.href = `/room?id=${encodeURIComponent(preview.room_id)}${preview.avatar_url ? '&avatar=' + encodeURIComponent(preview.avatar_url) : ''}#bottomscroll`;
+							} else {
+								// display preview instead
+								a.href = `/room-preview?data=${encodeURIComponent(JSON.stringify(preview))}&via=${encodeURIComponent(JSON.stringify(via))}`;
+							}
+						} else if (info.payload) {
+							// Point to the user profile
+							a.href = `/profile?id=${encodeURIComponent(info.payload.user_id)}`;
+							avatarHtml = info.payload.avatar
+								? `<img class="mx-pill__avatar" src="${adaptBaseUriToPlatform(info.payload.avatar)}" alt="${info.payload.username}" />`
+								: `<span class="mx-pill__avatar-fallback">${(info.payload.username ?? '?').charAt(0)}</span>`;
+							nameHtml = `<span class="mx-pill__name">${info.payload.username ?? info.payload.user_id}</span>`;
+						}
+
+						// Swap the content smoothly without breaking browser node flows
+						a.innerHTML = `${avatarHtml}${nameHtml}`;
+
+						return;
+					} catch (err) {
+						console.error(err);
+					}
+				}
 			});
 		};
-
-		// Initial run
-		updateLinks();
-
-		return {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			update(newBody) {
-				// Re-run when the content of the message changes
-				updateLinks();
-			}
-		};
-	};
+	}
 </script>
 
 <div class="mt-1">
 	{#if textMessage.format == 'org.matrix.custom.html' && textMessage.formatted_body}
-		<div class="matrix-message" use:handleMatrixLinks>
+		<div class="matrix-message" {@attach handleMatrixLinks(textMessage.formatted_body)}>
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 			{@html textMessage.formatted_body}
 		</div>
@@ -131,7 +157,7 @@
 
 	/* Links */
 	.matrix-message :global(a) {
-		color: var(--accent);
+		color: var(--color-blue-600);
 		text-decoration: none;
 	}
 
@@ -182,5 +208,100 @@
 		border-left: 4px solid var(--color-accent);
 		color: var(--text-muted, #a0a0a0);
 		font-style: italic;
+	}
+
+	/* Base Pill Styling */
+	.matrix-message :global(.mx-pill) {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0 0.6rem 0 0.25rem;
+
+		/* Using theme radius token */
+		border-radius: var(--radius);
+
+		font-weight: 500;
+		font-size: 0.85rem;
+		line-height: 1.4rem;
+		text-decoration: none !important;
+		vertical-align: middle;
+
+		/* Clean transition state mapping */
+		transition:
+			background-color 0.15s ease,
+			color 0.15s ease,
+			border-color 0.15s ease;
+		max-width: 220px;
+		border: 1px solid transparent;
+	}
+
+	/* Hover Interaction: Switches safely to your system's accent tokens */
+	.matrix-message :global(.mx-pill:hover) {
+		background-color: var(--accent);
+		color: var(--accent-foreground);
+		border-color: var(--border);
+	}
+
+	/* 1. User Pills (Uses your colorful Primary token) */
+	.matrix-message :global(.mx-pill--user) {
+		background-color: color-mix(in oklch, var(--secondary), transparent);
+		color: var(--secondary-foreground);
+		border-color: var(--border);
+	}
+
+	/* 2. Room Pills (Uses your elegant structural Secondary token) */
+	.matrix-message :global(.mx-pill--room) {
+		background-color: var(--secondary);
+		color: var(--secondary-foreground);
+		border-color: var(--border);
+	}
+
+	/* 3. Space Pills (Uses Muted structural tokens to feel like a folder/utility) */
+	.matrix-message :global(.mx-pill--space) {
+		background-color: var(--muted);
+		color: var(--muted-foreground);
+		border-color: var(--border);
+	}
+
+	/* Avatar Layout */
+	.matrix-message :global(.mx-pill__avatar) {
+		width: 16px;
+		height: 16px;
+		/* Nested border-radius calculation for perfect visual harmony */
+		border-radius: calc(var(--radius) - 2px);
+		object-fit: cover;
+		display: inline-block;
+	}
+
+	/* Fallback Initials Avatar */
+	.matrix-message :global(.mx-pill__avatar-fallback) {
+		width: 16px;
+		height: 16px;
+		border-radius: calc(var(--radius) - 2px);
+		font-size: 0.65rem;
+		font-weight: 700;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		text-transform: uppercase;
+	}
+
+	/* Context-aware colors for fallback avatars to ensure high contrast */
+	.matrix-message :global(.mx-pill--user .mx-pill__avatar-fallback) {
+		background-color: var(--primary);
+		color: var(--primary-foreground);
+	}
+
+	.matrix-message :global(.mx-pill--room .mx-pill__avatar-fallback),
+	.matrix-message :global(.mx-pill--space .mx-pill__avatar-fallback) {
+		background-color: var(--foreground);
+		color: var(--background);
+	}
+
+	/* Truncated Name Text */
+	.matrix-message :global(.mx-pill__name) {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 </style>

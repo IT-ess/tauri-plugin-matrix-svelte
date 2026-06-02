@@ -6,8 +6,8 @@ use tauri::{Emitter, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_matrix_svelte::{
     AUTH_DEEPLINK_SENDER, Base64, CLIENT, EncryptedFile, EncryptedFileHashes, EncryptedFileInfo,
-    MediaFormat, MediaRequestParameters, MediaSource, MediaThumbnailSettings, Method, OwnedMxcUri,
-    Standard, UInt, UrlSafe, V2EncryptedFileInfo,
+    LOGIN_STORE_READY, MediaFormat, MediaRequestParameters, MediaSource, MediaThumbnailSettings,
+    Method, OwnedMxcUri, Standard, UInt, UrlSafe, V2EncryptedFileInfo,
 };
 use tauri_plugin_svelte::CborMarshaler;
 use tracing::{debug, error, trace};
@@ -283,17 +283,24 @@ pub fn run() {
 
             // Handle scheme:// deeplink
 
+            let deeplink_manager = app.deep_link();
             #[cfg(any(windows, target_os = "linux"))]
             {
-                app.deep_link()
+                deeplink_manager
                     .register_all()
                     .expect("couldn't register deeplink");
             }
 
             let deeplink_handle = app.app_handle().clone();
 
-            app.deep_link().on_open_url(move |event| {
+            deeplink_manager.on_open_url(move |event| {
                 if let Some(url) = event.urls().first() {
+                    // Matches matrix: URIs
+                    if url.scheme().eq("matrix") {
+                        tauri_plugin_matrix_svelte::handle_matrix_uri(url);
+                        return;
+                    }
+
                     // Matches scheme://auth-callback
                     if url.host_str().is_some_and(|s| s.eq("auth-callback")) {
                         // Wake up the UI (for iOS only)

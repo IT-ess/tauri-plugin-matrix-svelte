@@ -23,7 +23,8 @@ export enum MatrixSvelteListenEvent {
 	ToastNotification = 'matrix-svelte://toast-notification',
 	OAuthUrl = 'matrix-svelte://oauth-url',
 	ResetCrossSigningUrl = 'matrix-svelte://reset-cross-signing-url',
-	NewlyCreatedRoomId = 'matrix-svelte://newly-created-room-id'
+	NewlyCreatedRoomId = 'matrix-svelte://newly-created-room-id',
+	MatrixUriIntent = 'matrix-svelte://matrix-uri-intent'
 }
 
 export type VerificationEmojisEventType = {

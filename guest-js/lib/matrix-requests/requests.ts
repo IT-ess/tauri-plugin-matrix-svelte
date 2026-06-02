@@ -56,7 +56,8 @@ interface SyncRoomMemberListRequest {
 interface JoinRoomRequest {
 	event: 'joinRoom';
 	payload: {
-		roomId: RoomId;
+		roomOrAliasId: string;
+		via: string[] | null;
 	};
 }
 
@@ -64,6 +65,15 @@ interface LeaveRoomRequest {
 	event: 'leaveRoom';
 	payload: {
 		roomId: RoomId;
+	};
+}
+
+interface KnockRequest {
+	event: 'knock';
+	payload: {
+		roomOrAliasId: string;
+		reason: string | null;
+		serverNames: string[];
 	};
 }
 
@@ -215,6 +225,7 @@ export type MatrixRequest =
 	// | SyncRoomMemberListRequest
 	| JoinRoomRequest
 	| LeaveRoomRequest
+	| KnockRequest
 	// | GetRoomMembersRequest
 	| GetUserProfileRequest
 	| GetNumberUnreadMessagesRequest
@@ -243,6 +254,7 @@ export type {
 	// SyncRoomMemberListRequest,
 	JoinRoomRequest,
 	LeaveRoomRequest,
+	KnockRequest,
 	// GetRoomMembersRequest,
 	GetUserProfileRequest,
 	GetNumberUnreadMessagesRequest,
@@ -297,6 +309,11 @@ export const createMatrixRequest = {
 
 	leaveRoom: (payload: LeaveRoomRequest['payload']): LeaveRoomRequest => ({
 		event: 'leaveRoom',
+		payload
+	}),
+
+	knock: (payload: KnockRequest['payload']): KnockRequest => ({
+		event: 'knock',
 		payload
 	}),
 

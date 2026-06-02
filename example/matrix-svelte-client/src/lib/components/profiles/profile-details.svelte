@@ -10,7 +10,7 @@
 		type ProfileModel
 	} from 'tauri-plugin-matrix-svelte-api';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { getCustomMxcUriFromOriginal, getInitials, gotoRoom } from '$lib/utils.svelte';
+	import { getCustomMxcUriFromOriginal, getInitials, goBack, gotoRoom } from '$lib/utils.svelte';
 	import { onDestroy } from 'svelte';
 	import { Spinner } from '../ui/spinner';
 
@@ -42,7 +42,7 @@
 <div class="bg-background flex h-full w-full flex-col">
 	<div class="pt-safe sticky top-0 right-0 left-0 z-50 w-full pl-2">
 		<button
-			onclick={() => (window.navigation ? window.navigation.back() : window.history.back())}
+			onclick={goBack}
 			class="hover:bg-accent flex size-10 items-center justify-center rounded-full transition-colors"
 			aria-label="Go back"
 		>

@@ -28,6 +28,10 @@ const COMMANDS: &[&str] = &[
     "silent_save_matrix_media_to_cache_dir",
     "get_event_from_main_timeline",
     "send_media_message",
+    "try_get_room_preview_from_address",
+    "fetch_matrix_pill_info",
+    "handle_matrix_uri_command",
+    "get_matrix_to_permalink_for_room",
     "android_share_matrix_media",
     "register_notifications",
 ];

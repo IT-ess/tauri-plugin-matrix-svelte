@@ -33,6 +33,10 @@ Default permissions for the plugin
 - `allow-silent-save-matrix-media-to-cache-dir`
 - `allow-get-event-from-main-timeline`
 - `allow-send-media-message`
+- `allow-try-get-room-preview-from-address`
+- `allow-fetch-matrix-pill-info`
+- `allow-handle-matrix-uri-command`
+- `allow-get-matrix-to-permalink-for-room`
 - `allow-android-share-matrix-media`
 - `allow-register-notifications`
 
@@ -256,6 +260,32 @@ Denies the edit_user_information command without any pre-configured scope.
 <tr>
 <td>
 
+`matrix-svelte:allow-fetch-matrix-pill-info`
+
+</td>
+<td>
+
+Enables the fetch_matrix_pill_info command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-fetch-matrix-pill-info`
+
+</td>
+<td>
+
+Denies the fetch_matrix_pill_info command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `matrix-svelte:allow-fetch-media`
 
 </td>
@@ -457,6 +487,58 @@ Enables the get_event_from_main_timeline command without any pre-configured scop
 <td>
 
 Denies the get_event_from_main_timeline command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-get-matrix-to-permalink-for-room`
+
+</td>
+<td>
+
+Enables the get_matrix_to_permalink_for_room command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-get-matrix-to-permalink-for-room`
+
+</td>
+<td>
+
+Denies the get_matrix_to_permalink_for_room command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-handle-matrix-uri-command`
+
+</td>
+<td>
+
+Enables the handle_matrix_uri_command command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-handle-matrix-uri-command`
+
+</td>
+<td>
+
+Denies the handle_matrix_uri_command command without any pre-configured scope.
 
 </td>
 </tr>
@@ -847,6 +929,32 @@ Enables the submit_matrix_login_request command without any pre-configured scope
 <td>
 
 Denies the submit_matrix_login_request command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-try-get-room-preview-from-address`
+
+</td>
+<td>
+
+Enables the try_get_room_preview_from_address command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-try-get-room-preview-from-address`
+
+</td>
+<td>
+
+Denies the try_get_room_preview_from_address command without any pre-configured scope.
 
 </td>
 </tr>

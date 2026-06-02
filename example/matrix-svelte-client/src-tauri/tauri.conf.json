@@ -41,10 +41,14 @@
 				{
 					"scheme": ["mxsvelte"],
 					"appLink": false
+				},
+				{
+					"scheme": ["matrix"],
+					"appLink": false
 				}
 			],
 			"desktop": {
-				"schemes": ["mxsvelte"]
+				"schemes": ["mxsvelte", "matrix"]
 			}
 		}
 	},

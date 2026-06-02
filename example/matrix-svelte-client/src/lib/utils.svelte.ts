@@ -9,6 +9,7 @@ import { fileTypeFromBlob } from 'file-type';
 import {
 	type EncryptedFile,
 	type RoomDisplayName,
+	type RoomPreview,
 	type Thumbnail
 } from 'tauri-plugin-matrix-svelte-api';
 import { platform } from '@tauri-apps/plugin-os';
@@ -82,6 +83,28 @@ export async function gotoRoomMembers(roomId: string, avatarUri: string | null) 
 
 export async function gotoProfile(matrixUserId: string) {
 	return await goto(`/profile?id=${encodeURIComponent(matrixUserId)}`);
+}
+
+export function gotoRoomPreview(
+	prefetchedData: RoomPreview | null,
+	via: string[] | null,
+	matrixId: string | null
+) {
+	if (prefetchedData) {
+		return goto(
+			`/room-preview?data=${encodeURIComponent(JSON.stringify(prefetchedData))}&via=${encodeURIComponent(JSON.stringify(via))}`
+		);
+	} else if (matrixId) {
+		return goto(`/room-preview?matrixId=${encodeURIComponent(matrixId)}`);
+	}
+}
+
+export function goBack() {
+	if (window.navigation) {
+		window.navigation.back();
+	} else {
+		window.history.back();
+	}
 }
 
 export async function getImageThumbnailBlob(blob: Blob, width = 300): Promise<Thumbnail> {
@@ -275,7 +298,7 @@ export function getOptionalQueryParams(info: {
  * media requires to use the http protocol. So our uri should
  * look like: http://mxc.localhost/...
  */
-function adaptBaseUriToPlatform(mxcUri: string): string {
+export function adaptBaseUriToPlatform(mxcUri: string): string {
 	const currentPlatform = platform();
 	if (currentPlatform == 'android' || currentPlatform == 'windows') {
 		const path = mxcUri.slice(6);

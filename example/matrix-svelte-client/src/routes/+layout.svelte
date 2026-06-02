@@ -8,18 +8,22 @@
 	import { Toaster, toast } from 'svelte-sonner';
 	import { MediaQuery } from 'svelte/reactivity';
 	import type { LayoutProps } from './$types';
-	import { goto } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import { m } from '$lib/paraglide/messages';
 	import '@saurl/tauri-plugin-safe-area-insets-css-api';
 	import { loginStore } from '../hooks.client';
 	import { platform } from '@tauri-apps/plugin-os';
+	import { getCurrent } from '@tauri-apps/plugin-deep-link';
 	import {
+		handleMatrixUri,
 		isLoggedIn,
 		MatrixSvelteEmitEvent,
 		MatrixSvelteListenEvent,
+		type MatrixUriIntent,
 		type ToastNotificationEventType,
 		type VerificationEmojisEventType
 	} from 'tauri-plugin-matrix-svelte-api';
+	import { gotoProfile, gotoRoomPreview } from '$lib/utils.svelte';
 
 	let { children }: LayoutProps = $props();
 
@@ -34,8 +38,20 @@
 
 	let emojisUnlistener: UnlistenFn;
 	let toastUnlistener: UnlistenFn;
+	let matrixIntentUnlistener: UnlistenFn;
 
 	onMount(async () => {
+		matrixIntentUnlistener = await listen<MatrixUriIntent>(
+			MatrixSvelteListenEvent.MatrixUriIntent,
+			(event) => {
+				if (event.payload.kind == 'room') {
+					gotoRoomPreview(null, null, event.payload.payload[0]);
+				} else {
+					gotoProfile(event.payload.payload);
+				}
+			}
+		);
+
 		emojisUnlistener = await listen<VerificationEmojisEventType>(
 			MatrixSvelteListenEvent.VerificationStart,
 			(event) => {
@@ -69,6 +85,12 @@
 				}
 			}
 		);
+
+		// We check if the app has been launched with a specific intent (i.e. a deep link)
+		const launchUris = await getCurrent();
+		if (launchUris && launchUris[0] && launchUris[0].startsWith('matrix:')) {
+			handleMatrixUri(launchUris[0]);
+		}
 	});
 
 	$effect(() => {
@@ -83,8 +105,24 @@
 	});
 
 	onDestroy(() => {
-		emojisUnlistener();
-		toastUnlistener();
+		if (matrixIntentUnlistener) {
+			matrixIntentUnlistener();
+		}
+		if (emojisUnlistener) {
+			emojisUnlistener();
+		}
+		if (toastUnlistener) {
+			toastUnlistener();
+		}
+	});
+
+	beforeNavigate(({ cancel, to }) => {
+		// Current bug: `matrix:` URIs aren't supported by the browser so it doesn't
+		// even trigger navigation correctly and this handler isn't reached.
+		if (to && (to.url.protocol == 'matrix:' || to.url.hostname == 'matrix.to')) {
+			cancel();
+			handleMatrixUri(to.url.toString());
+		}
 	});
 </script>
 

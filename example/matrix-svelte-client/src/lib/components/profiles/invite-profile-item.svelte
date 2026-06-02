@@ -26,7 +26,8 @@
 
 	const joinRoom = async () => {
 		const request = createMatrixRequest.joinRoom({
-			roomId: invitedRoomInfo.roomId
+			roomOrAliasId: invitedRoomInfo.roomId,
+			via: null
 		});
 		await submitAsyncRequest(request);
 		openAlertDialog = false;

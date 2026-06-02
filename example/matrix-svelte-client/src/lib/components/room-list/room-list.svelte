@@ -9,7 +9,11 @@
 	import { useSearchParams } from 'runed/kit';
 	import { lazyEffect, roomsListSearchParamsSchema } from '$lib/utils.svelte';
 	import { roomsCollection } from '../../../hooks.client';
-	import { filterRoomList } from 'tauri-plugin-matrix-svelte-api';
+	import {
+		filterRoomList,
+		type InvitedRoomInfo,
+		type JoinedRoomInfo
+	} from 'tauri-plugin-matrix-svelte-api';
 
 	if (import.meta.env.DEV) {
 		// eslint-disable-next-line svelte/no-inspect
@@ -54,8 +58,11 @@
 					<Card.Content class="grid gap-6">
 						<div class="divide-border divide-y">
 							{#each roomsCollection.state.displayedInvitedRooms as invitedRoomId (invitedRoomId)}
+								<!-- Assertion should be ok, displayedInvitedRooms is managed by the backend -->
 								<InviteProfileItem
-									invitedRoomInfo={roomsCollection.state.invitedRooms[invitedRoomId]}
+									invitedRoomInfo={roomsCollection.state.invitedRooms[
+										invitedRoomId
+									] as InvitedRoomInfo}
 								/>
 							{/each}
 						</div>
@@ -71,7 +78,8 @@
 	<SearchRooms bind:searchQuery />
 	<div class="divide-border divide-y overflow-y-scroll">
 		{#each roomIds as id (id)}
-			<RoomListItem room={roomsCollection.state.allJoinedRooms[id]} {disabled} />
+			<!-- Assertion should be ok, the id list is managed by the backend -->
+			<RoomListItem room={roomsCollection.state.allJoinedRooms[id] as JoinedRoomInfo} {disabled} />
 		{/each}
 	</div>
 {/snippet}
