@@ -82,6 +82,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
             commands::setup_new_backup,
             commands::search_users,
             commands::disconnect_and_clear_session,
+            commands::await_paginate_timeline,
             commands::check_if_last_device,
             commands::is_logged_in,
             commands::has_session_stored,

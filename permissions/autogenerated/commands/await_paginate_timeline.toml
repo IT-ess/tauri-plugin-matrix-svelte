@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-await-paginate-timeline"
+description = "Enables the await_paginate_timeline command without any pre-configured scope."
+commands.allow = ["await_paginate_timeline"]
+
+[[permission]]
+identifier = "deny-await-paginate-timeline"
+description = "Denies the await_paginate_timeline command without any pre-configured scope."
+commands.deny = ["await_paginate_timeline"]

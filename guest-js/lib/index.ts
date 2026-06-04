@@ -6,7 +6,11 @@ import type { EditRoomInformationPayload } from './bindings/EditRoomInformationP
 import type { MatrixLoginPayload } from './bindings/MatrixLoginPayload.js';
 import type { ProfileModel } from './bindings/ProfileModel.js';
 import type { VerifyDeviceEvent } from './bindings/VerifyDeviceEvent.js';
-import { createMatrixRequest, type MatrixRequest } from './matrix-requests/requests.js';
+import {
+	createMatrixRequest,
+	type MatrixRequest,
+	type PaginateTimelineRequest
+} from './matrix-requests/requests.js';
 
 import { LoginStore } from './stores/login-store.svelte.js';
 import { RoomStore } from './stores/room-store.svelte.js';
@@ -110,6 +114,15 @@ export async function getAllUserProfiles(): Promise<ProfileModel[]> {
  */
 export function disconnectAndClearSession(): Promise<null> {
 	return invoke('plugin:matrix-svelte|disconnect_and_clear_session', {});
+}
+
+/**
+ * Paginate a room timeline and wait until it is done
+ */
+export function awaitPaginateTimeline(
+	request: PaginateTimelineRequest['payload']
+): Promise<boolean> {
+	return invoke<boolean>('plugin:matrix-svelte|await_paginate_timeline', { ...request });
 }
 
 /**

@@ -216,5 +216,7 @@
 	"room_preview_join_requires_invite": "Rejoindre ce salon demande une invitation",
 	"room_preview_join_knock": "Demander à rejoindre",
 	"room_preview_knock_again": "Demander à rejoindre à nouveau",
-	"room_preview_error": "Impossible de récupérer un aperçu de ce salon :"
+	"room_preview_error": "Impossible de récupérer un aperçu de ce salon :",
+	"timeline_focus_error": "Le message est trop éloigné ou n'est pas dans ce groupe",
+	"timeline_pill_event_in": "Message dans"
 }

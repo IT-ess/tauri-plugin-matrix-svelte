@@ -17,6 +17,7 @@ permissions = [
     "allow-setup-new-backup",
     "allow-search-users",
     "allow-disconnect-and-clear-session",
+    "allow-await-paginate-timeline",
     "allow-check-if-last-device",
     "allow-is-logged-in",
     "allow-has-session-stored",

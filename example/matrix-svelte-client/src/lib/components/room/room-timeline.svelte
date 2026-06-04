@@ -15,6 +15,7 @@
 	import type { MediaViewerInfo } from '../media/utils';
 	import { Spinner } from '../ui/spinner';
 	import {
+		awaitPaginateTimeline,
 		createMatrixRequest,
 		sendMediaMessage,
 		submitAsyncRequest,
@@ -23,13 +24,16 @@
 		type MediaRequestParameters
 	} from 'tauri-plugin-matrix-svelte-api';
 	import { toast } from 'svelte-sonner';
+	import { afterNavigate } from '$app/navigation';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		roomId: string;
 		roomAvatarUrl: string | null;
 		threadRoot: string | null;
+		openingFocus: string | null;
 	};
-	let { roomId, roomAvatarUrl, threadRoot }: Props = $props();
+	let { roomId, roomAvatarUrl, threadRoot, openingFocus }: Props = $props();
 
 	if (import.meta.env.DEV) {
 		// eslint-disable-next-line svelte/no-inspect
@@ -37,7 +41,6 @@
 	}
 
 	let isLoadingMore = $state(false);
-	let prevScrollHeight = $state(0);
 
 	// Reply state
 	let replyingTo = $state<{
@@ -86,21 +89,16 @@
 			return;
 
 		isLoadingMore = true;
-		prevScrollHeight = scroll.y || 0;
 		console.log('Loading more messages !');
 
 		try {
 			const request = createMatrixRequest.paginateTimeline({
 				roomId,
 				threadRootEventId: threadRoot,
-				numEvents: 20,
+				numEvents: 50,
 				direction: 'backwards'
 			});
 			await submitAsyncRequest(request);
-			setTimeout(() => {
-				const newScrollHeight = scroll.y;
-				scroll.scrollTo(undefined, newScrollHeight - prevScrollHeight);
-			}, 100);
 		} finally {
 			isLoadingMore = false;
 		}
@@ -119,8 +117,28 @@
 		if (!viewportElement) return;
 
 		// Find the element with the matching event ID
+		let counter = 0;
 		while (!viewportElement.querySelector(`[data-event-id="${eventId}"]`)) {
-			await loadMoreMessages();
+			// Paginate at most 200 events
+			if (counter > 4) {
+				toast.error(m.timeline_focus_error());
+				return;
+			}
+			counter++;
+			try {
+				isLoadingMore = true;
+				await awaitPaginateTimeline({
+					roomId,
+					threadRootEventId: threadRoot,
+					numEvents: 50,
+					direction: 'backwards'
+				});
+			} catch (err) {
+				console.error(err);
+				toast.error(err as string);
+			} finally {
+				isLoadingMore = false;
+			}
 		}
 		const messageElement = viewportElement.querySelector(`[data-event-id="${eventId}"]`);
 
@@ -259,6 +277,17 @@
 	const handleCloseMediaViewer = () => {
 		showMediaViewer = false;
 	};
+
+	// We use afterNavigate instead of onMount because sometimes the navigation
+	// is done between rooms, thus this component is already mounted
+	afterNavigate(() => {
+		if (openingFocus) {
+			// We wait for the viewportElement to be available
+			setTimeout(() => {
+				scrollToMessage(openingFocus);
+			}, 100);
+		}
+	});
 </script>
 
 {#if roomStore.state.tlState}

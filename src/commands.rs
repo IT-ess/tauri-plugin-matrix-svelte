@@ -12,7 +12,8 @@ use matrix_ui_serializable::models::profile::ProfileModel;
 use matrix_ui_serializable::{
     AttachmentInfo, BaseAudioInfo, BaseFileInfo, BaseImageInfo, BaseVideoInfo, CLIENT,
     FrontendTimelineItem, FrontendVerificationState, MatrixRequest, MediaRequestParameters,
-    OwnedDeviceId, OwnedMxcUri, OwnedRoomId, OwnedUserId, Thumbnail, UInt, UserProfile, oneshot,
+    OwnedDeviceId, OwnedMxcUri, OwnedRoomId, OwnedUserId, PaginationDirection, Thumbnail, UInt,
+    UserProfile, get_timeline_kind, oneshot,
 };
 use mime_serde_shim::Wrapper as MimeWrapper;
 use serde::Deserialize;
@@ -235,6 +236,27 @@ pub(crate) async fn disconnect_and_clear_session<R: Runtime>(
     clear_session_in_keyring(
         get_app_dir_or_create_it(&app_handle).expect("app data dir should be defined"),
     )
+}
+
+#[command]
+pub(crate) async fn await_paginate_timeline(
+    room_id: OwnedRoomId,
+    thread_root_event_id: Option<OwnedEventId>,
+    num_events: u16,
+    direction: PaginationDirection,
+) -> Result<bool> {
+    let (tx, rx) = oneshot::channel();
+    matrix_ui_serializable::commands::submit_async_request(MatrixRequest::PaginateTimeline {
+        timeline_kind: get_timeline_kind(room_id, thread_root_event_id),
+        num_events,
+        direction,
+        result_sender: Some(tx),
+    });
+
+    match rx.await {
+        Ok(Ok(fully_paginated)) => Ok(fully_paginated),
+        _ => Err(Error::Anyhow(anyhow!("Cannot paginate timeline"))),
+    }
 }
 
 #[command]

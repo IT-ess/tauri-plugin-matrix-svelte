@@ -8,5 +8,10 @@
 
 <div class="bg-background pb-tauri-bottom-safe relative flex h-full flex-col">
 	<RoomHeader initialAvatarUrl={data.avatarUri} roomId={data.roomId} />
-	<RoomTimeline roomId={data.roomId} roomAvatarUrl={data.avatarUri} threadRoot={null} />
+	<RoomTimeline
+		roomId={data.roomId}
+		roomAvatarUrl={data.avatarUri}
+		threadRoot={null}
+		openingFocus={data.openingFocus}
+	/>
 </div>

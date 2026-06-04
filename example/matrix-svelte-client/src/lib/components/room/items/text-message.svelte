@@ -40,15 +40,15 @@
 						let avatarHtml = '';
 						let nameHtml = '';
 						if (info.kind == 'room') {
-							const [preview, via] = info.payload;
+							const [preview, via, focusOnEvent] = info.payload;
 							avatarHtml = preview.avatar_url
 								? `<img class="mx-pill__avatar" src="${adaptBaseUriToPlatform(preview.avatar_url)}" alt="${preview.name}" />`
 								: `<span class="mx-pill__avatar-fallback">${(preview.name ?? '?').charAt(0)}</span>`;
-							nameHtml = `<span class="mx-pill__name">${preview.name ?? preview.canonical_alias ?? preview.room_id}</span>`;
+							nameHtml = `<span class="mx-pill__name">${focusOnEvent ? m.timeline_pill_event_in() + ' ' : ''}${preview.name ?? preview.canonical_alias ?? preview.room_id}</span>`;
 
 							if (preview.state && preview.state == 'Joined') {
 								// Point to the room if already joined
-								a.href = `/room?id=${encodeURIComponent(preview.room_id)}${preview.avatar_url ? '&avatar=' + encodeURIComponent(preview.avatar_url) : ''}#bottomscroll`;
+								a.href = `/room?id=${encodeURIComponent(preview.room_id)}${preview.avatar_url ? '&avatar=' + encodeURIComponent(preview.avatar_url) : ''}${focusOnEvent ? '&focus=' + encodeURIComponent(focusOnEvent) : '#bottomscroll'}`;
 							} else {
 								// display preview instead
 								a.href = `/room-preview?data=${encodeURIComponent(JSON.stringify(preview))}&via=${encodeURIComponent(JSON.stringify(via))}`;

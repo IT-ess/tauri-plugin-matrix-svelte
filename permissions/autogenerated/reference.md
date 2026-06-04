@@ -20,6 +20,7 @@ Default permissions for the plugin
 - `allow-setup-new-backup`
 - `allow-search-users`
 - `allow-disconnect-and-clear-session`
+- `allow-await-paginate-timeline`
 - `allow-check-if-last-device`
 - `allow-is-logged-in`
 - `allow-has-session-stored`
@@ -71,6 +72,32 @@ Enables the android_share_matrix_media command without any pre-configured scope.
 <td>
 
 Denies the android_share_matrix_media command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-await-paginate-timeline`
+
+</td>
+<td>
+
+Enables the await_paginate_timeline command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-await-paginate-timeline`
+
+</td>
+<td>
+
+Denies the await_paginate_timeline command without any pre-configured scope.
 
 </td>
 </tr>

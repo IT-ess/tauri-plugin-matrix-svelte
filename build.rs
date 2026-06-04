@@ -15,6 +15,7 @@ const COMMANDS: &[&str] = &[
     "setup_new_backup",
     "search_users",
     "disconnect_and_clear_session",
+    "await_paginate_timeline",
     "check_if_last_device",
     "is_logged_in",
     "has_session_stored",

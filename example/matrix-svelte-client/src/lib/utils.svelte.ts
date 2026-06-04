@@ -57,9 +57,9 @@ export async function gotoRoomsList(selectedTab: 'dm' | 'groups' | 'invites') {
 	return await goto(`/?tab=${selectedTab}`);
 }
 
-export async function gotoRoom(roomId: string, avatarUri: string | null) {
+export async function gotoRoom(roomId: string, avatarUri: string | null, focusOnEvent?: string) {
 	return await goto(
-		`/room?id=${encodeURIComponent(roomId)}${avatarUri ? '&avatar=' + encodeURIComponent(avatarUri) : ''}#bottomscroll`
+		`/room?id=${encodeURIComponent(roomId)}${avatarUri ? '&avatar=' + encodeURIComponent(avatarUri) : ''}${focusOnEvent ? '&focus=' + encodeURIComponent(focusOnEvent) : '#bottomscroll'}`
 	);
 }
 

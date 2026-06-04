@@ -214,5 +214,7 @@
 	"room_preview_join_requires_invite": "Joining this room requires an invite",
 	"room_preview_join_knock": "Knock to join room",
 	"room_preview_knock_again": "Knock again",
-	"room_preview_error": "Cannot get preview of this room:"
+	"room_preview_error": "Cannot get preview of this room:",
+	"timeline_focus_error": "Message is too far in this timeline or not there",
+	"timeline_pill_event_in": "Message in"
 }

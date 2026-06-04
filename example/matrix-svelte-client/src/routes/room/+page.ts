@@ -11,6 +11,7 @@ import {
 export const load: PageLoad = async ({ url }) => {
 	const roomId = url.searchParams.get('id');
 	const avatarUri = url.searchParams.get('avatar');
+	const openingFocus = url.searchParams.get('focus');
 	if (roomId === null) {
 		error(500, 'The current room id has not been set properly');
 	}
@@ -23,5 +24,5 @@ export const load: PageLoad = async ({ url }) => {
 	};
 	emit(MatrixSvelteEmitEvent.UpdateCurrentActiveRoom, payload);
 
-	return { roomId, avatarUri };
+	return { roomId, avatarUri, openingFocus };
 };
