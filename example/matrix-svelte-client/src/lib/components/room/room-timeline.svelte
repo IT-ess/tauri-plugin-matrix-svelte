@@ -66,14 +66,38 @@
 				roomsCollection.state.allJoinedRooms[roomId] &&
 				roomsCollection.state.allJoinedRooms[roomId].numUnreadMessages > 0
 			) {
-				const request = createMatrixRequest.markRoomAsRead({
-					roomId,
-					threadRootEventId: threadRoot
-				});
-				submitAsyncRequest(request);
+				try {
+					const request = createMatrixRequest.readReceipt({
+						eventId: getLatestEventId(),
+						receiptType: 'm.read',
+						roomId,
+						threadRootEventId: threadRoot
+					});
+					submitAsyncRequest(request);
+				} catch (err) {
+					console.error(err);
+					toast.error(err as string);
+				}
 			}
 		}
 	});
+
+	const getLatestEventId = (): string => {
+		if (roomStore.state.tlState?.items && roomStore.state.tlState.items.length > 0) {
+			const timelineLength = roomStore.state.tlState.items.length;
+			let newArray = Array.from(
+				{ length: timelineLength },
+				(value, index) => timelineLength - index - 1
+			);
+			for (const i of newArray) {
+				const item = roomStore.state.tlState.items[i];
+				if (item.kind == 'msgLike' && !item.isOwn) {
+					return roomStore.state.tlState.items[i].eventId as string; // All remote msgLike events have eventIds
+				}
+			}
+		}
+		throw Error('No message like event to read in this room');
+	};
 
 	let showScrollButton = $derived(!scroll.arrived.bottom && scroll.y > 100);
 
