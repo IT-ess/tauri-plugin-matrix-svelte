@@ -1,6 +1,7 @@
 use anyhow::anyhow;
 use matrix_ui_serializable::commands::{
-    MatrixUriPillInfo, OwnedEventId, OwnedServerName, SerializableRoomPreview, VerifyDeviceEvent,
+    FrontendIndexedBookmark, MatrixUriPillInfo, OwnedEventId, OwnedServerName,
+    SerializableRoomPreview, VerifyDeviceEvent,
 };
 use matrix_ui_serializable::models::events::{
     FrontendDevice, MatrixLoginPayload, MediaStreamEvent,
@@ -595,6 +596,23 @@ pub(crate) async fn get_matrix_to_permalink_for_room(room_id: OwnedRoomId) -> Re
         .await
         .map(|uri| uri.to_string())
         .map_err(Into::into)
+}
+
+#[command]
+pub(crate) async fn search_bookmarks(
+    query: String,
+    max_number_of_results: usize,
+    pagination_offset: Option<usize>,
+    room_id_filter: Option<OwnedRoomId>,
+) -> Result<Vec<FrontendIndexedBookmark>> {
+    matrix_ui_serializable::commands::search_bookmarks(
+        &query,
+        max_number_of_results,
+        pagination_offset,
+        room_id_filter,
+    )
+    .await
+    .map_err(Error::Anyhow)
 }
 
 //

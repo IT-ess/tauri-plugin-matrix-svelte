@@ -35,6 +35,7 @@ permissions = [
     "allow-fetch-matrix-pill-info",
     "allow-handle-matrix-uri-command",
     "allow-get-matrix-to-permalink-for-room",
+    "allow-search-bookmarks",
     "allow-android-share-matrix-media",
     "allow-register-notifications",
 ]

@@ -8,7 +8,11 @@
 		User,
 		UserPlus
 	} from '@lucide/svelte';
-	import { getMatrixToPermalinkForRoom, type RoomStore } from 'tauri-plugin-matrix-svelte-api';
+	import {
+		getMatrixToPermalinkForRoom,
+		searchBookmarks,
+		type RoomStore
+	} from 'tauri-plugin-matrix-svelte-api';
 	import { roomsCollection } from '../../../../hooks.client';
 	import { m } from '$lib/paraglide/messages';
 	import { Button } from '$lib/components/ui/button';
@@ -21,6 +25,7 @@
 	import RoomDetails from './room-details.svelte';
 	import { toast } from 'svelte-sonner';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+	import { onMount } from 'svelte';
 
 	let {
 		roomId,
@@ -51,6 +56,11 @@
 			toast.error(err as string);
 		}
 	};
+
+	onMount(async () => {
+		const bookmarks = await searchBookmarks('TWIM', 10, 0, null);
+		console.log(bookmarks);
+	});
 </script>
 
 <div class="bg-background flex h-full w-full flex-col">

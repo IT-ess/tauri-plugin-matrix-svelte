@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import {
+		Bookmark,
 		Copy,
 		MessageSquareReply,
 		MessagesSquare,
@@ -167,6 +168,15 @@
 
 	const handleShowdropdown = () => {
 		showDropdown = true;
+	};
+
+	const handleBookmarkEvent = () => {
+		const request = createMatrixRequest.bookmarkMessage({
+			roomId,
+			eventId,
+			senderDisplayName: data.sender ?? ''
+		});
+		submitAsyncRequest(request);
 	};
 
 	// SWIPE TO REPLY
@@ -448,6 +458,9 @@
 						><MessagesSquare class="size-4" />{m.button_reply_in_thread()}</DropdownMenuItem
 					>
 				{/if}
+				<DropdownMenuItem onclick={handleBookmarkEvent} class="text-md">
+					<Bookmark class="size-4" />BOOKMARK ME</DropdownMenuItem
+				>
 				{#if data.kind == 'text'}
 					<DropdownMenuItem onclick={() => writeText(data.body.body)} class="text-md">
 						<Copy class="size-4" />

@@ -1,11 +1,9 @@
 import type { RedactMessagePayload } from '../bindings/RedactMessagePayload.js';
 import type { RoomMessageEventContentWithoutRelation } from '../bindings/RoomMessageEventContentWithoutRelation.js';
 import type {
-	MatrixId,
 	EventId,
 	RoomAliasId,
 	RoomId,
-	ServerName,
 	UserId,
 	TimelineEventItemId,
 	MxcUri
@@ -173,14 +171,6 @@ interface RedactMessageRequest {
 	payload: RedactMessagePayload;
 }
 
-interface GetMatrixRoomLinkPillInfoRequest {
-	event: 'getMatrixRoomLinkPillInfo';
-	payload: {
-		matrixId: MatrixId;
-		via: ServerName[];
-	};
-}
-
 interface CreateDMRoomRequest {
 	event: 'createDMRoom';
 	payload: {
@@ -217,6 +207,15 @@ interface KickOrBanUserFromRoomRequest {
 	};
 }
 
+interface BookmarkMessageRequest {
+	event: 'bookmarkMessage';
+	payload: {
+		roomId: RoomId;
+		eventId: EventId;
+		senderDisplayName: string;
+	};
+}
+
 // Union type combining all request types
 export type MatrixRequest =
 	| PaginateTimelineRequest
@@ -244,7 +243,8 @@ export type MatrixRequest =
 	| CreateDMRoomRequest
 	| CreateRoomRequest
 	| InviteUsersInRoomRequest
-	| KickOrBanUserFromRoomRequest;
+	| KickOrBanUserFromRoomRequest
+	| BookmarkMessageRequest;
 
 // Export individual types as well for convenience
 export type {
@@ -270,7 +270,7 @@ export type {
 	GetRoomPowerLevelsRequest,
 	ToggleReactionRequest,
 	RedactMessageRequest,
-	// GetMatrixRoomLinkPillInfoRequest,
+	BookmarkMessageRequest,
 	// Base types
 	PaginationDirection
 	// RoomMember,
@@ -390,13 +390,6 @@ export const createMatrixRequest = {
 		payload
 	}),
 
-	getMatrixRoomLinkPillInfo: (
-		payload: GetMatrixRoomLinkPillInfoRequest['payload']
-	): GetMatrixRoomLinkPillInfoRequest => ({
-		event: 'getMatrixRoomLinkPillInfo',
-		payload
-	}),
-
 	createDMRoom: (payload: CreateDMRoomRequest['payload']): CreateDMRoomRequest => ({
 		event: 'createDMRoom',
 		payload
@@ -416,6 +409,11 @@ export const createMatrixRequest = {
 		payload: KickOrBanUserFromRoomRequest['payload']
 	): KickOrBanUserFromRoomRequest => ({
 		event: 'kickOrBanUserFromRoom',
+		payload
+	}),
+
+	bookmarkMessage: (payload: BookmarkMessageRequest['payload']): BookmarkMessageRequest => ({
+		event: 'bookmarkMessage',
 		payload
 	})
 };

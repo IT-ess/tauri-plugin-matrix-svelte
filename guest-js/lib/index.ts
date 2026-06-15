@@ -19,6 +19,7 @@ import type { MediaRequestParameters, SendMediaMessageRequest } from './matrix-r
 import type { TimelineItem } from './bindings/TimelineItem.js';
 import type { RoomPreview } from './bindings/RoomPreview.js';
 import type { MatrixUriPillInfo } from './bindings/MatrixUriPillInfo.js';
+import type { IndexedBookmark } from './bindings/IndexedBookmark.js';
 
 export function submitMatrixLoginRequest(request: MatrixLoginPayload): Promise<null> {
 	return invoke('plugin:matrix-svelte|submit_matrix_login_request', {
@@ -301,6 +302,24 @@ export function getMatrixToPermalinkForRoom(roomId: string): Promise<string> {
 }
 
 /**
+ * Search bookmarks stored in the dedicated index. Send empty string to get all bookmarks.
+ * The roomIdFilter parameter allows to get only the bookmarks from a given room.
+ */
+export function searchBookmarks(
+	query: string,
+	maxNumberOfResults: number,
+	paginationOffset: number,
+	roomIdFilter: string | null
+): Promise<IndexedBookmark[]> {
+	return invoke('plugin:matrix-svelte|search_bookmarks', {
+		query,
+		maxNumberOfResults,
+		paginationOffset,
+		roomIdFilter
+	});
+}
+
+/**
  *
  * Register push notifications on mobile and OS notifications on desktop. On desktop just send empty strings.
  */
@@ -331,6 +350,7 @@ export * from './bindings/FrontendRoomMember.js';
 export * from './bindings/ImageInfo.js';
 export * from './bindings/ImageMessageEventContent.js';
 export * from './bindings/InReplyTo.js';
+export * from './bindings/IndexedBookmark.js';
 export * from './bindings/InvitedRoomInfo.js';
 export * from './bindings/InviterInfo.js';
 export * from './bindings/InviteState.js';
