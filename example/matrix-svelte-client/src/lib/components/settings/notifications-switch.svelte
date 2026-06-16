@@ -1,9 +1,6 @@
 <script lang="ts">
 	import { error } from '@sveltejs/kit';
-	import {
-		enableDailyRecapAndPushNotifications,
-		requestPermissionsAndCreateChannel
-	} from '$lib/notifications';
+	import { enablePushNotifications, requestPermissionsAndCreateChannel } from '$lib/notifications';
 	import { m } from '$lib/paraglide/messages';
 	import { Switch } from '$lib/components/ui/switch';
 	import { cancelAll } from '@choochmeque/tauri-plugin-notifications-api';
@@ -11,37 +8,37 @@
 
 	let { hasPending }: { hasPending: boolean } = $props();
 
-	const enableRecap = async () => {
+	const enablePushNotif = async () => {
 		try {
 			await requestPermissionsAndCreateChannel();
-			await enableDailyRecapAndPushNotifications(true);
+			await enablePushNotifications(true);
 		} catch (e) {
-			error(400, `couldn't enable daily recap. ${e}`);
+			error(400, `couldn't enable push notifications. ${e}`);
 		}
 	};
 
 	// svelte-ignore state_referenced_locally
 	let isActivated = $state(hasPending);
 
-	const changeRecapState = () => {
+	const changeToggleState = () => {
 		// Wait for isActivated value to be updated
 		setTimeout(async () => {
 			if (isActivated) {
-				await enableRecap();
+				await enablePushNotif();
 			} else {
 				await cancelAll();
-				toast.success(`Daily recap notification removed`);
+				toast.success(`Push notifications removed`);
 			}
 		}, 100);
 	};
 </script>
 
 <div class="flex shrink flex-col">
-	<div class="border-border mb-4 flex items-center justify-between border-b pb-6">
+	<div class="mb-4 flex items-center justify-between border-b border-border pb-6">
 		<div>
 			<p class="mb-1 font-medium">{m.notification_enable_notifications()}</p>
-			<p class="text-muted-foreground text-sm">{m.notification_enable_desc()}</p>
+			<p class="text-sm text-muted-foreground">{m.notification_enable_notifications_desc()}</p>
 		</div>
-		<Switch onclick={changeRecapState} bind:checked={isActivated} />
+		<Switch onclick={changeToggleState} bind:checked={isActivated} />
 	</div>
 </div>

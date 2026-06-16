@@ -121,7 +121,7 @@
 	"notification_messages_channel": "Nouveaux messages",
 	"notification_messages_channel_desc": "Recevez une notification push à chaque nouveau message",
 	"notification_enable_notifications": "Activer les notifications",
-	"notification_enable_desc": "Recevoir des notifications de nouveaux messages",
+	"notification_enable_notifications_desc": "Recevoir des notifications push à chaque nouveau message",
 	"notification_set_success": "Notifications activées !",
 	"popup_verification_please_verify": "Vérifier un appareil",
 	"popup_verification_instructions": "Vérifiez que les émojis correspondent entre les appareils:",

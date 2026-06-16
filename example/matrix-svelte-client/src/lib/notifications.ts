@@ -12,7 +12,6 @@ import { toast } from 'svelte-sonner';
 import { getLocale } from './paraglide/runtime';
 import { registerNotifications } from 'tauri-plugin-matrix-svelte-api';
 
-export const DAILY_NOTIFICATIONS_CHANNEL_ID = 'daily_notifications';
 export const MESSAGES_CHANNEL_ID = 'messages';
 
 export async function requestPermissionsAndCreateChannel() {
@@ -26,9 +25,9 @@ export async function requestPermissionsAndCreateChannel() {
 		permissionGranted = permission === 'granted';
 	}
 
-	const currentPlatform = platform();
-	if (currentPlatform === 'android') {
-		if (permissionGranted) {
+	if (permissionGranted) {
+		const currentPlatform = platform();
+		if (currentPlatform === 'android') {
 			await createChannel({
 				id: MESSAGES_CHANNEL_ID,
 				name: m.notification_messages_channel(),
@@ -41,10 +40,12 @@ export async function requestPermissionsAndCreateChannel() {
 				//sound: 'notification_sound'
 			});
 		}
+	} else {
+		throw Error("cannot enable notifications if the user doesn't allow the permission");
 	}
 }
 
-export async function enableDailyRecapAndPushNotifications(areNotificationsAllowed: boolean) {
+export async function enablePushNotifications(areNotificationsAllowed: boolean) {
 	try {
 		if (!areNotificationsAllowed) {
 			await requestPermissionsAndCreateChannel();
