@@ -29,7 +29,7 @@ futures-util = "0.3.31"
 tauri-plugin-android-fs = { version = "28.1.0", default-features = false }
 tauri-plugin-dialog = "2.7.1"
 tauri-plugin-svelte = { version = "3.2.0", features = ["marshaler-cbor"] }
-tauri-plugin-notifications = { version = "0.4.6", features = ["push-notifications"] }
+tauri-plugin-notifications = { path = "../tauri-plugin-notifications", features = ["push-notifications"] }
 tracing = "0.1.43"
 infer = { version = "0.19", default-features = false }
 matrix-ui-serializable = { git = "https://github.com/IT-ess/matrix-ui-serializable" }

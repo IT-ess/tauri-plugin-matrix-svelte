@@ -31,14 +31,13 @@
 		"@tailwindcss/vite": "^4.3.0",
 		"@tauri-apps/api": "^2.11.0",
 		"@tauri-apps/plugin-fs": "^2.5.1",
-		"@tauri-apps/plugin-notification": "~2.3.3",
 		"@tauri-apps/plugin-opener": "^2.5.4",
 		"@tauri-apps/plugin-os": "^2.3.2",
 		"runed": "^0.37.1",
 		"tailwindcss": "^4.3.0"
 	},
 	"devDependencies": {
-		"@choochmeque/tauri-plugin-notifications-api": "^0.4.6",
+		"@choochmeque/tauri-plugin-notifications-api": "file:../../../tauri-plugin-notifications",
 		"@choochmeque/tauri-plugin-sharekit-api": "^0.3.1",
 		"@eslint/compat": "^2.1.0",
 		"@eslint/js": "^10.0.1",
