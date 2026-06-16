@@ -9,6 +9,8 @@ use tauri_plugin_matrix_svelte::{
     LOGIN_STORE_READY, MediaFormat, MediaRequestParameters, MediaSource, MediaThumbnailSettings,
     Method, OwnedMxcUri, Standard, UInt, UrlSafe, V2EncryptedFileInfo,
 };
+#[cfg(target_os = "android")]
+use tauri_plugin_notifications::NotificationsExt;
 use tauri_plugin_svelte::CborMarshaler;
 use tracing::{error, trace};
 
@@ -254,6 +256,19 @@ pub fn run() {
                         );
                     })
                 });
+            // Register the Rust-only silent-push handler. On Android, data-only
+            // FCM messages are routed here so we can fetch content and raise the
+            // notification ourselves — the Matrix client pattern.
+            #[cfg(target_os = "android")]
+            {
+                let handle = app.handle().clone();
+                if let Err(e) = app.notifications().on_silent_push(move |push| {
+                    tracing::info!("silent push received: {:?}", push.data);
+                    process_silent_push(&handle, &push.data);
+                }) {
+                    tracing::error!("failed to register silent push handler: {e}");
+                }
+            }
             // Tray icon stuff
             #[cfg(desktop)]
             {
@@ -422,6 +437,75 @@ pub extern "system" fn Java_com_matrix_svelte_client_MainActivity_initNdkContext
             None
         }
     });
+}
+
+// Android-only background (killed-state) silent-push handling: a JNI entry the
+// FCM service calls when there is no Tauri runtime. See the module docs.
+#[cfg(target_os = "android")]
+mod android_push;
+
+/// Simulates handling a *silent* (data-only) push for a Matrix-style client on
+/// the **warm** path — i.e. while the app/Tauri runtime is alive, driven by
+/// `on_silent_push`. Here we can use the plugin builder directly.
+///
+/// The **killed** path can't use the builder (no `AppHandle`); it goes through
+/// `android_push`'s JNI entry instead, but shares the same `simulate_matrix_fetch`.
+#[cfg(target_os = "android")]
+fn process_silent_push<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    data: &std::collections::HashMap<String, String>,
+) {
+    let room_id = data
+        .get("room_id")
+        .cloned()
+        .unwrap_or_else(|| "!unknown:matrix.org".to_string());
+    let event_id = data
+        .get("event_id")
+        .cloned()
+        .unwrap_or_else(|| "$unknown".to_string());
+
+    tracing::info!("silent push (warm): fetching event {event_id} in room {room_id}");
+
+    // Stand-in for `GET /_matrix/client/v3/rooms/{room_id}/event/{event_id}`.
+    let (sender, body) = android_push::simulate_matrix_fetch(&room_id, &event_id);
+    let id = android_push::notification_id_for(&event_id);
+
+    let builder = app
+        .notifications()
+        .builder()
+        .id(id)
+        .title(sender)
+        .body(body)
+        .extra("room_id", room_id)
+        .extra("event_id", event_id);
+
+    // `show()` is async on mobile; the silent-push handler runs on a background
+    // thread, so spawn the display work rather than blocking it.
+    tauri::async_runtime::spawn(async move {
+        if let Err(e) = builder.show().await {
+            tracing::error!("failed to show notification from silent push: {e}");
+        }
+    });
+}
+
+/// Demo-only command: feed a fake silent push through the same handler the FCM
+/// data message would, so the flow is testable without a Firebase backend. In
+/// production the identical `process_silent_push` runs from `on_silent_push`.
+// Tauri command handlers take owned args by convention (see the plugin's own
+// `commands.rs`), and these are only consumed on Android.
+#[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
+#[cfg_attr(not(target_os = "android"), allow(unused_variables))]
+fn simulate_silent_push(app: tauri::AppHandle, room_id: String, event_id: String) {
+    #[cfg(target_os = "android")]
+    {
+        let mut data = std::collections::HashMap::new();
+        data.insert("room_id".to_string(), room_id);
+        data.insert("event_id".to_string(), event_id);
+        process_silent_push(&app, &data);
+    }
+    #[cfg(not(target_os = "android"))]
+    tracing::warn!("simulate_silent_push is Android-only");
 }
 
 #[test]
