@@ -25,10 +25,14 @@ use jni::sys::jstring;
 ///
 /// Shared by the warm path (`process_silent_push` in `lib.rs`) and the killed
 /// path (the JNI entry below).
-pub(crate) fn simulate_matrix_fetch(room_id: &str, event_id: &str) -> (String, String) {
+pub(crate) fn simulate_matrix_fetch(
+    data_dir: &str,
+    room_id: &str,
+    event_id: &str,
+) -> (String, String) {
     (
         "Alice".to_string(),
-        format!("New message in {room_id} (event {event_id})"),
+        format!("New message {data_dir} in {room_id} (event {event_id})"),
     )
 }
 
@@ -41,11 +45,15 @@ pub(crate) fn notification_id_for(event_id: &str) -> i32 {
     i32::try_from(hash).unwrap_or(0)
 }
 
-/// JNI entry: `com.matrix.svelte.client.SilentPushBridge.nativeProcessSilentPush(String): String`.
+/// JNI entry: `com.matrix.svelte.client.SilentPushBridge.nativeProcessSilentPush(String, String): String`.
 ///
-/// Input is the FCM data payload as a JSON object (string → string). Output is
-/// JSON `{ "id", "title", "body", "channelId" }` for Kotlin to post, or `null`
-/// on failure.
+/// Inputs are the app data directory path and the FCM data payload as a JSON
+/// object (string → string). Output is JSON `{ "id", "title", "body",
+/// "channelId" }` for Kotlin to post, or `null` on failure.
+///
+/// `data_dir` is the app's data directory (the same path Tauri's path API
+/// resolves to on Android); a real client opens its on-disk store (e.g. the
+/// Matrix SDK database) under it to decrypt the event.
 ///
 /// # Safety
 /// Called by the JVM with valid JNI references; not invoked from Rust.
@@ -55,9 +63,10 @@ pub extern "system" fn Java_com_matrix_svelte_client_SilentPushBridge_nativeProc
 >(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
+    data_dir: JString<'local>,
     data_json: JString<'local>,
 ) -> jstring {
-    match process(&mut env, &data_json) {
+    match process(&mut env, &data_dir, &data_json) {
         Ok(json) => env
             .new_string(json)
             .map_or(std::ptr::null_mut(), jni::objects::JString::into_raw),
@@ -68,7 +77,11 @@ pub extern "system" fn Java_com_matrix_svelte_client_SilentPushBridge_nativeProc
     }
 }
 
-fn process(env: &mut JNIEnv, data_json: &JString) -> Result<String, String> {
+fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<String, String> {
+    let data_dir: String = env
+        .get_string(data_dir)
+        .map_err(|e| format!("reading dataDir JString: {e}"))?
+        .into();
     let input: String = env
         .get_string(data_json)
         .map_err(|e| format!("reading JString: {e}"))?
@@ -85,9 +98,10 @@ fn process(env: &mut JNIEnv, data_json: &JString) -> Result<String, String> {
         .cloned()
         .unwrap_or_else(|| "$unknown".to_string());
 
-    tracing::info!("silent push (background/JNI): fetching {event_id} in {room_id}");
-
-    let (sender, body) = simulate_matrix_fetch(&room_id, &event_id);
+    tracing::info!(
+        "silent push (background/JNI): fetching {event_id} in {room_id} (data dir: {data_dir})"
+    );
+    let (sender, body) = simulate_matrix_fetch(&data_dir, &room_id, &event_id);
 
     let out = serde_json::json!({
         "id": notification_id_for(&event_id),

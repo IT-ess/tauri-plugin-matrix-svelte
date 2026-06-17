@@ -21,11 +21,12 @@ import org.json.JSONObject
 class DemoSilentPushHandler : SilentPushHandler {
   override fun onSilentPush(
     context: Context,
+    dataDir: String,
     data: Map<String, String>,
     messageId: String?
   ): Boolean {
     val resultJson = try {
-      SilentPushBridge.nativeProcessSilentPush(JSONObject(data).toString())
+      SilentPushBridge.nativeProcessSilentPush(dataDir, JSONObject(data).toString())
     } catch (e: Throwable) {
       Log.e(TAG, "native silent-push processing failed", e)
       null

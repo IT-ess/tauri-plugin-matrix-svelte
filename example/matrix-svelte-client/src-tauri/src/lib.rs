@@ -464,10 +464,13 @@ fn process_silent_push<R: tauri::Runtime>(
         .cloned()
         .unwrap_or_else(|| "$unknown".to_string());
 
+    let app_data_path = app.path().app_data_dir().unwrap();
+
     tracing::info!("silent push (warm): fetching event {event_id} in room {room_id}");
 
     // Stand-in for `GET /_matrix/client/v3/rooms/{room_id}/event/{event_id}`.
-    let (sender, body) = android_push::simulate_matrix_fetch(&room_id, &event_id);
+    let (sender, body) =
+        android_push::simulate_matrix_fetch(app_data_path.to_str().unwrap(), &room_id, &event_id);
     let id = android_push::notification_id_for(&event_id);
 
     let builder = app
