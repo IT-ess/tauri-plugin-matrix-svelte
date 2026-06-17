@@ -1,6 +1,8 @@
-use std::sync::OnceLock;
+use std::{path::PathBuf, sync::OnceLock};
 
-use matrix_ui_serializable::{LibConfig, models::events::MatrixLoginPayload, mpsc};
+use matrix_ui_serializable::{
+    LibConfig, OwnedRoomId, commands::OwnedEventId, models::events::MatrixLoginPayload, mpsc,
+};
 use serde::Deserialize;
 use tauri::{
     Manager, Runtime,
@@ -30,6 +32,7 @@ use url::Url;
 
 use crate::{
     events::handle_incoming_events,
+    keyring::get_matrix_session_option,
     state_updaters::Updaters,
     utils::{get_app_dir_or_create_it, get_plugin_config},
 };
@@ -179,3 +182,52 @@ pub use matrix_ui_serializable::{
     UInt, UrlSafe, V2EncryptedFileInfo,
 };
 pub use matrix_ui_serializable::{CLIENT, LOGIN_STORE_READY};
+
+// Mobile notifications
+//
+// This is a "background" entry point, that doesn't require a full Tauri webview to launch.
+
+pub use matrix_ui_serializable::models::notification::{
+    FrontendNotificationResult, FrontendNotificationStatus,
+};
+
+#[cfg(target_os = "android")]
+pub async fn handle_silent_notification(
+    app_data_dir: String,
+    room_id: String,
+    event_id: String,
+) -> crate::Result<FrontendNotificationResult> {
+    // TODO: fetch app data dir with another crate because we don't have tauri handle.
+    let app_data_dir = PathBuf::from(app_data_dir);
+    let Some(session) = get_matrix_session_option(app_data_dir.clone()) else {
+        return Ok(FrontendNotificationResult {
+            status: FrontendNotificationStatus::NotFound,
+            refreshed_session: None,
+        });
+    };
+
+    let Ok(room_id) = OwnedRoomId::try_from(room_id) else {
+        return Ok(FrontendNotificationResult {
+            status: FrontendNotificationStatus::NotFound,
+            refreshed_session: None,
+        });
+    };
+
+    let Ok(event_id) = OwnedEventId::try_from(event_id) else {
+        return Ok(FrontendNotificationResult {
+            status: FrontendNotificationStatus::NotFound,
+            refreshed_session: None,
+        });
+    };
+
+    // TODO: HANDLE SESSION REFRESH HERE
+
+    matrix_ui_serializable::commands::get_notification_item(
+        session,
+        app_data_dir,
+        room_id,
+        event_id,
+    )
+    .await
+    .map_err(Into::into)
+}
