@@ -25,8 +25,8 @@ class DebugSilentPushReceiver : BroadcastReceiver() {
     intent.getStringExtra("room_id")?.let { data["room_id"] = it }
     intent.getStringExtra("event_id")?.let { data["event_id"] = it }
     Log.i(TAG, "debug silent push received: $data (app may have been killed)")
-
-    DemoSilentPushHandler().onSilentPush(context.applicationContext, data, null)
+    val appContext = context.applicationContext
+    DemoSilentPushHandler().onSilentPush(appContext, appContext.dataDir.absolutePath, data, null)
   }
 
   private companion object {

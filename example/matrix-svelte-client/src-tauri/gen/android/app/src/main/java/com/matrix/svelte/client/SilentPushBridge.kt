@@ -9,7 +9,8 @@ package com.matrix.svelte.client
  * a cold start, with no Activity/WebView, to "fetch" notification content in
  * Rust (where matrix-rust-sdk would run).
  *
- * Input: the FCM data payload as a JSON object string.
+ * Input: the app data directory path, and the FCM data payload as a JSON object
+ * string. 
  * Output: JSON `{ id, title, body, channelId }`, or `null` on failure.
  */
 object SilentPushBridge {
@@ -18,5 +19,5 @@ object SilentPushBridge {
   }
 
   @JvmStatic
-  external fun nativeProcessSilentPush(dataJson: String): String?
+  external fun nativeProcessSilentPush(dataDir: String, dataJson: String): String?
 }
