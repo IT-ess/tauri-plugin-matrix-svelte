@@ -16,6 +16,7 @@
 #![allow(clippy::redundant_pub_crate)]
 
 use std::collections::HashMap;
+use tauri_plugin_matrix_svelte::FrontendNotificationStatus;
 
 use jni::JNIEnv;
 use jni::objects::{JClass, JString};
@@ -25,15 +26,23 @@ use jni::sys::jstring;
 ///
 /// Shared by the warm path (`process_silent_push` in `lib.rs`) and the killed
 /// path (the JNI entry below).
-pub(crate) fn simulate_matrix_fetch(
-    data_dir: &str,
-    room_id: &str,
-    event_id: &str,
+pub(crate) async fn simulate_matrix_fetch(
+    data_dir: String,
+    room_id: String,
+    event_id: String,
 ) -> (String, String) {
-    (
+    let mut message = (
         "Alice".to_string(),
         format!("New message {data_dir} in {room_id} (event {event_id})"),
-    )
+    );
+    if let Ok(result) =
+        tauri_plugin_matrix_svelte::handle_silent_notification(data_dir, room_id, event_id).await
+        && let FrontendNotificationStatus::Event(item) = result.status
+    {
+        message.0 = item.sender_display_name.unwrap_or(item.room_display_name);
+        message.1 = item.body.unwrap_or(item.summary);
+    };
+    message
 }
 
 /// Derive a stable, positive notification id from an event id, so re-delivery of
@@ -101,7 +110,13 @@ fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<
     tracing::info!(
         "silent push (background/JNI): fetching {event_id} in {room_id} (data dir: {data_dir})"
     );
-    let (sender, body) = simulate_matrix_fetch(&data_dir, &room_id, &event_id);
+
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| format!("building runtime: {e}"))?;
+    let (sender, body) = runtime
+        .block_on(async { simulate_matrix_fetch(data_dir, room_id, event_id.clone()).await });
 
     let out = serde_json::json!({
         "id": notification_id_for(&event_id),

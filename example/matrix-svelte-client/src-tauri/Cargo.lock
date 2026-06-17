@@ -3918,6 +3918,7 @@ dependencies = [
  "tauri-plugin-svelte",
  "tauri-plugin-web-auth",
  "time",
+ "tokio",
  "tracing",
  "tracing-subscriber",
 ]

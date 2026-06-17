@@ -468,23 +468,28 @@ fn process_silent_push<R: tauri::Runtime>(
 
     tracing::info!("silent push (warm): fetching event {event_id} in room {room_id}");
 
-    // Stand-in for `GET /_matrix/client/v3/rooms/{room_id}/event/{event_id}`.
-    let (sender, body) =
-        android_push::simulate_matrix_fetch(app_data_path.to_str().unwrap(), &room_id, &event_id);
-    let id = android_push::notification_id_for(&event_id);
-
-    let builder = app
-        .notifications()
-        .builder()
-        .id(id)
-        .title(sender)
-        .body(body)
-        .extra("room_id", room_id)
-        .extra("event_id", event_id);
-
-    // `show()` is async on mobile; the silent-push handler runs on a background
-    // thread, so spawn the display work rather than blocking it.
+    let inner_handle = app.app_handle().clone();
     tauri::async_runtime::spawn(async move {
+        // Stand-in for `GET /_matrix/client/v3/rooms/{room_id}/event/{event_id}`.
+        let (sender, body) = android_push::simulate_matrix_fetch(
+            app_data_path.to_str().unwrap().to_owned(),
+            room_id.clone(),
+            event_id.clone(),
+        )
+        .await;
+        let id = android_push::notification_id_for(&event_id);
+
+        let builder = inner_handle
+            .notifications()
+            .builder()
+            .id(id)
+            .title(sender)
+            .body(body)
+            .extra("room_id", room_id)
+            .extra("event_id", event_id);
+
+        // `show()` is async on mobile; the silent-push handler runs on a background
+        // thread, so spawn the display work rather than blocking it.
         if let Err(e) = builder.show().await {
             tracing::error!("failed to show notification from silent push: {e}");
         }
