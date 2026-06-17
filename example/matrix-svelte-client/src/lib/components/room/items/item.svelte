@@ -53,8 +53,7 @@
 			isOwn={item.isOwn}
 			{roomId}
 			eventId={item.eventId ?? ''}
-			timelineItemId={item.timelineItemId}
-			isLocal={item.isLocal}
+			timelineEventItemId={item.timelineItemId}
 			{currentUserId}
 			{onReply}
 			{onScrollToMessage}

@@ -48,6 +48,8 @@
 	"button_copy": "Copier le texte",
 	"button_goto_room": "Aller au salon",
 	"button_join_room": "Rejoindre le salon",
+	"button_bookmark": "Ajouter aux signets",
+	"button_unbookmark": "Retirer le signet",
 	"or": "Ou",
 	"items": "éléments",
 	"just_now": "À l'instant",

@@ -58,7 +58,7 @@
 	};
 
 	onMount(async () => {
-		const bookmarks = await searchBookmarks('TWIM', 10, 0, null);
+		const bookmarks = await searchBookmarks('*', 10, 0, roomId);
 		console.log(bookmarks);
 	});
 </script>

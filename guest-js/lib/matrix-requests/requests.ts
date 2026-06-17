@@ -29,7 +29,7 @@ interface EditMessageRequest {
 	payload: {
 		roomId: RoomId;
 		threadRootEventId: string | null;
-		timelineEventItemId: { timelineItemId: string; isLocal: boolean };
+		timelineEventItemId: TimelineEventItemId;
 		editedContent: RoomMessageEventContentWithoutRelation;
 	};
 }
@@ -161,7 +161,7 @@ interface ToggleReactionRequest {
 	payload: {
 		roomId: RoomId;
 		threadRootEventId: string | null;
-		timelineEventId: TimelineEventItemId;
+		timelineEventItemId: TimelineEventItemId;
 		reaction: string;
 	};
 }
@@ -207,12 +207,12 @@ interface KickOrBanUserFromRoomRequest {
 	};
 }
 
-interface BookmarkMessageRequest {
-	event: 'bookmarkMessage';
+interface ToggleBookmarkMessageRequest {
+	event: 'toggleBookmarkMessage';
 	payload: {
 		roomId: RoomId;
-		eventId: EventId;
-		senderDisplayName: string;
+		timelineEventItemId: TimelineEventItemId;
+		wasBookmarked: boolean;
 	};
 }
 
@@ -244,7 +244,7 @@ export type MatrixRequest =
 	| CreateRoomRequest
 	| InviteUsersInRoomRequest
 	| KickOrBanUserFromRoomRequest
-	| BookmarkMessageRequest;
+	| ToggleBookmarkMessageRequest;
 
 // Export individual types as well for convenience
 export type {
@@ -270,7 +270,7 @@ export type {
 	GetRoomPowerLevelsRequest,
 	ToggleReactionRequest,
 	RedactMessageRequest,
-	BookmarkMessageRequest,
+	ToggleBookmarkMessageRequest,
 	// Base types
 	PaginationDirection
 	// RoomMember,
@@ -412,8 +412,10 @@ export const createMatrixRequest = {
 		payload
 	}),
 
-	bookmarkMessage: (payload: BookmarkMessageRequest['payload']): BookmarkMessageRequest => ({
-		event: 'bookmarkMessage',
+	toggleBookmarkMessage: (
+		payload: ToggleBookmarkMessageRequest['payload']
+	): ToggleBookmarkMessageRequest => ({
+		event: 'toggleBookmarkMessage',
 		payload
 	})
 };

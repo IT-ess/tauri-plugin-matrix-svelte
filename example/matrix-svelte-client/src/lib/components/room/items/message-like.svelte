@@ -2,6 +2,7 @@
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import {
 		Bookmark,
+		BookmarkOff,
 		Copy,
 		MessageSquareReply,
 		MessagesSquare,
@@ -57,8 +58,7 @@
 		isOwn: boolean;
 		roomId: string;
 		eventId: string;
-		timelineItemId: string;
-		isLocal: boolean;
+		timelineEventItemId: string;
 		currentUserId: string;
 		repliedToMessage?: MsgLikeContent;
 		onReply?: (eventId: string, senderName: string, content: string) => void;
@@ -85,8 +85,7 @@
 		isOwn,
 		roomId,
 		eventId,
-		timelineItemId,
-		isLocal,
+		timelineEventItemId,
 		currentUserId,
 		onReply,
 		repliedToMessage,
@@ -124,7 +123,7 @@
 			reaction: emoji,
 			roomId,
 			threadRootEventId,
-			timelineEventId: eventId
+			timelineEventItemId: timelineEventItemId
 		});
 		await submitAsyncRequest(request);
 		showDropdown = false;
@@ -145,7 +144,7 @@
 		let request = createMatrixRequest.editMessage({
 			roomId,
 			threadRootEventId,
-			timelineEventItemId: { timelineItemId, isLocal },
+			timelineEventItemId: timelineEventItemId,
 			editedContent: {
 				msgtype: 'm.text',
 				body: newMessage,
@@ -160,7 +159,7 @@
 		const request = createMatrixRequest.redactMessage({
 			roomId,
 			threadRootEventId,
-			timelineEventId: eventId,
+			timelineEventItemId: timelineEventItemId,
 			reason: null
 		});
 		submitAsyncRequest(request);
@@ -170,11 +169,11 @@
 		showDropdown = true;
 	};
 
-	const handleBookmarkEvent = () => {
-		const request = createMatrixRequest.bookmarkMessage({
+	const handleToggleBookmarkEvent = () => {
+		const request = createMatrixRequest.toggleBookmarkMessage({
 			roomId,
-			eventId,
-			senderDisplayName: data.sender ?? ''
+			timelineEventItemId: timelineEventItemId,
+			wasBookmarked: data.bookmarked
 		});
 		submitAsyncRequest(request);
 	};
@@ -325,9 +324,14 @@
 							isSwipeActive ? 'ring-2 ring-blue-300' : ''
 						]}
 					>
-						<div class="flex items-center gap-2">
+						<div class="flex items-center justify-between gap-2">
 							<p class="text-sm font-medium">{data.sender}</p>
-							<span class="text-xs opacity-70">{formatTime(timestamp ?? 0)}</span>
+							<div class="flex gap-1">
+								<span class="text-[10px] opacity-70">{formatTime(timestamp ?? 0)}</span>
+								{#if data.bookmarked}
+									<Bookmark class="size-3.5" />
+								{/if}
+							</div>
 						</div>
 						{#if repliedToMessage && !threadRootEventId}
 							<div
@@ -458,9 +462,15 @@
 						><MessagesSquare class="size-4" />{m.button_reply_in_thread()}</DropdownMenuItem
 					>
 				{/if}
-				<DropdownMenuItem onclick={handleBookmarkEvent} class="text-md">
-					<Bookmark class="size-4" />BOOKMARK ME</DropdownMenuItem
-				>
+				{#if data.bookmarked}
+					<DropdownMenuItem onclick={handleToggleBookmarkEvent} class="text-md">
+						<BookmarkOff class="size-4" />{m.button_unbookmark()}</DropdownMenuItem
+					>
+				{:else}
+					<DropdownMenuItem onclick={handleToggleBookmarkEvent} class="text-md">
+						<Bookmark class="size-4" />{m.button_bookmark()}</DropdownMenuItem
+					>
+				{/if}
 				{#if data.kind == 'text'}
 					<DropdownMenuItem onclick={() => writeText(data.body.body)} class="text-md">
 						<Copy class="size-4" />

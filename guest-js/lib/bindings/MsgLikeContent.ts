@@ -46,6 +46,10 @@ export type MsgLikeContent = {
 	 * Sender id of the event
 	 */
 	senderId: string;
+	/**
+	 * Whether this event is bookmarked or not
+	 */
+	bookmarked: boolean;
 } & (
 	| { kind: 'audio'; body: AudioMessageEventContent }
 	| { kind: 'emote'; body: EmoteMessageEventContent }

@@ -46,6 +46,8 @@
 	"button_copy": "Copy text",
 	"button_goto_room": "Go to room",
 	"button_join_room": "Join room",
+	"button_bookmark": "Bookmark message",
+	"button_unbookmark": "Remove bookmark",
 	"or": "Or",
 	"items": "Items",
 	"just_now": "Just now",
