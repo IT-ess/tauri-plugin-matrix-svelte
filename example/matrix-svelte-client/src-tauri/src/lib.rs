@@ -10,7 +10,7 @@ use tauri_plugin_matrix_svelte::{
     Method, OwnedMxcUri, Standard, UInt, UrlSafe, V2EncryptedFileInfo,
 };
 #[cfg(target_os = "android")]
-use tauri_plugin_notifications::NotificationsExt;
+use tauri_plugin_notifications::{NotificationMessage, NotificationsExt};
 use tauri_plugin_svelte::CborMarshaler;
 use tracing::{error, trace};
 
@@ -471,22 +471,36 @@ fn process_silent_push<R: tauri::Runtime>(
     let inner_handle = app.app_handle().clone();
     tauri::async_runtime::spawn(async move {
         // Stand-in for `GET /_matrix/client/v3/rooms/{room_id}/event/{event_id}`.
-        let (sender, body) = android_push::simulate_matrix_fetch(
-            app_data_path.to_str().unwrap().to_owned(),
-            room_id.clone(),
-            event_id.clone(),
-        )
-        .await;
-        let id = android_push::notification_id_for(&event_id);
+        let (sender, body, summary, room_display_name, is_dm, sender_avatar_url) =
+            android_push::simulate_matrix_fetch(
+                app_data_path.to_str().unwrap().to_owned(),
+                room_id.clone(),
+                event_id.clone(),
+            )
+            .await;
+        // Key the notification by the room so repeated events accumulate into one
+        // MessagingStyle conversation (tap the demo button twice to see it stack).
+        let id = android_push::notification_id_for(&room_id);
 
-        let builder = inner_handle
+        let mut builder = inner_handle
             .notifications()
             .builder()
             .id(id)
-            .title(sender)
-            .body(body)
+            .conversation_title(room_display_name.as_str())
+            .self_name("Me")
+            .message(
+                NotificationMessage::new(body)
+                    .sender(&sender)
+                    .person_key(sender)
+                    .avatar_bytes(android_push::demo_avatar_base64()),
+            )
+            .auto_cancel()
             .extra("room_id", room_id)
             .extra("event_id", event_id);
+
+        if !is_dm {
+            builder = builder.group_conversation();
+        }
 
         // `show()` is async on mobile; the silent-push handler runs on a background
         // thread, so spawn the display work rather than blocking it.

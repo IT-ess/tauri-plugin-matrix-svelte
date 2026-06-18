@@ -3,8 +3,10 @@ package com.matrix.svelte.client
 import android.content.Context
 import android.util.Log
 import app.tauri.notification.Notification
+import app.tauri.notification.NotificationMessage
 import app.tauri.notification.NotificationPlugin
 import app.tauri.notification.SilentPushHandler
+import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -39,6 +41,13 @@ class DemoSilentPushHandler : SilentPushHandler {
         title = result.optString("title", "")
         body = result.optString("body", null)
         channelId = result.optString("channelId", null)
+        // Chat-style fields: the plugin renders these as MessagingStyle and
+        // decodes each message's base64 avatar into a circular icon.
+        conversationTitle = result.optString("conversationTitle", null)
+        groupConversation = result.optBoolean("groupConversation", false)
+        selfName = result.optString("selfName", null)
+        appendMessages = result.optBoolean("appendMessages", true)
+        messages = parseMessages(result.optJSONArray("messages"))
       }
       NotificationPlugin.postBackgroundNotification(context, notification)
       Log.i(TAG, "posted background notification ${notification.id} from silent push")
@@ -47,6 +56,22 @@ class DemoSilentPushHandler : SilentPushHandler {
       Log.e(TAG, "failed to post background notification", e)
       false
     }
+  }
+
+  private fun parseMessages(array: JSONArray?): List<NotificationMessage>? {
+    if (array == null) return null
+    val messages = mutableListOf<NotificationMessage>()
+    for (i in 0 until array.length()) {
+      val obj = array.optJSONObject(i) ?: continue
+      messages.add(NotificationMessage().apply {
+        sender = obj.optString("sender", null)
+        personKey = obj.optString("personKey", null)
+        avatarBytes = obj.optString("avatarBytes", null)
+        text = obj.optString("text", null)
+        timestamp = obj.optLong("timestamp", 0)
+      })
+    }
+    return messages
   }
 
   private companion object {

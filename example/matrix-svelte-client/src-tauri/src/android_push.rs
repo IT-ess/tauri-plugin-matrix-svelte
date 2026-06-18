@@ -15,6 +15,7 @@
 // private, so clippy flags that as redundant — it isn't, the parent needs them.
 #![allow(clippy::redundant_pub_crate)]
 
+use base64::Engine;
 use std::collections::HashMap;
 use tauri_plugin_matrix_svelte::FrontendNotificationStatus;
 
@@ -22,33 +23,54 @@ use jni::JNIEnv;
 use jni::objects::{JClass, JString};
 use jni::sys::jstring;
 
-/// Pretend to fetch the event body from a homeserver. Returns `(sender, body)`.
+/// Pretend to fetch the event body from a homeserver. Returns `(sender, body, summary, room_display_name, is_dm, sender_avatar_url)`.
 ///
 /// Shared by the warm path (`process_silent_push` in `lib.rs`) and the killed
-/// path (the JNI entry below).
+/// path (the JNI entry below). The body is intentionally long so the expandable
+/// `MessagingStyle` notification has something to show.
 pub(crate) async fn simulate_matrix_fetch(
     data_dir: String,
     room_id: String,
     event_id: String,
-) -> (String, String) {
+) -> (String, String, String, String, bool, Option<String>) {
     let mut message = (
         "Alice".to_string(),
-        format!("New message {data_dir} in {room_id} (event {event_id})"),
+        format!("Nouveau message {data_dir} in {room_id} (event {event_id})"),
+        format!("Summary"),
+        format!("Test room"),
+        true,
+        Some(format!("mxc://")),
     );
     if let Ok(result) =
         tauri_plugin_matrix_svelte::handle_silent_notification(data_dir, room_id, event_id).await
         && let FrontendNotificationStatus::Event(item) = result.status
     {
-        message.0 = item.sender_display_name.unwrap_or(item.room_display_name);
-        message.1 = item.body.unwrap_or(item.summary);
+        message.0 = item
+            .sender_display_name
+            .unwrap_or(item.room_display_name.clone());
+        message.1 = item.body.unwrap_or(item.summary.clone());
+        message.2 = item.summary;
+        message.3 = item.room_display_name;
+        message.4 = item.is_dm;
+        message.5 = item.sender_avatar_url;
     };
     message
 }
 
-/// Derive a stable, positive notification id from an event id, so re-delivery of
-/// the same event updates rather than stacks.
-pub(crate) fn notification_id_for(event_id: &str) -> i32 {
-    let hash = event_id.bytes().fold(0u32, |acc, b| {
+/// Base64-encoded demo avatar. Stands in for the bytes a real client gets from
+/// matrix-sdk's media store after downloading the sender/room `mxc://` avatar;
+/// here we just reuse the app icon so no extra asset is committed.
+pub(crate) fn demo_avatar_base64() -> String {
+    const AVATAR_PNG: &[u8] = include_bytes!("../icons/testavatar.png");
+    base64::engine::general_purpose::STANDARD.encode(AVATAR_PNG)
+}
+
+/// Derive a stable, positive notification id from a conversation key (the room
+/// id). Using the room as the key means every message in that room lands in the
+/// same notification, so the plugin accumulates them into one conversation
+/// instead of posting a separate notification per event.
+pub(crate) fn notification_id_for(key: &str) -> i32 {
+    let hash = key.bytes().fold(0u32, |acc, b| {
         acc.wrapping_mul(31).wrapping_add(u32::from(b))
     }) & 0x7fff_ffff;
     i32::try_from(hash).unwrap_or(0)
@@ -57,8 +79,10 @@ pub(crate) fn notification_id_for(event_id: &str) -> i32 {
 /// JNI entry: `com.matrix.svelte.client.SilentPushBridge.nativeProcessSilentPush(String, String): String`.
 ///
 /// Inputs are the app data directory path and the FCM data payload as a JSON
-/// object (string → string). Output is JSON `{ "id", "title", "body",
-/// "channelId" }` for Kotlin to post, or `null` on failure.
+/// object (string → string). Output is the notification content as JSON
+/// (`id`, `channelId`, `conversationTitle`, `selfName`, and a `messages` array of
+/// `{ sender, personKey, text, timestamp, avatarBytes }`) for Kotlin to post, or
+/// `null` on failure.
 ///
 /// `data_dir` is the app's data directory (the same path Tauri's path API
 /// resolves to on Android); a real client opens its on-disk store (e.g. the
@@ -115,14 +139,35 @@ fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<
         .enable_all()
         .build()
         .map_err(|e| format!("building runtime: {e}"))?;
-    let (sender, body) = runtime
+    let notif_id = notification_id_for(&room_id);
+    let (sender, body, summary, room_display_name, is_dm, sender_avatar_url) = runtime
         .block_on(async { simulate_matrix_fetch(data_dir, room_id, event_id.clone()).await });
 
+    let now_ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| i64::try_from(d.as_millis()).unwrap_or(0));
+
+    // MessagingStyle: the plugin decodes `avatarBytes` and renders a chat-style
+    // notification with the sender's circular avatar and the room as the title.
+    // The id is keyed by the room, and `appendMessages` lets the plugin stack
+    // each new event onto the same conversation notification.
     let out = serde_json::json!({
-        "id": notification_id_for(&event_id),
-        "title": sender,
-        "body": body,
+        "id": notif_id,
         "channelId": "default",
+        "title": summary,
+        "body": body,
+        "conversationTitle": room_display_name,
+        "groupConversation": !is_dm,
+        "selfName": "Me",
+        "appendMessages": true,
+        "autoCancel": true,
+        "messages": [{
+            "sender": sender,
+            "personKey": sender,
+            "text": body,
+            "timestamp": now_ms,
+            "avatarBytes": demo_avatar_base64(),
+        }],
     });
     Ok(out.to_string())
 }

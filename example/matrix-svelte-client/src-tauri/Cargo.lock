@@ -3892,6 +3892,7 @@ name = "matrix-svelte-client"
 version = "0.4.0"
 dependencies = [
  "anyhow",
+ "base64 0.22.1",
  "jni 0.21.1",
  "mime_serde_shim",
  "ndk-context",
