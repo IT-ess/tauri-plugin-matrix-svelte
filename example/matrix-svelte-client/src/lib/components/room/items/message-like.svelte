@@ -51,6 +51,7 @@
 		type MessageAbility,
 		type MsgLikeContent
 	} from 'tauri-plugin-matrix-svelte-api';
+	import { loginStore } from '../../../../hooks.client';
 
 	type Props = {
 		data: MsgLikeContent;
@@ -59,7 +60,6 @@
 		roomId: string;
 		eventId: string;
 		timelineEventItemId: string;
-		currentUserId: string;
 		repliedToMessage?: MsgLikeContent;
 		onReply?: (eventId: string, senderName: string, content: string) => void;
 		onScrollToMessage?: (eventId: string) => void;
@@ -86,7 +86,6 @@
 		roomId,
 		eventId,
 		timelineEventItemId,
-		currentUserId,
 		onReply,
 		repliedToMessage,
 		onScrollToMessage,
@@ -105,6 +104,7 @@
 	let showDropdown = $state(false);
 	let isEditing = $state(false);
 	let reactionsPopoverAnchor = $state<HTMLElement>(null!);
+	let currentUserId = $derived(loginStore.state.userId as string);
 
 	// Format timestamp
 	const formatTime = (timestamp: number) => {

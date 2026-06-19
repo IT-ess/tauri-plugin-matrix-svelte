@@ -20,6 +20,7 @@ import type { TimelineItem } from './bindings/TimelineItem.js';
 import type { RoomPreview } from './bindings/RoomPreview.js';
 import type { MatrixUriPillInfo } from './bindings/MatrixUriPillInfo.js';
 import type { IndexedBookmark } from './bindings/IndexedBookmark.js';
+import type { MatrixBookmarkItem } from './bindings/MatrixBookmarkItem.js';
 
 export function submitMatrixLoginRequest(request: MatrixLoginPayload): Promise<null> {
 	return invoke('plugin:matrix-svelte|submit_matrix_login_request', {
@@ -305,17 +306,17 @@ export function getMatrixToPermalinkForRoom(roomId: string): Promise<string> {
  * Search bookmarks stored in the dedicated index. Send empty string to get all bookmarks.
  * The roomIdFilter parameter allows to get only the bookmarks from a given room.
  */
-export function searchBookmarks(
+export function searchBookmarksInRoom(
 	query: string,
-	maxNumberOfResults: number,
-	paginationOffset: number,
-	roomIdFilter: string | null
-): Promise<IndexedBookmark[]> {
-	return invoke('plugin:matrix-svelte|search_bookmarks', {
+	batchSize: number,
+	page: number,
+	roomId: string
+): Promise<MatrixBookmarkItem[]> {
+	return invoke('plugin:matrix-svelte|search_bookmarks_in_room', {
 		query,
-		maxNumberOfResults,
-		paginationOffset,
-		roomIdFilter
+		batchSize,
+		page,
+		roomId
 	});
 }
 
@@ -359,6 +360,7 @@ export * from './bindings/JoinRuleSummary.js';
 export * from './bindings/JsonWebKey.js';
 export * from './bindings/LocationMessageEventContent.js';
 export * from './bindings/LoginState.js';
+export * from './bindings/MatrixBookmarkItem.js';
 export * from './bindings/MatrixUriIntent.js';
 export * from './bindings/MatrixLoginPayload.js';
 export * from './bindings/MediaSource.js';

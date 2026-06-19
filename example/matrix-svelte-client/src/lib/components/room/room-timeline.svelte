@@ -9,7 +9,7 @@
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import { tick } from 'svelte';
 	import { cn } from '$lib/utils.svelte';
-	import { loginStore, roomsCollection, roomStore } from '../../../hooks.client';
+	import { roomsCollection, roomStore } from '../../../hooks.client';
 	import RoomInput from './room-input.svelte';
 	import MediaViewer from '../common/media-viewer.svelte';
 	import type { MediaViewerInfo } from '../media/utils';
@@ -328,7 +328,6 @@
 						<Item
 							{item}
 							{roomId}
-							currentUserId={loginStore.state.userId ?? 'shouldbedefined'}
 							onReply={handleReplyTo}
 							onScrollToMessage={scrollToMessage}
 							repliedToMessage={item.kind === 'msgLike' && item.data.inReplyToId !== null

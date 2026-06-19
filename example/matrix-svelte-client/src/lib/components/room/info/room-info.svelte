@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getCustomMxcUriFromOriginal, getInitials, gotoRoom } from '$lib/utils.svelte';
 	import {
+		Bookmark,
 		ChevronLeft,
 		Link,
 		SquareArrowRightExit,
@@ -10,7 +11,7 @@
 	} from '@lucide/svelte';
 	import {
 		getMatrixToPermalinkForRoom,
-		searchBookmarks,
+		searchBookmarksInRoom,
 		type RoomStore
 	} from 'tauri-plugin-matrix-svelte-api';
 	import { roomsCollection } from '../../../../hooks.client';
@@ -47,6 +48,8 @@
 	// since we already filter it on the backend side.
 	let membersIds = $derived(Object.keys(roomStore.state.members));
 
+	let bookmarkCount = $state(0);
+
 	const handleCopyRoomLink = async () => {
 		try {
 			const uri = await getMatrixToPermalinkForRoom(roomId);
@@ -58,8 +61,13 @@
 	};
 
 	onMount(async () => {
-		const bookmarks = await searchBookmarks('*', 10, 0, roomId);
-		console.log(bookmarks);
+		try {
+			// Empty query returns all bookmarks; cap is large enough for a "basic" count.
+			const bookmarks = await searchBookmarksInRoom('*', 100, 0, roomId);
+			bookmarkCount = bookmarks.length;
+		} catch (err) {
+			console.error(err);
+		}
 	});
 </script>
 
@@ -126,6 +134,24 @@
 				</Item.Content>
 				<Item.Actions>
 					{membersIds.length}
+				</Item.Actions>
+			</a>
+		{/snippet}
+	</Item.Root>
+	<Item.Root>
+		{#snippet child({ props })}
+			<a
+				href={`/room/info/bookmarks?id=${encodeURIComponent(roomId)}${avatar ? '&avatar=' + encodeURIComponent(avatar) : ''}`}
+				{...props}
+			>
+				<Item.Media>
+					<Bookmark class="text-muted-foreground size-6" />
+				</Item.Media>
+				<Item.Content>
+					<Item.Title class="text-base">{m.bookmarks()}</Item.Title>
+				</Item.Content>
+				<Item.Actions>
+					{bookmarkCount}
 				</Item.Actions>
 			</a>
 		{/snippet}

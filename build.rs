@@ -33,7 +33,7 @@ const COMMANDS: &[&str] = &[
     "fetch_matrix_pill_info",
     "handle_matrix_uri_command",
     "get_matrix_to_permalink_for_room",
-    "search_bookmarks",
+    "search_bookmarks_in_room",
     "android_share_matrix_media",
     "register_notifications",
 ];

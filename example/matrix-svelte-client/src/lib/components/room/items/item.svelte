@@ -11,7 +11,6 @@
 	type Props = {
 		item: TimelineItem;
 		roomId: string;
-		currentUserId: string;
 		repliedToMessage?: TimelineItem;
 		onReply?: (eventId: string, senderName: string, content: string) => void;
 		onScrollToMessage?: (eventId: string) => void;
@@ -33,7 +32,6 @@
 	let {
 		item,
 		roomId,
-		currentUserId,
 		onReply,
 		repliedToMessage,
 		onScrollToMessage,
@@ -54,7 +52,6 @@
 			{roomId}
 			eventId={item.eventId ?? ''}
 			timelineEventItemId={item.timelineItemId}
-			{currentUserId}
 			{onReply}
 			{onScrollToMessage}
 			repliedToMessage={repliedToMessage?.kind === 'msgLike' ? repliedToMessage.data : undefined}

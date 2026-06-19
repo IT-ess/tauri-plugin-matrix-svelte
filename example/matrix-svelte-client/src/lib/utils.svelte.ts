@@ -81,6 +81,12 @@ export async function gotoRoomMembers(roomId: string, avatarUri: string | null) 
 	);
 }
 
+export async function gotoRoomBookmarks(roomId: string, avatarUri: string | null) {
+	return await goto(
+		`/room/info/bookmarks?id=${encodeURIComponent(roomId)}${avatarUri ? '&avatar=' + encodeURIComponent(avatarUri) : ''}`
+	);
+}
+
 export async function gotoProfile(matrixUserId: string) {
 	return await goto(`/profile?id=${encodeURIComponent(matrixUserId)}`);
 }
