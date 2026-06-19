@@ -33,7 +33,7 @@
 		try {
 			const currentOffset = reset ? 0 : offset;
 			const page = await searchBookmarksInRoom(
-				searchQuery.trim() ? '*' : searchQuery.trim(),
+				searchQuery.trim() ? searchQuery.trim() : '*',
 				PAGE_SIZE,
 				currentOffset,
 				roomId
