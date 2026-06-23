@@ -12,7 +12,7 @@ readme = "README.md"
 license = "Apache-2.0"
 
 [dependencies]
-tauri = "2.11.2"
+tauri = "2.11.3"
 serde = "1.0"
 serde_json = "1.0.142"
 base64 = "0.22.1"
@@ -36,7 +36,7 @@ infer = { version = "0.19", default-features = false }
 matrix-ui-serializable = { path = "../matrix-ui-serializable" }
 
 [build-dependencies]
-tauri-plugin = { version = "2.6.2", features = ["build"] }
+tauri-plugin = { version = "2.6.3", features = ["build"] }
 
 [target."cfg(any(target_os = \"macos\", target_os = \"ios\"))".dependencies]
 apple-native-keyring-store = { version = "1.0.0", features = ["protected"] }
