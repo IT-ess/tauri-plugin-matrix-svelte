@@ -110,6 +110,17 @@ pub extern "system" fn Java_com_matrix_svelte_client_SilentPushBridge_nativeProc
     }
 }
 
+/// Build the canonical Matrix URI (MSC2312) for an event in a room, e.g.
+/// `matrix:roomid/abc:matrix.org/e/xyz` from `!abc:matrix.org` / `$xyz`. The
+/// notification's tap fires `ACTION_VIEW` for this, which the app's `matrix:`
+/// intent-filter routes to `tauri-plugin-deep-link`. Sigils (`!`/`$`) are
+/// dropped; the spec keeps `:` literal in the path.
+pub(crate) fn matrix_uri(room_id: &str, event_id: &str) -> String {
+    let room = room_id.strip_prefix('!').unwrap_or(room_id);
+    let event = event_id.strip_prefix('$').unwrap_or(event_id);
+    format!("matrix:roomid/{room}/e/{event}")
+}
+
 fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<String, String> {
     let data_dir: String = env
         .get_string(data_dir)
@@ -140,8 +151,10 @@ fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<
         .build()
         .map_err(|e| format!("building runtime: {e}"))?;
     let notif_id = notification_id_for(&room_id);
-    let (sender, body, summary, room_display_name, is_dm, sender_avatar_url) = runtime
-        .block_on(async { simulate_matrix_fetch(data_dir, room_id, event_id.clone()).await });
+    let (sender, body, summary, room_display_name, is_dm, sender_avatar_url) =
+        runtime.block_on(async {
+            simulate_matrix_fetch(data_dir, room_id.clone(), event_id.clone()).await
+        });
 
     let now_ms = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -160,6 +173,10 @@ fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<
         "groupConversation": !is_dm,
         "selfName": "Me",
         "appendMessages": true,
+        // Tapping the notification opens this Matrix deep link (ACTION_VIEW),
+        // routed by the app's `matrix:` intent-filter to tauri-plugin-deep-link
+        // (Option B). This replaces the `notificationClicked` event for the tap.
+        "deepLink": matrix_uri(&room_id, &event_id),
         "autoCancel": true,
         "messages": [{
             "sender": sender,

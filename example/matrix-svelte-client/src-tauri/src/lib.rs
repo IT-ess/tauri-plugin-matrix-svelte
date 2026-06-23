@@ -495,8 +495,7 @@ fn process_silent_push<R: tauri::Runtime>(
                     .avatar_bytes(android_push::demo_avatar_base64()),
             )
             .auto_cancel()
-            .extra("room_id", room_id)
-            .extra("event_id", event_id);
+            .deep_link(android_push::matrix_uri(&room_id, &event_id));
 
         if !is_dm {
             builder = builder.group_conversation();

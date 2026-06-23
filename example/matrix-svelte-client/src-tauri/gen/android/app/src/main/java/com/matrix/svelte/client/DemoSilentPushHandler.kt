@@ -48,6 +48,9 @@ class DemoSilentPushHandler : SilentPushHandler {
         selfName = result.optString("selfName", null)
         appendMessages = result.optBoolean("appendMessages", true)
         messages = parseMessages(result.optJSONArray("messages"))
+        // Tapping the notification opens this `matrix:` deep link (ACTION_VIEW),
+        // which the app's intent-filter routes to tauri-plugin-deep-link.
+        deepLink = result.optString("deepLink", null)
       }
       NotificationPlugin.postBackgroundNotification(context, notification)
       Log.i(TAG, "posted background notification ${notification.id} from silent push")
