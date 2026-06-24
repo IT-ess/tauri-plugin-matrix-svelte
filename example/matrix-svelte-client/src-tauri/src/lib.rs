@@ -414,29 +414,15 @@ fn android_windows_to_common_uri(raw_uri: &Uri) -> anyhow::Result<Uri> {
 #[allow(non_snake_case)]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_matrix_svelte_client_MainActivity_initNdkContext(
-    env: jni::JNIEnv,
+    mut env: jni::JNIEnv,
     _class: jni::objects::JObject,
     context: jni::objects::JObject,
 ) {
-    use jni::objects::GlobalRef;
-    use std::ffi::c_void;
-    use std::sync::OnceLock;
-    static REF: OnceLock<Option<GlobalRef>> = OnceLock::new();
-    REF.get_or_init(|| match env.new_global_ref(&context) {
-        Ok(ref_) => {
-            let vm = env.get_java_vm().unwrap();
-            let vm = vm.get_java_vm_pointer() as *mut c_void;
-            unsafe {
-                ndk_context::initialize_android_context(vm, ref_.as_obj().as_raw() as _);
-            }
-            Some(ref_)
-        }
-        Err(e) => {
-            tracing::error!(%e, "error creating global reference for context");
-            tracing::debug!(?e);
-            None
-        }
-    });
+    // Shared with the cold-push JNI entry so `ndk_context` is initialized at most
+    // once per process. The FCM service runs in the same process and Android may
+    // reuse a push process to launch this activity; using one guard for both
+    // entry points avoids `ndk_context`'s double-init panic. See `android_push`.
+    android_push::ensure_ndk_context(&mut env, &context);
 }
 
 // Android-only background (killed-state) silent-push handling: a JNI entry the

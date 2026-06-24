@@ -1,6 +1,15 @@
 use tauri::{Builder, Wry};
 
 pub fn setup_logging(mut tauri_builder: Builder<Wry>) -> Builder<Wry> {
+    // On Android the FCM/silent-push process may already have installed a global
+    // `tracing` subscriber (the cold-path logcat subscriber). If the OS reuses
+    // that process to launch the app, installing a second global subscriber here
+    // (devtools in debug, fmt in release) would panic — so reuse the existing one.
+    #[cfg(target_os = "android")]
+    if crate::android_push::cold_logging_installed() {
+        return tauri_builder;
+    }
+
     #[cfg(not(debug_assertions))]
     {
         use time::macros::{format_description, offset};

@@ -48,6 +48,9 @@ class DemoSilentPushHandler : SilentPushHandler {
         selfName = result.optString("selfName", null)
         appendMessages = result.optBoolean("appendMessages", true)
         messages = parseMessages(result.optJSONArray("messages"))
+        // Dismiss the notification when tapped (FLAG_AUTO_CANCEL). Without this the
+        // posted notification lingers in the shade after launching the app.
+        isAutoCancel = result.optBoolean("autoCancel", true)
         // Tapping the notification opens this `matrix:` deep link (ACTION_VIEW),
         // which the app's intent-filter routes to tauri-plugin-deep-link.
         deepLink = result.optString("deepLink", null)

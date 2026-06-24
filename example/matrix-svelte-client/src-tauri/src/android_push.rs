@@ -17,11 +17,65 @@
 
 use base64::Engine;
 use std::collections::HashMap;
+use std::sync::OnceLock;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri_plugin_matrix_svelte::FrontendNotificationStatus;
 
 use jni::JNIEnv;
-use jni::objects::{JClass, JObject, JString};
+use jni::objects::{GlobalRef, JClass, JObject, JString};
 use jni::sys::jstring;
+
+/// Keeps the global ref to the Android `Context` alive for the lifetime of the
+/// process and guarantees `ndk_context::initialize_android_context` runs at most
+/// once, regardless of which entry point reaches it first.
+static NDK_CONTEXT_REF: OnceLock<GlobalRef> = OnceLock::new();
+
+/// Whether the cold-path logcat `tracing` subscriber has been installed in this
+/// process (see [`init_cold_path_logging`]). Read by `setup_logging` so the app
+/// does not try to install a *second* global subscriber — which would panic —
+/// when the FCM/push process is reused to launch the activity.
+static COLD_LOG_INSTALLED: AtomicBool = AtomicBool::new(false);
+
+/// Initialize the `ndk_context` global exactly once per process.
+///
+/// `ndk_context::initialize_android_context` panics (`assert!(previous.is_none())`)
+/// if called twice. Both the cold-push JNI entry ([`init_cold_path_context`]) and
+/// `MainActivity.onCreate` (`initNdkContext` in `lib.rs`) need the context
+/// initialized; because the FCM service shares the app's process and Android may
+/// reuse that process to launch the activity (or it is already the warm app),
+/// both can run in one process. This shared guard makes the second call a no-op
+/// instead of an abort.
+pub(crate) fn ensure_ndk_context(env: &mut JNIEnv, context: &JObject) {
+    if NDK_CONTEXT_REF.get().is_some() {
+        return;
+    }
+    let Ok(context_ref) = env.new_global_ref(context) else {
+        tracing::error!("ensure_ndk_context: couldn't create global ref for context");
+        return;
+    };
+    let Ok(vm) = env.get_java_vm() else {
+        tracing::error!("ensure_ndk_context: couldn't get JavaVM");
+        return;
+    };
+    // `get_or_init` makes the unsafe init + store atomic; if another thread won
+    // the race the closure never runs and our spare `context_ref` is dropped.
+    NDK_CONTEXT_REF.get_or_init(|| {
+        unsafe {
+            ndk_context::initialize_android_context(
+                vm.get_java_vm_pointer().cast::<std::ffi::c_void>(),
+                context_ref.as_obj().as_raw().cast::<std::ffi::c_void>(),
+            );
+        }
+        tracing::info!("ndk_context initialized");
+        context_ref
+    });
+}
+
+/// Whether the cold-path logcat `tracing` subscriber is the process-global
+/// subscriber. Used by `setup_logging` to avoid a second (panicking) install.
+pub(crate) fn cold_logging_installed() -> bool {
+    COLD_LOG_INSTALLED.load(Ordering::Relaxed)
+}
 
 /// Pretend to fetch the event body from a homeserver. Returns `(sender, body, summary, room_display_name, is_dm, sender_avatar_url)`.
 ///
@@ -158,11 +212,18 @@ fn init_cold_path_logging() {
             "info,matrix_svelte_client_lib=debug,matrix_ui_serializable=debug,matrix_sdk=warn",
         )
         .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
-        // `try_init` fails only if a global subscriber is already set; ignore that.
-        let _ = tracing_subscriber::registry()
+        // `try_init` fails only if a global subscriber is already set (e.g. the
+        // app's own logging ran first in a warm process); ignore that.
+        if tracing_subscriber::registry()
             .with(filter)
             .with(paranoid_android::layer("MatrixSilentPush"))
-            .try_init();
+            .try_init()
+            .is_ok()
+        {
+            // We installed the process-global subscriber; tell `setup_logging`
+            // not to install another one if the app later starts in this process.
+            COLD_LOG_INSTALLED.store(true, Ordering::Relaxed);
+        }
     });
 }
 
@@ -180,31 +241,26 @@ fn init_cold_path_logging() {
 /// pushes in one process is safe. Mirrors `MainActivity.initNdkContext`
 /// (`lib.rs`) and the matrix-svelte plugin `setup`.
 fn init_cold_path_context(env: &mut JNIEnv, context: &JObject) -> Result<(), String> {
-    use std::ffi::c_void;
     use std::sync::Once;
 
-    static NDK_AND_TLS: Once = Once::new();
-    let mut init_result: Result<(), String> = Ok(());
-    NDK_AND_TLS.call_once(|| {
-        init_result = (|| {
+    // 1. NDK context (used by the Android keyring backend). Shared guard with
+    //    `MainActivity.initNdkContext` so it is initialized at most once per
+    //    process even when this push process is reused to launch the app.
+    ensure_ndk_context(env, context);
+
+    // 2. TLS platform verifier (used by matrix-sdk's HTTP client). Its
+    //    `init_with_refs` is internally idempotent (`get_or_init`), but the JNI
+    //    work to build the refs isn't free, so guard it with a `Once`.
+    static TLS: Once = Once::new();
+    let mut tls_result: Result<(), String> = Ok(());
+    TLS.call_once(|| {
+        tls_result = (|| {
             let vm = env
                 .get_java_vm()
                 .map_err(|e| format!("getting JavaVM: {e}"))?;
             let context_ref = env
                 .new_global_ref(context)
                 .map_err(|e| format!("global-ref'ing context: {e}"))?;
-
-            // 1. NDK context (used by the Android keyring backend).
-            unsafe {
-                ndk_context::initialize_android_context(
-                    vm.get_java_vm_pointer().cast::<c_void>(),
-                    context_ref.as_obj().as_raw().cast::<c_void>(),
-                );
-            }
-
-            tracing::info!("cold-path: ndk_context initialized");
-
-            // 2. TLS platform verifier (used by matrix-sdk's HTTP client).
             let loader = env
                 .call_method(context, "getClassLoader", "()Ljava/lang/ClassLoader;", &[])
                 .and_then(|v| v.l())
@@ -213,12 +269,11 @@ fn init_cold_path_context(env: &mut JNIEnv, context: &JObject) -> Result<(), Str
                 .new_global_ref(&loader)
                 .map_err(|e| format!("global-ref'ing ClassLoader: {e}"))?;
             rustls_platform_verifier::android::init_with_refs(vm, context_ref, loader_ref);
-
             tracing::info!("cold-path: rustls platform verifier initialized");
             Ok(())
         })();
     });
-    init_result?;
+    tls_result?;
 
     // 3. Keyring backend. Idempotent inside the plugin; cheap to call each time.
     tauri_plugin_matrix_svelte::init_keyring_store()
