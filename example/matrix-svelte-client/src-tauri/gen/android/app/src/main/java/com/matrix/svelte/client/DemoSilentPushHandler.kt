@@ -28,7 +28,7 @@ class DemoSilentPushHandler : SilentPushHandler {
     messageId: String?
   ): Boolean {
     val resultJson = try {
-      SilentPushBridge.nativeProcessSilentPush(dataDir, JSONObject(data).toString())
+      SilentPushBridge.nativeProcessSilentPush(context.applicationContext, dataDir, JSONObject(data).toString())
     } catch (e: Throwable) {
       Log.e(TAG, "native silent-push processing failed", e)
       null

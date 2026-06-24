@@ -449,7 +449,7 @@ mod android_push;
 /// `on_silent_push`. Here we can use the plugin builder directly.
 ///
 /// The **killed** path can't use the builder (no `AppHandle`); it goes through
-/// `android_push`'s JNI entry instead, but shares the same `simulate_matrix_fetch`.
+/// `android_push`'s JNI entry instead, but shares the same `fetch_notification_event`.
 #[cfg(target_os = "android")]
 fn process_silent_push<R: tauri::Runtime>(
     app: &tauri::AppHandle<R>,
@@ -472,7 +472,7 @@ fn process_silent_push<R: tauri::Runtime>(
     tauri::async_runtime::spawn(async move {
         // Stand-in for `GET /_matrix/client/v3/rooms/{room_id}/event/{event_id}`.
         let (sender, body, summary, room_display_name, is_dm, sender_avatar_url) =
-            android_push::simulate_matrix_fetch(
+            android_push::fetch_notification_event(
                 app_data_path.to_str().unwrap().to_owned(),
                 room_id.clone(),
                 event_id.clone(),

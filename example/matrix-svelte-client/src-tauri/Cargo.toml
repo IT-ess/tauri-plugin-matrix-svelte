@@ -53,6 +53,9 @@ jni = "0.21.1"
 tokio = "1.52.1"
 base64 = "0.22"
 tauri-plugin-android-fs = { version = "28.1.0", default-features = false }
+# Routes the cold-path (killed-state) silent-push `tracing` output to logcat,
+# since the Tauri runtime's logging setup never runs in that path.
+paranoid-android = "0.2"
 
 [profile.dev]
 incremental = true # Compile your binary in smaller steps.

@@ -183,6 +183,12 @@ pub use matrix_ui_serializable::{
 };
 pub use matrix_ui_serializable::{CLIENT, LOGIN_STORE_READY};
 
+// Exposed for the Android background/JNI silent-push entry (cold path), which
+// must initialize the keyring backend itself because the plugin `setup` never
+// runs when only the FCM service cold-starts the process.
+#[cfg(target_os = "android")]
+pub use crate::keyring::init_keyring_store;
+
 // Mobile notifications
 //
 // This is a "background" entry point, that doesn't require a full Tauri webview to launch.
