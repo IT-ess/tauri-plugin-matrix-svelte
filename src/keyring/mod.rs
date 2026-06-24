@@ -69,7 +69,25 @@ pub(crate) fn clear_session_in_keyring(app_data_path: PathBuf) -> crate::Result<
     fs::remove_file(app_data_path.join("salt")).map_err(|e| e.into())
 }
 
-pub(crate) fn init_keyring_store() -> anyhow::Result<()> {
+/// Install the platform-native keyring backend as the process-wide default
+/// `keyring_core` store.
+///
+/// Idempotent: the underlying `keyring_core::set_default_store` may only be
+/// called once per process, so subsequent calls are no-ops. This matters
+/// because the store has to be initialized both from the plugin `setup` (warm
+/// path) and from the Android background/JNI silent-push entry (cold path,
+/// where `setup` never runs).
+pub fn init_keyring_store() -> anyhow::Result<()> {
+    use std::sync::Once;
+    static INIT: Once = Once::new();
+    let mut result = Ok(());
+    INIT.call_once(|| {
+        result = init_keyring_store_inner();
+    });
+    result
+}
+
+fn init_keyring_store_inner() -> anyhow::Result<()> {
     #[cfg(target_os = "android")]
     {
         use android_native_keyring_store::Store as AndroidStore;
