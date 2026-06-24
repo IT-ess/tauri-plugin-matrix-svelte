@@ -21,7 +21,7 @@ tauri-build = { version = "2.6.3", features = [] }
 [dependencies]
 anyhow = "1.0.102"
 jni = "0.21.1"
-rustls-platform-verifier = "0.6"
+rustls-platform-verifier = "0.6.2"
 tauri = { version = "2.11.3", features = ["tray-icon"] }
 tauri-plugin-matrix-svelte = { path = "../../../" }
 serde = { version = "1", features = ["derive"] }

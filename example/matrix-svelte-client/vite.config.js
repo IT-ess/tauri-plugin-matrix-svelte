@@ -64,5 +64,8 @@ export default defineConfig(async () => ({
 			// 3. tell vite to ignore watching `src-tauri`
 			ignored: ['**/src-tauri/**']
 		}
+	},
+	build: {
+		target: 'es2024'
 	}
 }));

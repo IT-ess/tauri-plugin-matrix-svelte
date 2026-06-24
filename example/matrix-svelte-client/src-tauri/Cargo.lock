@@ -78,7 +78,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48c6349ddff23194f8fdce2ea8849380f5a4868c1648965b70e801e104cba9b3"
 dependencies = [
  "base64 0.22.1",
- "jni 0.21.1",
+ "jni",
  "keyring-core",
  "log",
  "ndk-context",
@@ -3255,36 +3255,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "jni"
-version = "0.22.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5efd9a482cf3a427f00d6b35f14332adc7902ce91efb778580e180ff90fa3498"
-dependencies = [
- "cfg-if",
- "combine",
- "jni-macros",
- "jni-sys 0.4.1",
- "log",
- "simd_cesu8",
- "thiserror 2.0.18",
- "walkdir",
- "windows-link 0.2.1",
-]
-
-[[package]]
-name = "jni-macros"
-version = "0.22.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a00109accc170f0bdb141fed3e393c565b6f5e072365c3bd58f5b062591560a3"
-dependencies = [
- "proc-macro2",
- "quote",
- "rustc_version",
- "simd_cesu8",
- "syn 2.0.117",
-]
-
-[[package]]
 name = "jni-sys"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3993,10 +3963,10 @@ name = "matrix-svelte-client"
 version = "0.4.0"
 dependencies = [
  "anyhow",
- "jni 0.21.1",
+ "jni",
  "mime_serde_shim",
  "ndk-context",
- "rustls-platform-verifier 0.6.2",
+ "rustls-platform-verifier",
  "serde",
  "serde_json",
  "serde_urlencoded",
@@ -5582,7 +5552,7 @@ dependencies = [
  "quinn",
  "rustls",
  "rustls-pki-types",
- "rustls-platform-verifier 0.7.0",
+ "rustls-platform-verifier",
  "serde",
  "serde_json",
  "sync_wrapper 1.0.2",
@@ -5670,6 +5640,7 @@ dependencies = [
 [[package]]
 name = "ruma"
 version = "0.16.0"
+source = "git+https://github.com/IT-ess/ruma?branch=msc4482-bookmarks#5a4a8525a0934da68ca08d3ffb82223c0d61d9bb"
 dependencies = [
  "assign",
  "js_int",
@@ -5684,6 +5655,7 @@ dependencies = [
 [[package]]
 name = "ruma-client-api"
 version = "0.24.0"
+source = "git+https://github.com/IT-ess/ruma?branch=msc4482-bookmarks#5a4a8525a0934da68ca08d3ffb82223c0d61d9bb"
 dependencies = [
  "as_variant",
  "assign",
@@ -5705,6 +5677,7 @@ dependencies = [
 [[package]]
 name = "ruma-common"
 version = "0.19.0"
+source = "git+https://github.com/IT-ess/ruma?branch=msc4482-bookmarks#5a4a8525a0934da68ca08d3ffb82223c0d61d9bb"
 dependencies = [
  "as_variant",
  "base64 0.22.1",
@@ -5737,6 +5710,7 @@ dependencies = [
 [[package]]
 name = "ruma-events"
 version = "0.34.0"
+source = "git+https://github.com/IT-ess/ruma?branch=msc4482-bookmarks#5a4a8525a0934da68ca08d3ffb82223c0d61d9bb"
 dependencies = [
  "as_variant",
  "indexmap 2.14.0",
@@ -5757,6 +5731,7 @@ dependencies = [
 [[package]]
 name = "ruma-html"
 version = "0.8.0"
+source = "git+https://github.com/IT-ess/ruma?branch=msc4482-bookmarks#5a4a8525a0934da68ca08d3ffb82223c0d61d9bb"
 dependencies = [
  "as_variant",
  "html5ever 0.39.0",
@@ -5767,6 +5742,7 @@ dependencies = [
 [[package]]
 name = "ruma-identifiers-validation"
 version = "0.12.1"
+source = "git+https://github.com/IT-ess/ruma?branch=msc4482-bookmarks#5a4a8525a0934da68ca08d3ffb82223c0d61d9bb"
 dependencies = [
  "js_int",
  "thiserror 2.0.18",
@@ -5775,6 +5751,7 @@ dependencies = [
 [[package]]
 name = "ruma-macros"
 version = "0.19.0"
+source = "git+https://github.com/IT-ess/ruma?branch=msc4482-bookmarks#5a4a8525a0934da68ca08d3ffb82223c0d61d9bb"
 dependencies = [
  "as_variant",
  "cfg-if",
@@ -5893,28 +5870,7 @@ checksum = "1d99feebc72bae7ab76ba994bb5e121b8d83d910ca40b36e0921f53becc41784"
 dependencies = [
  "core-foundation",
  "core-foundation-sys",
- "jni 0.21.1",
- "log",
- "once_cell",
- "rustls",
- "rustls-native-certs",
- "rustls-platform-verifier-android",
- "rustls-webpki",
- "security-framework",
- "security-framework-sys",
- "webpki-root-certs",
- "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "rustls-platform-verifier"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26d1e2536ce4f35f4846aa13bff16bd0ff40157cdb14cc056c7b14ba41233ba0"
-dependencies = [
- "core-foundation",
- "core-foundation-sys",
- "jni 0.22.4",
+ "jni",
  "log",
  "once_cell",
  "rustls",
@@ -6366,22 +6322,6 @@ name = "simd-adler32"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "703d5c7ef118737c72f1af64ad2f6f8c5e1921f818cdcb97b8fe6fc69bf66214"
-
-[[package]]
-name = "simd_cesu8"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94f90157bb87cddf702797c5dadfa0be7d266cdf49e22da2fcaa32eff75b2c33"
-dependencies = [
- "rustc_version",
- "simdutf8",
-]
-
-[[package]]
-name = "simdutf8"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e"
 
 [[package]]
 name = "siphasher"
@@ -6838,7 +6778,7 @@ dependencies = [
  "gdkwayland-sys",
  "gdkx11-sys",
  "gtk",
- "jni 0.21.1",
+ "jni",
  "libc",
  "log",
  "ndk",
@@ -6894,7 +6834,7 @@ dependencies = [
  "gtk",
  "heck 0.5.0",
  "http 1.4.0",
- "jni 0.21.1",
+ "jni",
  "libc",
  "log",
  "mime",
@@ -7323,7 +7263,7 @@ dependencies = [
  "dpi",
  "gtk",
  "http 1.4.0",
- "jni 0.21.1",
+ "jni",
  "objc2",
  "objc2-ui-kit",
  "objc2-web-kit",
@@ -7346,7 +7286,7 @@ checksum = "fe41e015bf8fc4d6477ff4926a0ef769dc64ff34c7b0038b6f7cacae892acb5c"
 dependencies = [
  "gtk",
  "http 1.4.0",
- "jni 0.21.1",
+ "jni",
  "log",
  "objc2",
  "objc2-app-kit",
@@ -9405,7 +9345,7 @@ dependencies = [
  "gtk",
  "http 1.4.0",
  "javascriptcore-rs",
- "jni 0.21.1",
+ "jni",
  "libc",
  "ndk",
  "objc2",

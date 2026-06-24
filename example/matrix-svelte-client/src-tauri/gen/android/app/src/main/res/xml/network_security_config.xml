@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+  <domain-config cleartextTrafficPermitted="true">
+      <!-- Let's Encrypt disabled OCSP for certificate revocation and switched to CRL, which needs clear-text access.
+     See https://github.com/matrix-org/matrix-rust-sdk/pull/6645/changes -->
+      <domain includeSubdomains="true">lencr.org</domain>
+    </domain-config>
+</network-security-config>

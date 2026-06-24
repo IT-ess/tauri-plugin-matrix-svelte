@@ -139,7 +139,7 @@
 					{@render actionButton(m.button_goto_room(), () => gotoRoom(room_id, avatar_url))}
 				{:else if state == 'Banned'}
 					{@render summaryText(m.room_preview_banned())}
-					{@render actionButton(m.room_preview_banned_action())}
+					{@render actionButton(m.room_preview_banned_action(), undefined)}
 				{:else if state == 'Invited'}
 					{@render summaryText(m.room_preview_invited())}
 					{@render actionButton(m.button_join_room(), () => joinRoom(room_id, avatar_url))}
@@ -149,7 +149,7 @@
 				{:else if state == 'Left'}
 					{@render summaryText(m.room_preview_previously_left())}
 					{#if !join_rule}
-						{@render actionButton(m.room_preview_not_allowed())}
+						{@render actionButton(m.room_preview_not_allowed(), undefined)}
 					{:else if join_rule.join_rule == 'public'}
 						{@render actionButton(
 							m.room_preview_rejoin_room(),
@@ -158,13 +158,13 @@
 								: () => joinRoom(room_id, avatar_url)
 						)}
 					{:else if join_rule.join_rule == 'invite'}
-						{@render actionButton(m.room_preview_rejoin_requires_invite())}
+						{@render actionButton(m.room_preview_rejoin_requires_invite(), undefined)}
 					{:else if join_rule.join_rule == 'knock' || join_rule.join_rule == 'knock_restricted'}
 						{@render actionButton(m.room_preview_rejoin_knock(), () =>
 							knockRoom(room_id, via, name)
 						)}
 					{:else}
-						{@render actionButton(m.room_preview_not_allowed())}
+						{@render actionButton(m.room_preview_not_allowed(), undefined)}
 					{/if}
 				{:else if join_rule}
 					<!-- The room is unknown to the user -->
@@ -176,14 +176,14 @@
 								: () => joinRoom(room_id, avatar_url)
 						)}
 					{:else if join_rule.join_rule == 'invite'}
-						{@render actionButton(m.room_preview_join_requires_invite())}
+						{@render actionButton(m.room_preview_join_requires_invite(), undefined)}
 					{:else if join_rule.join_rule == 'knock' || join_rule.join_rule == 'knock_restricted'}
 						{@render actionButton(m.room_preview_join_knock(), () => knockRoom(room_id, via, name))}
 					{:else}
-						{@render actionButton(m.room_preview_not_allowed())}
+						{@render actionButton(m.room_preview_not_allowed(), undefined)}
 					{/if}
 				{:else}
-					{@render actionButton(m.room_preview_not_allowed())}
+					{@render actionButton(m.room_preview_not_allowed(), undefined)}
 				{/if}
 				<Button variant="outline" onclick={goBack}>{m.button_back()}</Button>
 			</div>
@@ -197,7 +197,7 @@
 	<p class="text-center py-8 font-medium">{text}</p>
 {/snippet}
 
-{#snippet actionButton(text: string, handler?: () => Promise<void>)}
+{#snippet actionButton(text: string, handler: (() => Promise<void>) | undefined)}
 	<Button onclick={handler} disabled={!handler || isLoading}
 		>{text}
 		{#if isLoading}
