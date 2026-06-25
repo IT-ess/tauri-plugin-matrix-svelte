@@ -36,6 +36,7 @@ permissions = [
     "allow-handle-matrix-uri-command",
     "allow-get-matrix-to-permalink-for-room",
     "allow-search-bookmarks-in-room",
+    "allow-search-bookmarks-globally",
     "allow-android-share-matrix-media",
     "allow-register-notifications",
 ]

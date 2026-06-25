@@ -39,6 +39,7 @@ Default permissions for the plugin
 - `allow-handle-matrix-uri-command`
 - `allow-get-matrix-to-permalink-for-room`
 - `allow-search-bookmarks-in-room`
+- `allow-search-bookmarks-globally`
 - `allow-android-share-matrix-media`
 - `allow-register-notifications`
 
@@ -775,6 +776,32 @@ Enables the restore_backup_with_passphrase command without any pre-configured sc
 <td>
 
 Denies the restore_backup_with_passphrase command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-search-bookmarks-globally`
+
+</td>
+<td>
+
+Enables the search_bookmarks_globally command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-search-bookmarks-globally`
+
+</td>
+<td>
+
+Denies the search_bookmarks_globally command without any pre-configured scope.
 
 </td>
 </tr>

@@ -101,6 +101,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
             commands::handle_matrix_uri_command,
             commands::get_matrix_to_permalink_for_room,
             commands::search_bookmarks_in_room,
+            commands::search_bookmarks_globally,
             #[cfg(target_os = "android")]
             commands::android_share_matrix_media,
             commands::register_notifications

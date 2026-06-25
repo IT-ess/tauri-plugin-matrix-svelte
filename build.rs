@@ -34,6 +34,7 @@ const COMMANDS: &[&str] = &[
     "handle_matrix_uri_command",
     "get_matrix_to_permalink_for_room",
     "search_bookmarks_in_room",
+    "search_bookmarks_globally",
     "android_share_matrix_media",
     "register_notifications",
 ];

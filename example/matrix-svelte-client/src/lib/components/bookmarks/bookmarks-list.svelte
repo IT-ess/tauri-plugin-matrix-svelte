@@ -4,7 +4,11 @@
 	import { getLocale } from '$lib/paraglide/runtime';
 	import { getCustomMxcUriFromOriginal, getInitials, gotoRoom } from '$lib/utils.svelte';
 	import { Search } from '@lucide/svelte';
-	import { searchBookmarksInRoom, type MatrixBookmarkItem } from 'tauri-plugin-matrix-svelte-api';
+	import {
+		searchBookmarksGlobally,
+		searchBookmarksInRoom,
+		type MatrixBookmarkItem
+	} from 'tauri-plugin-matrix-svelte-api';
 	import * as Item from '$lib/components/ui/item/index.js';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import * as Empty from '$lib/components/ui/empty/index.js';
@@ -15,13 +19,14 @@
 	import FileMessage from '../room/items/file-message.svelte';
 	import VideoMessage from '../room/items/video-message.svelte';
 
-	let { roomId }: { roomId: string } = $props();
+	// When there is no roomId passed, we consider we should use global bookmarks
+	// search instead.
+	let { searchedRoomId }: { searchedRoomId?: string } = $props();
 
 	const PAGE_SIZE = 30;
 
 	let searchQuery = $state('');
 	let results = $state<MatrixBookmarkItem[]>([]);
-	$inspect(results);
 	let loading = $state(false);
 	let offset = $state(0);
 	let hasMore = $state(false);
@@ -32,12 +37,17 @@
 		loading = true;
 		try {
 			const currentOffset = reset ? 0 : offset;
-			const page = await searchBookmarksInRoom(
-				searchQuery.trim() ? searchQuery.trim() : '*',
-				PAGE_SIZE,
-				currentOffset,
-				roomId
-			);
+			let page = [];
+			if (searchedRoomId) {
+				page = await searchBookmarksInRoom(
+					searchQuery.trim(),
+					PAGE_SIZE,
+					currentOffset,
+					searchedRoomId
+				);
+			} else {
+				page = await searchBookmarksGlobally(searchQuery.trim(), PAGE_SIZE, currentOffset);
+			}
 			results = reset ? page : [...results, ...page];
 			offset = currentOffset + page.length;
 			hasMore = page.length === PAGE_SIZE;
@@ -63,10 +73,6 @@
 			hour: '2-digit',
 			minute: '2-digit'
 		});
-
-	const handleClick = (bookmark: MatrixBookmarkItem) => {
-		gotoRoom(bookmark.roomId, bookmark.roomAvatar, bookmark.item.eventId as string);
-	};
 </script>
 
 <div class="flex w-full flex-col">
@@ -98,7 +104,7 @@
 					{@const { item, roomAvatar, roomId, roomName, senderAvatar } = bookmark}
 					{@const sender = item.data.sender}
 					{@const data = item.data}
-					<Item.Root onclick={() => handleClick(bookmark)} size="sm">
+					<Item.Root onclick={() => gotoRoom(roomId, roomAvatar, item.eventId as string)} size="sm">
 						<Item.Media>
 							<Avatar.Root>
 								<Avatar.Image src={getCustomMxcUriFromOriginal(senderAvatar)} alt={sender} />
@@ -168,9 +174,11 @@
 									/>
 								{/if}
 							</Item.Description>
-							<!-- <Item.Description class="text-muted-foreground/70">
-								{roomName}
-							</Item.Description> -->
+							{#if !searchedRoomId}
+								<Item.Description class="text-muted-foreground/70">
+									{roomName}
+								</Item.Description>
+							{/if}
 						</Item.Content>
 						<Item.Actions>
 							<span class="text-muted-foreground text-xs">

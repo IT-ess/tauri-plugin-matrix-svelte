@@ -610,6 +610,17 @@ pub(crate) async fn search_bookmarks_in_room(
         .map_err(Error::Anyhow)
 }
 
+#[command]
+pub(crate) async fn search_bookmarks_globally(
+    query: String,
+    batch_size: usize,
+    page: usize,
+) -> Result<Vec<MatrixBookmarkItem>> {
+    matrix_ui_serializable::commands::search_bookmarks_globally(query, batch_size, page)
+        .await
+        .map_err(Error::Anyhow)
+}
+
 //
 // Helpers
 //

@@ -11,7 +11,8 @@
 		ShieldCheck,
 		DatabaseBackup,
 		LogOut,
-		Pencil
+		Pencil,
+		Bookmark
 	} from '@lucide/svelte';
 	import { cn, getCustomMxcUriFromOriginal, getInitials } from '$lib/utils.svelte';
 	import Badge from '../ui/badge/badge.svelte';
@@ -67,6 +68,9 @@
 						><DatabaseBackup />{m.profile_menu_enable_recovery()}</Button
 					>
 				{/if}
+				<Button class="w-full" size="lg" variant="outline" href="/bookmarks"
+					><Bookmark />{m.bookmarks()}</Button
+				>
 				<Button class="w-full" size="lg" variant="outline" href="/devices"
 					><MonitorSmartphone />{m.profile_menu_devices()}</Button
 				>
