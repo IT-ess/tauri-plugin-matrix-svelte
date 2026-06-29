@@ -457,7 +457,7 @@ fn process_silent_push<R: tauri::Runtime>(
     let inner_handle = app.app_handle().clone();
     tauri::async_runtime::spawn(async move {
         // Stand-in for `GET /_matrix/client/v3/rooms/{room_id}/event/{event_id}`.
-        let (sender, body, summary, room_display_name, is_dm, sender_avatar_url) =
+        let (sender, body, summary, room_display_name, is_dm, sender_avatar) =
             android_push::fetch_notification_event(
                 app_data_path.to_str().unwrap().to_owned(),
                 room_id.clone(),
@@ -478,7 +478,7 @@ fn process_silent_push<R: tauri::Runtime>(
                 NotificationMessage::new(body)
                     .sender(&sender)
                     .person_key(sender)
-                    .avatar_bytes(android_push::demo_avatar_base64()),
+                    .avatar_bytes(sender_avatar.unwrap_or(android_push::demo_avatar_base64())),
             )
             .auto_cancel()
             .deep_link(android_push::matrix_uri(&room_id, &event_id));
@@ -493,26 +493,6 @@ fn process_silent_push<R: tauri::Runtime>(
             tracing::error!("failed to show notification from silent push: {e}");
         }
     });
-}
-
-/// Demo-only command: feed a fake silent push through the same handler the FCM
-/// data message would, so the flow is testable without a Firebase backend. In
-/// production the identical `process_silent_push` runs from `on_silent_push`.
-// Tauri command handlers take owned args by convention (see the plugin's own
-// `commands.rs`), and these are only consumed on Android.
-#[tauri::command]
-#[allow(clippy::needless_pass_by_value)]
-#[cfg_attr(not(target_os = "android"), allow(unused_variables))]
-fn simulate_silent_push(app: tauri::AppHandle, room_id: String, event_id: String) {
-    #[cfg(target_os = "android")]
-    {
-        let mut data = std::collections::HashMap::new();
-        data.insert("room_id".to_string(), room_id);
-        data.insert("event_id".to_string(), event_id);
-        process_silent_push(&app, &data);
-    }
-    #[cfg(not(target_os = "android"))]
-    tracing::warn!("simulate_silent_push is Android-only");
 }
 
 #[test]
