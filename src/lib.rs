@@ -1,8 +1,6 @@
-use std::{path::PathBuf, sync::OnceLock};
+use std::sync::OnceLock;
 
-use matrix_ui_serializable::{
-    LibConfig, OwnedRoomId, commands::OwnedEventId, models::events::MatrixLoginPayload, mpsc,
-};
+use matrix_ui_serializable::{LibConfig, models::events::MatrixLoginPayload, mpsc};
 use serde::Deserialize;
 use tauri::{
     Manager, Runtime,
@@ -32,7 +30,6 @@ use url::Url;
 
 use crate::{
     events::handle_incoming_events,
-    keyring::get_matrix_session_option,
     state_updaters::Updaters,
     utils::{get_app_dir_or_create_it, get_plugin_config},
 };
@@ -202,38 +199,35 @@ pub async fn handle_silent_notification(
     app_data_dir: String,
     room_id: String,
     event_id: String,
-) -> crate::Result<FrontendNotificationResult> {
-    // TODO: fetch app data dir with another crate because we don't have tauri handle.
+) -> crate::Result<FrontendNotificationStatus> {
+    use keyring::get_matrix_session_option;
+    use matrix_ui_serializable::{OwnedRoomId, commands::OwnedEventId};
+    use std::path::PathBuf;
+
     let app_data_dir = PathBuf::from(app_data_dir);
     let Some(session) = get_matrix_session_option(app_data_dir.clone()) else {
-        return Ok(FrontendNotificationResult {
-            status: FrontendNotificationStatus::NotFound,
-            refreshed_session: None,
-        });
+        return Ok(FrontendNotificationStatus::InvalidSession);
     };
 
     let Ok(room_id) = OwnedRoomId::try_from(room_id) else {
-        return Ok(FrontendNotificationResult {
-            status: FrontendNotificationStatus::NotFound,
-            refreshed_session: None,
-        });
+        return Ok(FrontendNotificationStatus::WrongPayload);
     };
 
     let Ok(event_id) = OwnedEventId::try_from(event_id) else {
-        return Ok(FrontendNotificationResult {
-            status: FrontendNotificationStatus::NotFound,
-            refreshed_session: None,
-        });
+        return Ok(FrontendNotificationStatus::WrongPayload);
     };
 
-    // TODO: HANDLE SESSION REFRESH HERE
-
-    matrix_ui_serializable::commands::get_notification_item(
+    let item = matrix_ui_serializable::commands::get_notification_item(
         session,
-        app_data_dir,
+        app_data_dir.clone(),
         room_id,
         event_id,
     )
-    .await
-    .map_err(Into::into)
+    .await?;
+
+    if let Some(session) = item.refreshed_session {
+        keyring::set_session_in_keyring(session.into_bytes(), app_data_dir)?;
+    }
+
+    Ok(item.status)
 }
