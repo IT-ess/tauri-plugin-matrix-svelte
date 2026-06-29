@@ -560,6 +560,7 @@ pub(crate) async fn register_notifications<R: Runtime>(
     user_language: String,
 ) -> Result<()> {
     let app_id = app_handle.config().identifier.clone();
+    tracing::warn!("GOT PUSH TOKEN {token}");
     let plugin_config = get_plugin_config(&app_handle)?;
     matrix_ui_serializable::commands::register_notifications(
         token,

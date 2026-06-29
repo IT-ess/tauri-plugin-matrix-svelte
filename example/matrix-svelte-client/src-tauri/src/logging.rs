@@ -1,7 +1,7 @@
 use tauri::{Builder, Wry};
 
 pub fn setup_logging(mut tauri_builder: Builder<Wry>) -> Builder<Wry> {
-    #[cfg(not(debug_assertions))]
+    #[cfg(not(all(target_os = "linux", debug_assertions)))]
     {
         use time::macros::{format_description, offset};
         use tracing_subscriber::{EnvFilter, fmt::time::OffsetTime};
@@ -47,7 +47,7 @@ pub fn setup_logging(mut tauri_builder: Builder<Wry>) -> Builder<Wry> {
             .with_writer(writer);
         builder.init();
     }
-    #[cfg(debug_assertions)]
+    #[cfg(all(target_os = "linux", debug_assertions))]
     {
         tauri_builder = tauri_builder.plugin(tauri_plugin_devtools::init());
     }

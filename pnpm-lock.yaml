@@ -101,8 +101,8 @@ importers:
         version: 4.3.0
     devDependencies:
       '@choochmeque/tauri-plugin-notifications-api':
-        specifier: ^0.4.6
-        version: 0.4.6
+        specifier: 0.5.0-rc.10
+        version: 0.5.0-rc.10
       '@choochmeque/tauri-plugin-sharekit-api':
         specifier: ^0.3.1
         version: 0.3.1
@@ -286,8 +286,8 @@ packages:
   '@borewit/text-codec@0.2.2':
     resolution: {integrity: sha512-DDaRehssg1aNrH4+2hnj1B7vnUGEjU6OIlyRdkMd0aUdIUvKXrJfXsy8LVtXAy7DRvYVluWbMspsRhz2lcW0mQ==}
 
-  '@choochmeque/tauri-plugin-notifications-api@0.4.6':
-    resolution: {integrity: sha512-GMoym90j4kGJ9ygkW2DYZqg3i3UkgrDHX+najen2mxw+HBdF3DOLlbu1L2Z/QdTHb8PP9g3NP+BlowCY1ifNhw==}
+  '@choochmeque/tauri-plugin-notifications-api@0.5.0-rc.10':
+    resolution: {integrity: sha512-pDfL6Pha0H2ovH+bowCz3lIna6dPvg+xgu7p6ayMAARNBZ1RDlhQQ0OifhnXOOcfSRl9t+nWL5lMk0wwLcPfiQ==}
 
   '@choochmeque/tauri-plugin-sharekit-api@0.3.1':
     resolution: {integrity: sha512-Cdd1wPW9Arang3sapz1LXDdklY06wnaf+zqsT+iS1c64cyozjhKYwAzLdirJY0HtlPlaZ7G5PsCfqgLoXkpqlg==}
@@ -1149,8 +1149,8 @@ packages:
     engines: {node: '>=4'}
     hasBin: true
 
-  dayjs@1.11.20:
-    resolution: {integrity: sha512-YbwwqR/uYpeoP4pu043q+LTDLFBLApUP6VxRihdfNTqu4ubqMlGDLd6ErXhEgsyvY0K6nCs7nggYumAN+9uEuQ==}
+  dayjs@1.11.21:
+    resolution: {integrity: sha512-98IT+HOahAisibz/yjKbzuOBwYcjJ7BCLPzARyHiyEBmRz4fatF+KPJszEHXsGYjUG234aH/cOjW1wwTbKUZlA==}
 
   debug@4.4.3:
     resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
@@ -1471,8 +1471,8 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
-  libphonenumber-js@1.13.3:
-    resolution: {integrity: sha512-xMkdAMqcyG7iN2WZZmGIfWbYxW4orRkny+0/AXIbwL0xll2zkDX0Vzo/BXFa6+7mh2UvJl9MbcTtHk0YXkFtBA==}
+  libphonenumber-js@1.13.7:
+    resolution: {integrity: sha512-rvr3HIMdOgzhz1RFGjftji+wjoAFlzhqCNqJOU/MKTZQ8d9NZxAR/tI+0weDicyoucqVR0U1GCniqHJ0f8aM2A==}
 
   lightningcss-android-arm64@1.32.0:
     resolution: {integrity: sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg==}
@@ -2278,7 +2278,7 @@ snapshots:
 
   '@borewit/text-codec@0.2.2': {}
 
-  '@choochmeque/tauri-plugin-notifications-api@0.4.6':
+  '@choochmeque/tauri-plugin-notifications-api@0.5.0-rc.10':
     dependencies:
       '@tauri-apps/api': 2.11.0
 
@@ -2954,7 +2954,7 @@ snapshots:
       '@types/validator': 13.15.10
       '@vinejs/compiler': 3.0.0
       camelcase: 8.0.0
-      dayjs: 1.11.20
+      dayjs: 1.11.21
       dlv: 1.1.3
       normalize-url: 8.1.1
       validator: 13.15.35
@@ -3087,7 +3087,7 @@ snapshots:
   class-validator@0.14.4:
     dependencies:
       '@types/validator': 13.15.10
-      libphonenumber-js: 1.13.3
+      libphonenumber-js: 1.13.7
       validator: 13.15.35
     optional: true
 
@@ -3118,7 +3118,7 @@ snapshots:
 
   cssesc@3.0.0: {}
 
-  dayjs@1.11.20:
+  dayjs@1.11.21:
     optional: true
 
   debug@4.4.3:
@@ -3411,7 +3411,7 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  libphonenumber-js@1.13.3:
+  libphonenumber-js@1.13.7:
     optional: true
 
   lightningcss-android-arm64@1.32.0:

@@ -32,7 +32,7 @@ tauri-plugin-clipboard-manager = "2.3.2"
 tauri-plugin-dialog = "2.7.1"
 tauri-plugin-deep-link = "2.4.9"
 tauri-plugin-fs = "2.5.1"
-tauri-plugin-notifications = { version = "0.4.6", features = ["push-notifications"] }
+tauri-plugin-notifications = { version = "0.5.0-rc.10", features = ["push-notifications"] }
 tauri-plugin-opener = "2.5.4"
 tauri-plugin-os = "2.3.2"
 tauri-plugin-persisted-scope = "2.3.7"
@@ -40,7 +40,6 @@ tauri-plugin-safe-area-insets-css = "0.2.0"
 tauri-plugin-svelte = { version = "3.2.0", features = ["marshaler-cbor"] }
 tauri-plugin-single-instance = { version = "2.4.0", features = ["deep-link"] }
 tauri-plugin-web-auth = "1.0.0"
-tauri-plugin-devtools = "2.0.0"
 time = "0.3.44"
 tracing = "0.1.43"
 tracing-subscriber = { version = "0.3.22", features = ["time", "env-filter"] }
@@ -51,6 +50,9 @@ tauri-plugin-sharekit = { version = "0.3.1", default-features = false }
 [target."cfg(target_os = \"android\")".dependencies]
 jni = "0.21.1"
 tauri-plugin-android-fs = { version = "28.1.0", default-features = false }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+tauri-plugin-devtools = "2.1.0"
 
 [profile.dev]
 incremental = true # Compile your binary in smaller steps.
