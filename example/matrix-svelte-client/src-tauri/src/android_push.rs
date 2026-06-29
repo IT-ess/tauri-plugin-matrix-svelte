@@ -93,7 +93,7 @@ pub(crate) async fn fetch_notification_event(
         format!("Summary"),
         format!("Test room"),
         true,
-        Some(format!("mxc://")),
+        None,
     );
     // Explicitly log *why* we fall back to the placeholder so the cold path is
     // debuggable in logcat (see `init_cold_path_logging`): an `Err` means the
@@ -111,7 +111,9 @@ pub(crate) async fn fetch_notification_event(
                 message.2 = item.summary;
                 message.3 = item.room_display_name;
                 message.4 = item.is_dm;
-                message.5 = item.sender_avatar_url;
+                message.5 = item
+                    .sender_avatar
+                    .map(|buffer| base64::engine::general_purpose::STANDARD.encode(buffer));
             }
             other => {
                 tracing::warn!("silent notification fell back to placeholder: status = {other:?}");
@@ -323,7 +325,7 @@ fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<
         .build()
         .map_err(|e| format!("building runtime: {e}"))?;
     let notif_id = notification_id_for(&room_id);
-    let (sender, body, summary, room_display_name, is_dm, sender_avatar_url) =
+    let (sender, body, summary, room_display_name, is_dm, sender_avatar) =
         runtime.block_on(async {
             fetch_notification_event(data_dir, room_id.clone(), event_id.clone()).await
         });
@@ -355,7 +357,7 @@ fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<
             "personKey": sender,
             "text": body,
             "timestamp": now_ms,
-            "avatarBytes": demo_avatar_base64(),
+            "avatarBytes": sender_avatar.unwrap_or(demo_avatar_base64()),
         }],
     });
     Ok(out.to_string())
