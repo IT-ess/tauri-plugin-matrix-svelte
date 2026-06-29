@@ -99,8 +99,9 @@ pub(crate) async fn fetch_notification_event(
     // debuggable in logcat (see `init_cold_path_logging`): an `Err` means the
     // fetch itself failed (e.g. keyring/session not initialized), while a
     // non-`Event` status (`NotFound`, …) means the event couldn't be resolved.
-    match tauri_plugin_matrix_svelte::handle_silent_notification(data_dir, room_id, event_id).await {
-        Ok(result) => match result.status {
+    match tauri_plugin_matrix_svelte::handle_silent_notification(data_dir, room_id, event_id).await
+    {
+        Ok(status) => match status {
             FrontendNotificationStatus::Event(item) => {
                 tracing::info!("silent notification: resolved event, building real message");
                 message.0 = item
@@ -113,9 +114,7 @@ pub(crate) async fn fetch_notification_event(
                 message.5 = item.sender_avatar_url;
             }
             other => {
-                tracing::warn!(
-                    "silent notification fell back to placeholder: status = {other:?}"
-                );
+                tracing::warn!("silent notification fell back to placeholder: status = {other:?}");
             }
         },
         Err(e) => {
