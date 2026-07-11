@@ -19,11 +19,12 @@ use base64::Engine;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use std::sync::atomic::{AtomicBool, Ordering};
-use tauri_plugin_matrix_svelte::FrontendNotificationStatus;
 
 use jni::JNIEnv;
 use jni::objects::{GlobalRef, JClass, JObject, JString};
 use jni::sys::jstring;
+
+use crate::push_shared::{fetch_notification_event, matrix_uri};
 
 /// Keeps the global ref to the Android `Context` alive for the lifetime of the
 /// process and guarantees `ndk_context::initialize_android_context` runs at most
@@ -75,55 +76,6 @@ pub(crate) fn ensure_ndk_context(env: &mut JNIEnv, context: &JObject) {
 /// subscriber. Used by `setup_logging` to avoid a second (panicking) install.
 pub(crate) fn cold_logging_installed() -> bool {
     COLD_LOG_INSTALLED.load(Ordering::Relaxed)
-}
-
-/// Pretend to fetch the event body from a homeserver. Returns `(sender, body, summary, room_display_name, is_dm, sender_avatar_url)`.
-///
-/// Shared by the warm path (`process_silent_push` in `lib.rs`) and the killed
-/// path (the JNI entry below). The body is intentionally long so the expandable
-/// `MessagingStyle` notification has something to show.
-pub(crate) async fn fetch_notification_event(
-    data_dir: String,
-    room_id: String,
-    event_id: String,
-) -> (String, String, String, String, bool, Option<String>) {
-    let mut message = (
-        "Alice".to_string(),
-        format!("Nouveau message {data_dir} in {room_id} (event {event_id})"),
-        format!("Summary"),
-        format!("Test room"),
-        true,
-        None,
-    );
-    // Explicitly log *why* we fall back to the placeholder so the cold path is
-    // debuggable in logcat (see `init_cold_path_logging`): an `Err` means the
-    // fetch itself failed (e.g. keyring/session not initialized), while a
-    // non-`Event` status (`NotFound`, …) means the event couldn't be resolved.
-    match tauri_plugin_matrix_svelte::handle_silent_notification(data_dir, room_id, event_id).await
-    {
-        Ok(status) => match status {
-            FrontendNotificationStatus::Event(item) => {
-                tracing::info!("silent notification: resolved event, building real message");
-                message.0 = item
-                    .sender_display_name
-                    .unwrap_or(item.room_display_name.clone());
-                message.1 = item.body.unwrap_or(item.summary.clone());
-                message.2 = item.summary;
-                message.3 = item.room_display_name;
-                message.4 = item.is_dm;
-                message.5 = item
-                    .sender_avatar
-                    .map(|buffer| base64::engine::general_purpose::STANDARD.encode(buffer));
-            }
-            other => {
-                tracing::warn!("silent notification fell back to placeholder: status = {other:?}");
-            }
-        },
-        Err(e) => {
-            tracing::error!("silent notification fetch failed, using placeholder: {e}");
-        }
-    };
-    message
 }
 
 /// Base64-encoded demo avatar. Stands in for the bytes a real client gets from
@@ -282,17 +234,6 @@ fn init_cold_path_context(env: &mut JNIEnv, context: &JObject) -> Result<(), Str
     tracing::info!("cold-path: keyring store initialized");
 
     Ok(())
-}
-
-/// Build the canonical Matrix URI (MSC2312) for an event in a room, e.g.
-/// `matrix:roomid/abc:matrix.org/e/xyz` from `!abc:matrix.org` / `$xyz`. The
-/// notification's tap fires `ACTION_VIEW` for this, which the app's `matrix:`
-/// intent-filter routes to `tauri-plugin-deep-link`. Sigils (`!`/`$`) are
-/// dropped; the spec keeps `:` literal in the path.
-pub(crate) fn matrix_uri(room_id: &str, event_id: &str) -> String {
-    let room = room_id.strip_prefix('!').unwrap_or(room_id);
-    let event = event_id.strip_prefix('$').unwrap_or(event_id);
-    format!("matrix:roomid/{room}/e/{event}")
 }
 
 fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<String, String> {

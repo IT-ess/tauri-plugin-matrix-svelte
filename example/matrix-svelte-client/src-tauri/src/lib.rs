@@ -430,6 +430,16 @@ pub extern "system" fn Java_com_matrix_svelte_client_MainActivity_initNdkContext
 #[cfg(target_os = "android")]
 mod android_push;
 
+// iOS-only silent-push decoding: the C entry point the app's Notification
+// Service Extension resolves via dlsym. See the module docs.
+#[cfg(target_os = "ios")]
+mod ios_push;
+
+// Platform-agnostic fetch/format helpers shared by all silent-push entry
+// points: Android warm + JNI killed paths, and the iOS NSE path.
+#[cfg(any(target_os = "android", target_os = "ios"))]
+mod push_shared;
+
 /// Simulates handling a *silent* (data-only) push for a Matrix-style client on
 /// the **warm** path — i.e. while the app/Tauri runtime is alive, driven by
 /// `on_silent_push`. Here we can use the plugin builder directly.
@@ -458,7 +468,7 @@ fn process_silent_push<R: tauri::Runtime>(
     tauri::async_runtime::spawn(async move {
         // Stand-in for `GET /_matrix/client/v3/rooms/{room_id}/event/{event_id}`.
         let (sender, body, summary, room_display_name, is_dm, sender_avatar) =
-            android_push::fetch_notification_event(
+            push_shared::fetch_notification_event(
                 app_data_path.to_str().unwrap().to_owned(),
                 room_id.clone(),
                 event_id.clone(),
@@ -481,7 +491,7 @@ fn process_silent_push<R: tauri::Runtime>(
                     .avatar_bytes(sender_avatar.unwrap_or(android_push::demo_avatar_base64())),
             )
             .auto_cancel()
-            .deep_link(android_push::matrix_uri(&room_id, &event_id));
+            .deep_link(push_shared::matrix_uri(&room_id, &event_id));
 
         if !is_dm {
             builder = builder.group_conversation();

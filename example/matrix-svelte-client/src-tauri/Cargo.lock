@@ -6849,6 +6849,7 @@ dependencies = [
  "keyring-core",
  "matrix-ui-serializable",
  "mime_serde_shim",
+ "objc2-foundation",
  "rand 0.10.1",
  "serde",
  "serde_json",

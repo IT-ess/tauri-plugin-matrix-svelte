@@ -41,6 +41,16 @@ tauri-plugin = { version = "2.6.2", features = ["build"] }
 [target."cfg(any(target_os = \"macos\", target_os = \"ios\"))".dependencies]
 apple-native-keyring-store = { version = "1.0.0", features = ["protected"] }
 
+[target."cfg(target_os = \"ios\")".dependencies]
+# Resolves the App Group container the Matrix store lives in when
+# `ios_app_group` is configured (shared with the Notification Service Extension).
+objc2-foundation = { version = "0.3", default-features = false, features = [
+    "std",
+    "NSFileManager",
+    "NSString",
+    "NSURL",
+] }
+
 [target.'cfg(target_os = "linux")'.dependencies]
 dbus-secret-service-keyring-store = { version = "1.0.0", features = ["crypto-rust"] }
 
