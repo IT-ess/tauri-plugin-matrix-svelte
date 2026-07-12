@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		074B5B8A9C2DAF784DF57AD9 /* Intents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5238D1CA6BF6B14D51BA42EC /* Intents.framework */; };
 		1C111393541FF867010F86DC /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 11E64F2625525EC993551C9B /* libapp.a */; };
 		2E9A2783F7F22D907A515DDE /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0DACC69F861FF633C00F14E /* MetalKit.framework */; };
 		4696569DCEAB481DE53A4DA4 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B79296E865D67E41DDE3A63 /* Metal.framework */; };
@@ -61,6 +62,7 @@
 		3B79296E865D67E41DDE3A63 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		3C57757B9888BAE120E7D8D9 /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
 		4D272F472F588D0885EB749E /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
+		5238D1CA6BF6B14D51BA42EC /* Intents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Intents.framework; path = System/Library/Frameworks/Intents.framework; sourceTree = SDKROOT; };
 		6966CFF7087D28AD9771DB70 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		6A5B6423C656E3D447860EF1 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		6E72EB9B96ED821878D233AE /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -90,6 +92,7 @@
 				1C111393541FF867010F86DC /* libapp.a in Frameworks */,
 				DCA227BE84EC73A2AAF01905 /* tauri-plugin-notifications-nse in Frameworks */,
 				D3202B5199357EBEE82065A5 /* Security.framework in Frameworks */,
+				074B5B8A9C2DAF784DF57AD9 /* Intents.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -201,6 +204,7 @@
 			isa = PBXGroup;
 			children = (
 				6E72EB9B96ED821878D233AE /* CoreGraphics.framework */,
+				5238D1CA6BF6B14D51BA42EC /* Intents.framework */,
 				11E64F2625525EC993551C9B /* libapp.a */,
 				3B79296E865D67E41DDE3A63 /* Metal.framework */,
 				D0DACC69F861FF633C00F14E /* MetalKit.framework */,
@@ -251,7 +255,7 @@
 			path = "matrix-svelte-client_iOS";
 			sourceTree = "<group>";
 		};
-		"TEMP_FCC706C2-0DB1-4EB3-A083-2BAE1969DBA4" /* x86_64 */ = {
+		"TEMP_09055818-A240-4E91-A46B-1C19EBEBA109" /* x86_64 */ = {
 			isa = PBXGroup;
 			children = (
 			);

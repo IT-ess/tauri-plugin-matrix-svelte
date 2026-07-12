@@ -67,6 +67,10 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         CFBundleShortVersionString: 0.4.0
         CFBundleVersion: "0.4.0"
+        # Required (with the communication-notifications entitlement) for the
+        # NSE's INSendMessageIntent rewrite: sender avatar as notification icon.
+        NSUserActivityTypes:
+          - INSendMessageIntent
     entitlements:
       path: matrix-svelte-client_iOS/matrix-svelte-client_iOS.entitlements
       properties:
@@ -75,6 +79,10 @@ targets:
         # is the `data_dir` handed to the Rust silent-push handler.
         com.apple.security.application-groups:
           - group.com.matrix.svelte.client
+        # Communication notifications (sender avatar as the icon). Must also be
+        # enabled on BOTH App IDs in the developer portal (app and .nse) so the
+        # provisioning profiles carry it.
+        com.apple.developer.usernotifications.communication: true
     scheme:
       environmentVariables:
         RUST_BACKTRACE: full
@@ -137,6 +145,7 @@ targets:
       properties:
         com.apple.security.application-groups:
           - group.com.matrix.svelte.client
+        com.apple.developer.usernotifications.communication: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.matrix.svelte.client.nse
@@ -159,6 +168,8 @@ targets:
       - package: NotificationsNSE
         product: tauri-plugin-notifications-nse
       - sdk: Security.framework
+      # INSendMessageIntent / INInteraction for communication notifications.
+      - sdk: Intents.framework
     preBuildScripts:
       # Same Rust build the app target runs; whichever target builds first
       # produces Externals/<arch>/<config>/libapp.a and the other's run is an

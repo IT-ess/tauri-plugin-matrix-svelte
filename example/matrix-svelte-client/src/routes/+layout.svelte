@@ -24,6 +24,8 @@
 		type VerificationEmojisEventType
 	} from 'tauri-plugin-matrix-svelte-api';
 	import { gotoProfile, gotoRoomPreview } from '$lib/utils.svelte';
+	import { onNotificationClicked } from '@choochmeque/tauri-plugin-notifications-api';
+	import type { PluginListener } from '@tauri-apps/api/core';
 
 	let { children }: LayoutProps = $props();
 
@@ -39,8 +41,20 @@
 	let emojisUnlistener: UnlistenFn;
 	let toastUnlistener: UnlistenFn;
 	let matrixIntentUnlistener: UnlistenFn;
+	let notificationClickedListener: PluginListener | undefined;
 
 	onMount(async () => {
+		// iOS: notifications posted by the Notification Service Extension carry
+		// the Matrix deep link in their userInfo (`deepLink` extra) instead of
+		// Android's ACTION_VIEW intent. This listener also replays a pending
+		// tap when the app was cold-started from a notification.
+		notificationClickedListener = await onNotificationClicked(({ data }) => {
+			const deepLink = data?.deepLink;
+			if (deepLink && deepLink.startsWith('matrix:')) {
+				handleMatrixUri(deepLink);
+			}
+		});
+
 		matrixIntentUnlistener = await listen<MatrixUriIntent>(
 			MatrixSvelteListenEvent.MatrixUriIntent,
 			(event) => {
@@ -114,6 +128,7 @@
 		if (toastUnlistener) {
 			toastUnlistener();
 		}
+		notificationClickedListener?.unregister();
 	});
 
 	beforeNavigate(({ cancel, to }) => {

@@ -22,7 +22,7 @@
 
 use std::collections::HashMap;
 
-use tauri_plugin_notifications::NotificationData;
+use tauri_plugin_notifications::{NotificationData, NotificationMessage};
 
 /// Must match `ios_app_group` in `tauri.conf.json` and the App Group in both
 /// targets' entitlements.
@@ -49,7 +49,7 @@ fn handle_silent_push(data_dir: &str, data: HashMap<String, String>) -> Option<N
         .enable_all()
         .build()
         .ok()?;
-    let (_sender, body, summary, room_display_name, _is_dm, _sender_avatar) =
+    let (sender, body, summary, room_display_name, is_dm, sender_avatar) =
         runtime.block_on(crate::push_shared::fetch_notification_event(
             data_dir.to_owned(),
             room_id.clone(),
@@ -61,20 +61,35 @@ fn handle_silent_push(data_dir: &str, data: HashMap<String, String>) -> Option<N
     // instead. The deep link and the Matrix ids ride in `extra`, whose string
     // values surface in the `notificationClicked` event's `data` when tapped —
     // the frontend routes `deepLink` through `handleMatrixUri`.
-    Some(
-        NotificationData::builder()
-            .title(summary)
-            .body(body)
-            .group(room_id.as_str())
-            .summary(room_display_name)
-            .extra(
-                "deepLink",
-                crate::push_shared::matrix_uri(&room_id, &event_id),
-            )
-            .extra("room_id", room_id)
-            .extra("event_id", event_id)
-            .build(),
-    )
+    //
+    // The `message`/`conversation_title`/`group_conversation` fields mirror the
+    // Android MessagingStyle payload (`android_push.rs`): the NSE renders them
+    // as a communication notification, so the sender's avatar replaces the app
+    // icon. Requires the communication-notifications entitlement on the app
+    // and the NSE (see `gen/apple/project.yml`).
+    let mut message = NotificationMessage::new(body.clone())
+        .sender(sender.clone())
+        .person_key(sender);
+    if let Some(avatar) = sender_avatar {
+        message = message.avatar_bytes(avatar);
+    }
+    let mut builder = NotificationData::builder()
+        .title(summary)
+        .body(body)
+        .group(room_id.as_str())
+        .summary(room_display_name.clone())
+        .message(message)
+        .conversation_title(room_display_name)
+        .extra(
+            "deepLink",
+            crate::push_shared::matrix_uri(&room_id, &event_id),
+        )
+        .extra("room_id", room_id)
+        .extra("event_id", event_id);
+    if !is_dm {
+        builder = builder.group_conversation();
+    }
+    Some(builder.build())
 }
 
 tauri_plugin_notifications::ios_silent_push_handler!(handle_silent_push);
