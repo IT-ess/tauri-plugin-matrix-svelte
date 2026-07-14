@@ -145,7 +145,10 @@ targets:
       properties:
         com.apple.security.application-groups:
           - group.com.matrix.svelte.client
-        com.apple.developer.usernotifications.communication: true
+        # No communication-notifications entitlement here: the capability
+        # doesn't exist for NSE App IDs (the app carries it), and an
+        # entitlement missing from the NSE's profile would fail install
+        # validation — the export script pre-signs the appex with this file.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.matrix.svelte.client.nse

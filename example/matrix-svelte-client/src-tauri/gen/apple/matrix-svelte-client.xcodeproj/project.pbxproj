@@ -255,7 +255,7 @@
 			path = "matrix-svelte-client_iOS";
 			sourceTree = "<group>";
 		};
-		"TEMP_09055818-A240-4E91-A46B-1C19EBEBA109" /* x86_64 */ = {
+		"TEMP_3E0DB5F8-A280-40A9-A1EA-A0437A536EA9" /* x86_64 */ = {
 			isa = PBXGroup;
 			children = (
 			);
