@@ -20,3 +20,11 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 -keep, includedescriptorclasses class org.rustls.platformverifier.** { *; }
+
+# The silent-push handler is only reachable through the SILENT_PUSH_HANDLER
+# manifest meta-data + Class.forName, and the JNI bridge only through the
+# handler — R8 can't see either. Without these keeps, release builds lose the
+# killed-state (cold) push path as soon as the debug-only DebugSilentPushReceiver
+# (their sole direct reference) is removed.
+-keep class com.matrix.svelte.client.DemoSilentPushHandler { <init>(); }
+-keep class com.matrix.svelte.client.SilentPushBridge { *; }
