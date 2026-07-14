@@ -124,4 +124,5 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
 }
 
+apply(plugin = "com.google.gms.google-services")
 apply(from = "tauri.build.gradle.kts")
