@@ -219,7 +219,7 @@ pub async fn handle_silent_notification(
     event_id: String,
 ) -> crate::Result<FrontendNotificationStatus> {
     use keyring::get_matrix_session_option;
-    use matrix_ui_serializable::{OwnedRoomId, commands::OwnedEventId};
+    use matrix_ui_serializable::{NotificationProcessMode, OwnedRoomId, commands::OwnedEventId};
     use std::path::PathBuf;
 
     let app_data_dir = PathBuf::from(app_data_dir);
@@ -235,11 +235,21 @@ pub async fn handle_silent_notification(
         return Ok(FrontendNotificationStatus::WrongPayload);
     };
 
+    // Only the iOS Notification Service Extension is a genuinely separate
+    // process; the Android push handler (warm or FCM cold start) always runs
+    // inside the app's own process and must share the app's client/stores.
+    let mode = if cfg!(target_os = "ios") {
+        NotificationProcessMode::MultipleProcesses
+    } else {
+        NotificationProcessMode::SingleProcess
+    };
+
     let item = matrix_ui_serializable::commands::get_notification_item(
         session,
         app_data_dir.clone(),
         room_id,
         event_id,
+        mode,
     )
     .await?;
 

@@ -236,6 +236,29 @@ fn init_cold_path_context(env: &mut JNIEnv, context: &JObject) -> Result<(), Str
     Ok(())
 }
 
+/// The tokio runtime driving cold-path (killed-app) push fetches. Process-wide
+/// rather than per-push: matrix-ui-serializable caches the notification client
+/// across pushes, and tasks the SDK spawns for it (connection pools, store
+/// maintenance) must not be killed between two pushes by a runtime drop. In a
+/// warm process the fetch hops onto the app's runtime anyway, so this one only
+/// ever drives the cross-runtime await.
+static PUSH_RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
+
+fn push_runtime() -> Result<&'static tokio::runtime::Runtime, String> {
+    if let Some(runtime) = PUSH_RUNTIME.get() {
+        return Ok(runtime);
+    }
+    // One worker thread is plenty: pushes are serialized by the FCM service.
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(1)
+        .enable_all()
+        .build()
+        .map_err(|e| format!("building runtime: {e}"))?;
+    // If another thread raced us, our spare runtime is dropped (it is unused,
+    // so dropping it here on a non-async thread is fine).
+    Ok(PUSH_RUNTIME.get_or_init(|| runtime))
+}
+
 fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<String, String> {
     let data_dir: String = env
         .get_string(data_dir)
@@ -261,10 +284,7 @@ fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<
         "silent push (background/JNI): fetching {event_id} in {room_id} (data dir: {data_dir})"
     );
 
-    let runtime = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .map_err(|e| format!("building runtime: {e}"))?;
+    let runtime = push_runtime()?;
     let notif_id = notification_id_for(&room_id);
     let (sender, body, summary, room_display_name, is_dm, sender_avatar) =
         runtime.block_on(async {
