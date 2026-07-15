@@ -271,14 +271,24 @@ fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<
     let data: HashMap<String, String> =
         serde_json::from_str(&input).map_err(|e| format!("parsing data JSON: {e}"))?;
 
-    let room_id = data
-        .get("room_id")
-        .cloned()
-        .unwrap_or_else(|| "!unknown:matrix.org".to_string());
-    let event_id = data
-        .get("event_id")
-        .cloned()
-        .unwrap_or_else(|| "$unknown".to_string());
+    // A data message without event/room ids is not a message push: it's the
+    // homeserver's badge update (unread counts only), sent e.g. after a read
+    // receipt clears a room. There is no event to fetch, so tell Kotlin to
+    // post nothing — and to clear the shade when everything has been read.
+    let (Some(room_id), Some(event_id)) = (
+        data.get("room_id").cloned(),
+        data.get("event_id").cloned(),
+    ) else {
+        let all_read = data
+            .get("unread")
+            .and_then(|unread| unread.trim().parse::<u64>().ok())
+            == Some(0);
+        tracing::info!(
+            "silent push (background/JNI): badge-only push (keys: {:?}), skipping; clearAll={all_read}",
+            data.keys().collect::<Vec<_>>()
+        );
+        return Ok(serde_json::json!({ "skip": true, "clearAll": all_read }).to_string());
+    };
 
     tracing::info!(
         "silent push (background/JNI): fetching {event_id} in {room_id} (data dir: {data_dir})"

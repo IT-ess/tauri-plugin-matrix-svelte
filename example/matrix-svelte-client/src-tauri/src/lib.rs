@@ -451,14 +451,30 @@ fn process_silent_push<R: tauri::Runtime>(
     app: &tauri::AppHandle<R>,
     data: &std::collections::HashMap<String, String>,
 ) {
-    let room_id = data
-        .get("room_id")
-        .cloned()
-        .unwrap_or_else(|| "!unknown:matrix.org".to_string());
-    let event_id = data
-        .get("event_id")
-        .cloned()
-        .unwrap_or_else(|| "$unknown".to_string());
+    // A data message without event/room ids is the homeserver's badge update
+    // (unread counts only), sent e.g. after a read receipt clears a room.
+    // There is no event to fetch and nothing to display; when everything has
+    // been read, clear the notifications still in the shade instead.
+    let (Some(room_id), Some(event_id)) = (
+        data.get("room_id").cloned(),
+        data.get("event_id").cloned(),
+    ) else {
+        let all_read = data
+            .get("unread")
+            .and_then(|unread| unread.trim().parse::<u64>().ok())
+            == Some(0);
+        tracing::info!(
+            "silent push (warm): badge-only push (keys: {:?}), skipping; clear_all={all_read}",
+            data.keys().collect::<Vec<_>>()
+        );
+        if all_read {
+            // Empty list = cancel all active notifications (plugin contract).
+            if let Err(e) = app.notifications().remove_active(vec![]) {
+                tracing::error!("failed to clear notifications on badge reset: {e}");
+            }
+        }
+        return;
+    };
 
     let app_data_path = app.path().app_data_dir().unwrap();
 

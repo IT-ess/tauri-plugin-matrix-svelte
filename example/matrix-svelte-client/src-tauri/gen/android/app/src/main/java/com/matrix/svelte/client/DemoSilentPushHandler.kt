@@ -2,6 +2,7 @@ package com.matrix.svelte.client
 
 import android.content.Context
 import android.util.Log
+import androidx.core.app.NotificationManagerCompat
 import app.tauri.notification.Notification
 import app.tauri.notification.NotificationMessage
 import app.tauri.notification.NotificationPlugin
@@ -36,6 +37,15 @@ class DemoSilentPushHandler : SilentPushHandler {
 
     return try {
       val result = JSONObject(resultJson)
+      // Badge-only push (no event to display): Rust asks us to post nothing,
+      // and to clear the shade once every message has been read.
+      if (result.optBoolean("skip", false)) {
+        if (result.optBoolean("clearAll", false)) {
+          NotificationManagerCompat.from(context).cancelAll()
+          Log.i(TAG, "badge reset push: cleared active notifications")
+        }
+        return true
+      }
       val notification = Notification().apply {
         id = result.optInt("id", System.currentTimeMillis().toInt())
         title = result.optString("title", "")
