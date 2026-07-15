@@ -49,7 +49,7 @@ fn handle_silent_push(data_dir: &str, data: HashMap<String, String>) -> Option<N
         .enable_all()
         .build()
         .ok()?;
-    let (sender, body, summary, room_display_name, is_dm, sender_avatar) =
+    let (sender, body, summary, room_display_name, is_dm, sender_avatar, room_avatar) =
         runtime.block_on(crate::push_shared::fetch_notification_event(
             data_dir.to_owned(),
             room_id.clone(),
@@ -64,9 +64,11 @@ fn handle_silent_push(data_dir: &str, data: HashMap<String, String>) -> Option<N
     //
     // The `message`/`conversation_title`/`group_conversation` fields mirror the
     // Android MessagingStyle payload (`android_push.rs`): the NSE renders them
-    // as a communication notification, so the sender's avatar replaces the app
-    // icon. Requires the communication-notifications entitlement on the app
-    // and the NSE (see `gen/apple/project.yml`).
+    // as a communication notification. DMs draw the sender's avatar in place
+    // of the app icon; group rooms brand as the room instead — room name as
+    // the group title, room avatar (when it has one) as the icon. Requires the
+    // communication-notifications entitlement on the app (see
+    // `gen/apple/project.yml`).
     let mut message = NotificationMessage::new(body.clone())
         .sender(sender.clone())
         .person_key(sender);
@@ -88,6 +90,9 @@ fn handle_silent_push(data_dir: &str, data: HashMap<String, String>) -> Option<N
         .extra("event_id", event_id);
     if !is_dm {
         builder = builder.group_conversation();
+        if let Some(avatar) = room_avatar {
+            builder = builder.conversation_avatar_bytes(avatar);
+        }
     }
     Some(builder.build())
 }

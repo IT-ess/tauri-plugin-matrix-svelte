@@ -296,7 +296,7 @@ fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<
 
     let runtime = push_runtime()?;
     let notif_id = notification_id_for(&room_id);
-    let (sender, body, summary, room_display_name, is_dm, sender_avatar) =
+    let (sender, body, summary, room_display_name, is_dm, sender_avatar, _room_avatar) =
         runtime.block_on(async {
             fetch_notification_event(data_dir, room_id.clone(), event_id.clone()).await
         });

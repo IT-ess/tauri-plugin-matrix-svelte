@@ -12,7 +12,10 @@ use base64::Engine;
 use tauri_plugin_matrix_svelte::FrontendNotificationStatus;
 
 /// Fetch the pushed event through the plugin's cold-path API and shape it for
-/// display. Returns `(sender, body, summary, room_display_name, is_dm, sender_avatar_base64)`.
+/// display. Returns `(sender, body, summary, room_display_name, is_dm,
+/// sender_avatar_base64, room_avatar_base64)`. The room avatar is only fetched
+/// for group rooms (`is_dm == false`), where the notification brands as the
+/// room; for DMs it is always `None`.
 ///
 /// `data_dir` is the directory holding the Matrix store and salt file: the app
 /// data dir on Android, the shared App Group container on iOS. On any failure
@@ -22,13 +25,22 @@ pub(crate) async fn fetch_notification_event(
     data_dir: String,
     room_id: String,
     event_id: String,
-) -> (String, String, String, String, bool, Option<String>) {
+) -> (
+    String,
+    String,
+    String,
+    String,
+    bool,
+    Option<String>,
+    Option<String>,
+) {
     let mut message = (
         "Alice".to_string(),
         format!("Nouveau message {data_dir} in {room_id} (event {event_id})"),
         format!("Summary"),
         format!("Test room"),
         true,
+        None,
         None,
     );
     // Explicitly log *why* we fall back to the placeholder so the cold path is
@@ -49,6 +61,9 @@ pub(crate) async fn fetch_notification_event(
                 message.4 = item.is_dm;
                 message.5 = item
                     .sender_avatar
+                    .map(|buffer| base64::engine::general_purpose::STANDARD.encode(buffer));
+                message.6 = item
+                    .room_avatar
                     .map(|buffer| base64::engine::general_purpose::STANDARD.encode(buffer));
             }
             other => {
