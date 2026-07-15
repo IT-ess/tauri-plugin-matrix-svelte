@@ -268,6 +268,26 @@ pub fn run() {
                 }) {
                     tracing::error!("failed to register silent push handler: {e}");
                 }
+
+                // Dismiss a room's notification (and its stored conversation)
+                // once the room has been read — locally or on another device.
+                // The matrix-svelte plugin emits this on the unread → 0
+                // transition it observes through sync.
+                use tauri::Listener;
+                let dismiss_handle = app.handle().clone();
+                app.handle().listen("matrix-svelte://room-read", move |event| {
+                    let Ok(room_id) = serde_json::from_str::<String>(event.payload()) else {
+                        tracing::error!("room-read event with unexpected payload: {}", event.payload());
+                        return;
+                    };
+                    let id = android_push::notification_id_for(&room_id);
+                    // A single-id list: an empty list would mean "cancel all".
+                    if let Err(e) = dismiss_handle.notifications().remove_active(vec![id]) {
+                        tracing::error!("failed to dismiss notification for read room {room_id}: {e}");
+                    } else {
+                        tracing::debug!("dismissed notification for read room {room_id}");
+                    }
+                });
             }
             // Tray icon stuff
             #[cfg(desktop)]

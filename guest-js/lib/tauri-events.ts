@@ -24,7 +24,11 @@ export enum MatrixSvelteListenEvent {
 	OAuthUrl = 'matrix-svelte://oauth-url',
 	ResetCrossSigningUrl = 'matrix-svelte://reset-cross-signing-url',
 	NewlyCreatedRoomId = 'matrix-svelte://newly-created-room-id',
-	MatrixUriIntent = 'matrix-svelte://matrix-uri-intent'
+	MatrixUriIntent = 'matrix-svelte://matrix-uri-intent',
+	/** A joined room's unread count dropped to zero (read on this or another
+	 * device). Payload: the room id string. The host app uses it to dismiss the
+	 * room's OS notification. */
+	RoomRead = 'matrix-svelte://room-read'
 }
 
 export type VerificationEmojisEventType = {

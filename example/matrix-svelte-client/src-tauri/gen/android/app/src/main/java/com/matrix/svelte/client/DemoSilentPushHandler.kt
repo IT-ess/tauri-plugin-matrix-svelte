@@ -42,6 +42,10 @@ class DemoSilentPushHandler : SilentPushHandler {
       if (result.optBoolean("skip", false)) {
         if (result.optBoolean("clearAll", false)) {
           NotificationManagerCompat.from(context).cancelAll()
+          // Everything is read: also drop the stored chat histories so the
+          // next message starts a fresh thread instead of resurrecting the
+          // cleared conversation.
+          NotificationPlugin.clearAllConversations(context)
           Log.i(TAG, "badge reset push: cleared active notifications")
         }
         return true
