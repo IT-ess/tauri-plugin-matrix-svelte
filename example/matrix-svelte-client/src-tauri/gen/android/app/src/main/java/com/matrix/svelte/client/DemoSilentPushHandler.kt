@@ -59,6 +59,9 @@ class DemoSilentPushHandler : SilentPushHandler {
         // decodes each message's base64 avatar into a circular icon.
         conversationTitle = result.optString("conversationTitle", null)
         groupConversation = result.optBoolean("groupConversation", false)
+        // Room avatar (base64), used as the conversation icon for group rooms.
+        // Rust omits the key when the room has none.
+        conversationAvatarBytes = result.optString("conversationAvatarBytes", null)
         selfName = result.optString("selfName", null)
         appendMessages = result.optBoolean("appendMessages", true)
         messages = parseMessages(result.optJSONArray("messages"))

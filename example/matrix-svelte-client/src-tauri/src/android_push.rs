@@ -296,7 +296,7 @@ fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<
 
     let runtime = push_runtime()?;
     let notif_id = notification_id_for(&room_id);
-    let (sender, body, summary, room_display_name, is_dm, sender_avatar, _room_avatar) =
+    let (sender, body, summary, room_display_name, is_dm, sender_avatar, room_avatar) =
         runtime.block_on(async {
             fetch_notification_event(data_dir, room_id.clone(), event_id.clone()).await
         });
@@ -309,7 +309,7 @@ fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<
     // notification with the sender's circular avatar and the room as the title.
     // The id is keyed by the room, and `appendMessages` lets the plugin stack
     // each new event onto the same conversation notification.
-    let out = serde_json::json!({
+    let mut out = serde_json::json!({
         "id": notif_id,
         "channelId": "default",
         "title": summary,
@@ -331,5 +331,10 @@ fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<
             "avatarBytes": sender_avatar.unwrap_or(demo_avatar_base64()),
         }],
     });
+    // Only insert the key when the room has an avatar: a JSON `null` would
+    // round-trip as the literal string "null" through `JSONObject.optString`.
+    if let Some(avatar) = room_avatar {
+        out["conversationAvatarBytes"] = avatar.into();
+    }
     Ok(out.to_string())
 }

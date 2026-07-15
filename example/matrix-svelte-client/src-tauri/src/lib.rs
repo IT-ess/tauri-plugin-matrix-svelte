@@ -503,7 +503,7 @@ fn process_silent_push<R: tauri::Runtime>(
     let inner_handle = app.app_handle().clone();
     tauri::async_runtime::spawn(async move {
         // Stand-in for `GET /_matrix/client/v3/rooms/{room_id}/event/{event_id}`.
-        let (sender, body, summary, room_display_name, is_dm, sender_avatar, _room_avatar) =
+        let (sender, body, summary, room_display_name, is_dm, sender_avatar, room_avatar) =
             push_shared::fetch_notification_event(
                 app_data_path.to_str().unwrap().to_owned(),
                 room_id.clone(),
@@ -531,6 +531,9 @@ fn process_silent_push<R: tauri::Runtime>(
 
         if !is_dm {
             builder = builder.group_conversation();
+            if let Some(avatar) = room_avatar {
+                builder = builder.conversation_avatar_bytes(avatar);
+            }
         }
 
         // `show()` is async on mobile; the silent-push handler runs on a background
