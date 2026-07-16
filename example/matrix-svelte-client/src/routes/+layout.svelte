@@ -11,7 +11,7 @@
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { m } from '$lib/paraglide/messages';
 	import '@saurl/tauri-plugin-safe-area-insets-css-api';
-	import { loginStore } from '../hooks.client';
+	import { loginStore, roomsCollection } from '../hooks.client';
 	import { platform } from '@tauri-apps/plugin-os';
 	import { getCurrent } from '@tauri-apps/plugin-deep-link';
 	import {
@@ -23,7 +23,7 @@
 		type ToastNotificationEventType,
 		type VerificationEmojisEventType
 	} from 'tauri-plugin-matrix-svelte-api';
-	import { gotoProfile, gotoRoomPreview } from '$lib/utils.svelte';
+	import { gotoProfile, gotoRoom, gotoRoomPreview, pollWithBackoff } from '$lib/utils.svelte';
 	import { onNotificationClicked } from '@choochmeque/tauri-plugin-notifications-api';
 	import type { PluginListener } from '@tauri-apps/api/core';
 
@@ -57,9 +57,27 @@
 
 		matrixIntentUnlistener = await listen<MatrixUriIntent>(
 			MatrixSvelteListenEvent.MatrixUriIntent,
-			(event) => {
+			async (event) => {
 				if (event.payload.kind == 'room') {
-					gotoRoomPreview(null, null, event.payload.payload[0]);
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
+					const [roomId, _viaServers, eventId] = event.payload.payload;
+
+					// If the intent points to an event, we directly open the room without the preview
+					if (eventId) {
+						// We need to await the room list to be populated before trying to go to the room
+						await pollWithBackoff(
+							() => !!roomsCollection.state.allJoinedRooms[roomId],
+							() =>
+								gotoRoom(
+									roomId,
+									roomsCollection.state.allJoinedRooms[roomId]?.avatar ?? null,
+									eventId
+								),
+							{ initialDelay: 20, maxRetries: 100, factor: 1.1 }
+						);
+					} else {
+						gotoRoomPreview(null, null, event.payload.payload[0]);
+					}
 				} else {
 					gotoProfile(event.payload.payload);
 				}

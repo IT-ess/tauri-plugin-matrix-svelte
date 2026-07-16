@@ -318,3 +318,45 @@ export const lazyEffect = (deps: () => any[], cb: () => any) => {
 		return untrack(cb);
 	});
 };
+
+
+type PollOptions = {
+  initialDelay?: number; // in milliseconds
+  maxDelay?: number;     // in milliseconds
+  maxRetries?: number;   // use Infinity for endless polling
+  factor?: number;       // exponential multiplier
+};
+
+/**
+ * Repeatedly checks a condition using exponential backoff.
+ * Once the condition evaluates to true, it executes and returns the target action.
+ */
+export async function pollWithBackoff<T>(
+  condition: () => boolean | Promise<boolean>,
+  action: () => T | Promise<T>,
+  options: PollOptions = {}
+): Promise<T> {
+  const {
+    initialDelay = 100,
+    maxDelay = 10000,
+    maxRetries = 10,
+    factor = 2,
+  } = options;
+
+  let delay = initialDelay;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    if (await condition()) {
+      return await action();
+    }
+
+    if (attempt === maxRetries) {
+      break;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    delay = Math.min(delay * factor, maxDelay);
+  }
+
+  throw new Error(`Polling failed: condition not met after ${maxRetries} attempts.`);
+}
