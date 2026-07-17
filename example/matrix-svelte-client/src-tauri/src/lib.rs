@@ -10,7 +10,7 @@ use tauri_plugin_matrix_svelte::{
     Method, OwnedMxcUri, Standard, UInt, UrlSafe, V2EncryptedFileInfo,
 };
 #[cfg(target_os = "android")]
-use tauri_plugin_notifications::{NotificationMessage, NotificationsExt};
+use tauri_plugin_notifications::NotificationsExt;
 use tauri_plugin_svelte::CborMarshaler;
 use tracing::{error, trace};
 
@@ -256,19 +256,15 @@ pub fn run() {
                         );
                     })
                 });
-            // Register the Rust-only silent-push handler. On Android, data-only
-            // FCM messages are routed here so we can fetch content and raise the
-            // notification ourselves — the Matrix client pattern.
+            // Silent (data-only) pushes are handled natively: the notifications
+            // plugin's FCM service dispatches every one — warm or killed — to
+            // `DemoSilentPushHandler` (manifest meta-data), which fetches the
+            // content through the JNI entry in `android_push` and posts the
+            // notification itself. No Rust-side `on_silent_push` handler: it
+            // would only run if the native handler failed, and keeping a second
+            // builder path in lockstep proved error-prone.
             #[cfg(target_os = "android")]
             {
-                let handle = app.handle().clone();
-                if let Err(e) = app.notifications().on_silent_push(move |push| {
-                    tracing::info!("silent push received: {:?}", push.data);
-                    process_silent_push(&handle, &push.data);
-                }) {
-                    tracing::error!("failed to register silent push handler: {e}");
-                }
-
                 // Dismiss a room's notification (and its stored conversation)
                 // once the room has been read — locally or on another device.
                 // The matrix-svelte plugin emits this on the unread → 0
@@ -459,90 +455,6 @@ mod ios_push;
 // points: Android warm + JNI killed paths, and the iOS NSE path.
 #[cfg(any(target_os = "android", target_os = "ios"))]
 mod push_shared;
-
-/// Simulates handling a *silent* (data-only) push for a Matrix-style client on
-/// the **warm** path — i.e. while the app/Tauri runtime is alive, driven by
-/// `on_silent_push`. Here we can use the plugin builder directly.
-///
-/// The **killed** path can't use the builder (no `AppHandle`); it goes through
-/// `android_push`'s JNI entry instead, but shares the same `fetch_notification_event`.
-#[cfg(target_os = "android")]
-fn process_silent_push<R: tauri::Runtime>(
-    app: &tauri::AppHandle<R>,
-    data: &std::collections::HashMap<String, String>,
-) {
-    // A data message without event/room ids is the homeserver's badge update
-    // (unread counts only), sent e.g. after a read receipt clears a room.
-    // There is no event to fetch and nothing to display; when everything has
-    // been read, clear the notifications still in the shade instead.
-    let (Some(room_id), Some(event_id)) = (
-        data.get("room_id").cloned(),
-        data.get("event_id").cloned(),
-    ) else {
-        let all_read = data
-            .get("unread")
-            .and_then(|unread| unread.trim().parse::<u64>().ok())
-            == Some(0);
-        tracing::info!(
-            "silent push (warm): badge-only push (keys: {:?}), skipping; clear_all={all_read}",
-            data.keys().collect::<Vec<_>>()
-        );
-        if all_read {
-            // Empty list = cancel all active notifications (plugin contract).
-            if let Err(e) = app.notifications().remove_active(vec![]) {
-                tracing::error!("failed to clear notifications on badge reset: {e}");
-            }
-        }
-        return;
-    };
-
-    let app_data_path = app.path().app_data_dir().unwrap();
-
-    tracing::info!("silent push (warm): fetching event {event_id} in room {room_id}");
-
-    let inner_handle = app.app_handle().clone();
-    tauri::async_runtime::spawn(async move {
-        // Stand-in for `GET /_matrix/client/v3/rooms/{room_id}/event/{event_id}`.
-        let (sender, body, summary, room_display_name, is_dm, sender_avatar, room_avatar) =
-            push_shared::fetch_notification_event(
-                app_data_path.to_str().unwrap().to_owned(),
-                room_id.clone(),
-                event_id.clone(),
-            )
-            .await;
-        // Key the notification by the room so repeated events accumulate into one
-        // MessagingStyle conversation (tap the demo button twice to see it stack).
-        let id = android_push::notification_id_for(&room_id);
-
-        let mut builder = inner_handle
-            .notifications()
-            .builder()
-            .id(id)
-            .conversation_title(room_display_name.as_str())
-            .self_name("Me")
-            .message(
-                NotificationMessage::new(body)
-                    .sender(&sender)
-                    .person_key(sender)
-                    .avatar_bytes(sender_avatar.unwrap_or(android_push::demo_avatar_base64())),
-            )
-            .auto_cancel()
-            .deep_link(push_shared::matrix_uri(&room_id, &event_id));
-
-        if !is_dm {
-            builder = builder.group_conversation();
-            if let Some(avatar) = room_avatar {
-                builder = builder.conversation_avatar_bytes(avatar);
-            }
-        }
-
-        // `show()` is async on mobile; the silent-push handler runs on a background
-        // thread, so spawn the display work rather than blocking it.
-        if let Err(e) = builder.show().await {
-            tracing::error!("failed to show notification from silent push: {e}");
-        }
-    });
-}
 
 #[test]
 fn reconstruct_custom_uri() {

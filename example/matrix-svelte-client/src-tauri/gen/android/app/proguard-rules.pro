@@ -23,8 +23,7 @@
 
 # The silent-push handler is only reachable through the SILENT_PUSH_HANDLER
 # manifest meta-data + Class.forName, and the JNI bridge only through the
-# handler — R8 can't see either. Without these keeps, release builds lose the
-# killed-state (cold) push path as soon as the debug-only DebugSilentPushReceiver
-# (their sole direct reference) is removed.
+# handler — R8 can't see either reference, so without these keeps release
+# builds strip them and lose the killed-state (cold) push path.
 -keep class com.matrix.svelte.client.DemoSilentPushHandler { <init>(); }
 -keep class com.matrix.svelte.client.SilentPushBridge { *; }

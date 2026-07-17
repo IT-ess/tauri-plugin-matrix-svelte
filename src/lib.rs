@@ -116,16 +116,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
 
             let app_data_dir = get_app_dir_or_create_it(&init_app_handle)?;
 
-            // keyring
-            #[cfg(not(target_os = "ios"))]
-            keyring::init_keyring_store().expect("couldn't init keyring store");
-            #[cfg(target_os = "ios")]
-            {
-                let plugin_config = get_plugin_config(&init_app_handle)
-                    .expect("Some plugin configuration is missing");
-                keyring::init_keyring_store(plugin_config.ios_app_group.as_deref())
-                    .expect("couldn't init keyring store");
-            }
+            let plugin_config =
+                get_plugin_config(&init_app_handle).expect("Some plugin configuration is missing");
+            keyring::init_keyring_store(plugin_config.ios_app_group.as_deref())
+                .expect("couldn't init keyring store");
 
             // Create download dir for files
             let path = init_app_handle
@@ -199,8 +193,8 @@ pub use matrix_ui_serializable::{CLIENT, LOGIN_STORE_READY};
 // initialize the keyring backend themselves because the plugin `setup` never
 // runs there: the Android FCM/JNI entry when only the messaging service
 // cold-starts the process, and the iOS Notification Service Extension, a
-// separate process without a Tauri runtime. On iOS the function takes the
-// shared keychain access group (the App Group id).
+// separate process without a Tauri runtime. The argument is the shared
+// keychain access group (the App Group id), only read on iOS.
 #[cfg(any(target_os = "android", target_os = "ios"))]
 pub use crate::keyring::init_keyring_store;
 

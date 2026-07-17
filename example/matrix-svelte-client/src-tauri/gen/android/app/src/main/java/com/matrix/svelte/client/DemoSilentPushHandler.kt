@@ -4,10 +4,9 @@ import android.content.Context
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import app.tauri.notification.Notification
-import app.tauri.notification.NotificationMessage
 import app.tauri.notification.NotificationPlugin
 import app.tauri.notification.SilentPushHandler
-import org.json.JSONArray
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.json.JSONObject
 
 /**
@@ -36,9 +35,9 @@ class DemoSilentPushHandler : SilentPushHandler {
     } ?: return false
 
     return try {
-      val result = JSONObject(resultJson)
       // Badge-only push (no event to display): Rust asks us to post nothing,
       // and to clear the shade once every message has been read.
+      val result = JSONObject(resultJson)
       if (result.optBoolean("skip", false)) {
         if (result.optBoolean("clearAll", false)) {
           NotificationManagerCompat.from(context).cancelAll()
@@ -50,28 +49,10 @@ class DemoSilentPushHandler : SilentPushHandler {
         }
         return true
       }
-      val notification = Notification().apply {
-        id = result.optInt("id", System.currentTimeMillis().toInt())
-        title = result.optString("title", "")
-        body = result.optString("body", null)
-        channelId = result.optString("channelId", null)
-        // Chat-style fields: the plugin renders these as MessagingStyle and
-        // decodes each message's base64 avatar into a circular icon.
-        conversationTitle = result.optString("conversationTitle", null)
-        groupConversation = result.optBoolean("groupConversation", false)
-        // Room avatar (base64), used as the conversation icon for group rooms.
-        // Rust omits the key when the room has none.
-        conversationAvatarBytes = result.optString("conversationAvatarBytes", null)
-        selfName = result.optString("selfName", null)
-        appendMessages = result.optBoolean("appendMessages", true)
-        messages = parseMessages(result.optJSONArray("messages"))
-        // Dismiss the notification when tapped (FLAG_AUTO_CANCEL). Without this the
-        // posted notification lingers in the shade after launching the app.
-        isAutoCancel = result.optBoolean("autoCancel", true)
-        // Tapping the notification opens this `matrix:` deep link (ACTION_VIEW),
-        // which the app's intent-filter routes to tauri-plugin-deep-link.
-        deepLink = result.optString("deepLink", null)
-      }
+      // Rust serializes the plugin's own `NotificationData` wire format
+      // (camelCase serde), which is exactly what `Notification` deserializes —
+      // same pair the JS invoke path and `NotificationStorage` use.
+      val notification = ObjectMapper().readValue(resultJson, Notification::class.java)
       NotificationPlugin.postBackgroundNotification(context, notification)
       Log.i(TAG, "posted background notification ${notification.id} from silent push")
       true
@@ -79,22 +60,6 @@ class DemoSilentPushHandler : SilentPushHandler {
       Log.e(TAG, "failed to post background notification", e)
       false
     }
-  }
-
-  private fun parseMessages(array: JSONArray?): List<NotificationMessage>? {
-    if (array == null) return null
-    val messages = mutableListOf<NotificationMessage>()
-    for (i in 0 until array.length()) {
-      val obj = array.optJSONObject(i) ?: continue
-      messages.add(NotificationMessage().apply {
-        sender = obj.optString("sender", null)
-        personKey = obj.optString("personKey", null)
-        avatarBytes = obj.optString("avatarBytes", null)
-        text = obj.optString("text", null)
-        timestamp = obj.optLong("timestamp", 0)
-      })
-    }
-    return messages
   }
 
   private companion object {

@@ -120,17 +120,6 @@
                 android:name="app.tauri.notification.SILENT_PUSH_HANDLER"
                 android:value="com.matrix.svelte.client.DemoSilentPushHandler" />
         </service>
-
-        <!-- Debug-only: lets `adb am broadcast` synthesize a silent push so the
-             killed-state path is testable without a Firebase backend. Exported
-             so adb can reach it; remove for production. -->
-        <receiver
-            android:name=".DebugSilentPushReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.matrix.svelte.client.DEBUG_SILENT_PUSH" />
-            </intent-filter>
-        </receiver>
     </application>
     <!-- ANDROID FS PLUGIN. AUTO-GENERATED. DO NOT REMOVE. -->
     

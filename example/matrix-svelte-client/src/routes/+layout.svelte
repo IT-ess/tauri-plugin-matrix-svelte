@@ -48,6 +48,8 @@
 		// the Matrix deep link in their userInfo (`deepLink` extra) instead of
 		// Android's ACTION_VIEW intent. This listener also replays a pending
 		// tap when the app was cold-started from a notification.
+		// Foreground pushes intentionally show no system banner (the plugin's
+		// delegate suppresses them); the room list's unread state covers it.
 		notificationClickedListener = await onNotificationClicked(({ data }) => {
 			const deepLink = data?.deepLink;
 			if (deepLink && deepLink.startsWith('matrix:')) {
@@ -62,21 +64,29 @@
 					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					const [roomId, _viaServers, eventId] = event.payload.payload;
 
-					// If the intent points to an event, we directly open the room without the preview
-					if (eventId) {
-						// We need to await the room list to be populated before trying to go to the room
-						await pollWithBackoff(
-							() => !!roomsCollection.state.allJoinedRooms[roomId],
-							() =>
-								gotoRoom(
-									roomId,
-									roomsCollection.state.allJoinedRooms[roomId]?.avatar ?? null,
-									eventId
-								),
-							{ initialDelay: 20, maxRetries: 100, factor: 1.1 }
-						);
+					// If the intent points to an event in a joined room, open the room
+					// directly without the preview. `roomId` can also be a room *alias*
+					// (`#…`), which never keys `allJoinedRooms` — those, unjoined rooms,
+					// and slow initial syncs all fall back to the preview instead of
+					// polling forever.
+					if (eventId && roomId.startsWith('!')) {
+						try {
+							// Await the room list being populated (a few seconds at most).
+							await pollWithBackoff(
+								() => !!roomsCollection.state.allJoinedRooms[roomId],
+								() =>
+									gotoRoom(
+										roomId,
+										roomsCollection.state.allJoinedRooms[roomId]?.avatar ?? null,
+										eventId
+									),
+								{ initialDelay: 50, maxDelay: 500, maxRetries: 20, factor: 1.5 }
+							);
+						} catch {
+							gotoRoomPreview(null, null, roomId);
+						}
 					} else {
-						gotoRoomPreview(null, null, event.payload.payload[0]);
+						gotoRoomPreview(null, null, roomId);
 					}
 				} else {
 					gotoProfile(event.payload.payload);

@@ -1,15 +1,6 @@
 use tauri::{Builder, Wry};
 
-pub fn setup_logging(mut tauri_builder: Builder<Wry>) -> Builder<Wry> {
-    // On Android the FCM/silent-push process may already have installed a global
-    // `tracing` subscriber (the cold-path logcat subscriber). If the OS reuses
-    // that process to launch the app, installing a second global subscriber here
-    // (devtools in debug, fmt in release) would panic — so reuse the existing one.
-    #[cfg(target_os = "android")]
-    if crate::android_push::cold_logging_installed() {
-        return tauri_builder;
-    }
-
+pub fn setup_logging(tauri_builder: Builder<Wry>) -> Builder<Wry> {
     #[cfg(not(all(target_os = "linux", debug_assertions)))]
     {
         use time::macros::{format_description, offset};
@@ -54,11 +45,12 @@ pub fn setup_logging(mut tauri_builder: Builder<Wry>) -> Builder<Wry> {
             .with_target(false)
             .with_timer(timer)
             .with_writer(writer);
-        builder.init();
+        // `try_init` fails only if a global subscriber is already installed —
+        // on Android that's the cold-path logcat subscriber when the OS reuses
+        // an FCM/silent-push process to launch the app; keep the existing one.
+        let _ = builder.try_init();
     }
     #[cfg(all(target_os = "linux", debug_assertions))]
-    {
-        tauri_builder = tauri_builder.plugin(tauri_plugin_devtools::init());
-    }
+    let tauri_builder = tauri_builder.plugin(tauri_plugin_devtools::init());
     tauri_builder
 }

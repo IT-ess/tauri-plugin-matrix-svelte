@@ -83,42 +83,34 @@ pub(crate) fn clear_session_in_keyring(app_data_path: PathBuf) -> crate::Result<
 /// Install the platform-native keyring backend as the process-wide default
 /// `keyring_core` store.
 ///
+/// `ios_access_group` is only read on iOS: the keychain access group shared
+/// between the app and its Notification Service Extension (the App Group id,
+/// e.g. `group.com.example.app`), so both processes read/write the same
+/// session entry. `None` keeps the app's default access group (no NSE
+/// support). Other platforms ignore it.
+///
 /// Idempotent: the underlying `keyring_core::set_default_store` may only be
-/// called once per process, so subsequent calls are no-ops. This matters
-/// because the store has to be initialized both from the plugin `setup` (warm
-/// path) and from the Android background/JNI silent-push entry (cold path,
-/// where `setup` never runs).
-#[cfg(not(target_os = "ios"))]
-pub fn init_keyring_store() -> anyhow::Result<()> {
-    use std::sync::Once;
-    static INIT: Once = Once::new();
-    let mut result = Ok(());
-    INIT.call_once(|| {
-        result = init_keyring_store_inner();
-    });
-    result
-}
-
-/// Install the iOS keyring backend as the process-wide default `keyring_core`
-/// store, optionally scoped to a shared keychain access group.
-///
-/// `access_group` should be the App Group identifier shared between the app
-/// and its Notification Service Extension (e.g. `group.com.example.app`), so
-/// both processes read/write the same session entry. `None` keeps the app's
-/// default access group (no NSE support).
-///
-/// Idempotent like the other platforms' variant: the plugin `setup` (warm
-/// path) and the NSE silent-push handler (cold path, separate process where
-/// `setup` never runs) can both call it safely.
-#[cfg(target_os = "ios")]
-pub fn init_keyring_store(access_group: Option<&str>) -> anyhow::Result<()> {
-    use std::sync::Once;
-    static INIT: Once = Once::new();
-    let mut result = Ok(());
-    INIT.call_once(|| {
-        result = init_keyring_store_inner(access_group);
-    });
-    result
+/// called once per process, and this has to be callable both from the plugin
+/// `setup` (warm path) and from the background silent-push entries (cold
+/// paths where `setup` never runs). A failed init is *not* latched — the
+/// mutex flag is only set on success, so the next caller retries instead of
+/// being handed a spurious `Ok(())` with no store installed.
+pub fn init_keyring_store(ios_access_group: Option<&str>) -> anyhow::Result<()> {
+    use std::sync::Mutex;
+    static INIT: Mutex<bool> = Mutex::new(false);
+    let mut done = INIT.lock().unwrap();
+    if *done {
+        return Ok(());
+    }
+    #[cfg(target_os = "ios")]
+    init_keyring_store_inner(ios_access_group)?;
+    #[cfg(not(target_os = "ios"))]
+    {
+        let _ = ios_access_group;
+        init_keyring_store_inner()?;
+    }
+    *done = true;
+    Ok(())
 }
 
 #[cfg(target_os = "ios")]

@@ -45,16 +45,18 @@ fn handle_silent_push(data_dir: &str, data: HashMap<String, String>) -> Option<N
     let room_id = data.get("room_id")?.clone();
     let event_id = data.get("event_id")?.clone();
 
+    // A per-push runtime is fine here: the multi-process NSE mode restores a
+    // fresh client on every call anyway (no cached client/tasks to keep alive,
+    // unlike the Android cold path's process-wide runtime).
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
         .ok()?;
-    let (sender, body, summary, room_display_name, is_dm, sender_avatar, room_avatar) =
-        runtime.block_on(crate::push_shared::fetch_notification_event(
-            data_dir.to_owned(),
-            room_id.clone(),
-            event_id.clone(),
-        ));
+    let content = runtime.block_on(crate::push_shared::fetch_notification_event(
+        data_dir.to_owned(),
+        room_id.clone(),
+        event_id.clone(),
+    ));
 
     // No `.id(...)`: the extension cannot change the identifier APNs assigned.
     // `group` (→ `threadIdentifier`) stacks the room's notifications together
@@ -69,28 +71,28 @@ fn handle_silent_push(data_dir: &str, data: HashMap<String, String>) -> Option<N
     // the group title, room avatar (when it has one) as the icon. Requires the
     // communication-notifications entitlement on the app (see
     // `gen/apple/project.yml`).
-    let mut message = NotificationMessage::new(body.clone())
-        .sender(sender.clone())
-        .person_key(sender);
-    if let Some(avatar) = sender_avatar {
+    let mut message = NotificationMessage::new(content.body.clone())
+        .sender(content.sender.clone())
+        .person_key(content.sender);
+    if let Some(avatar) = content.sender_avatar {
         message = message.avatar_bytes(avatar);
     }
     let mut builder = NotificationData::builder()
-        .title(summary)
-        .body(body)
+        .title(content.summary)
+        .body(content.body)
         .group(room_id.as_str())
-        .summary(room_display_name.clone())
+        .summary(content.room_display_name.clone())
         .message(message)
-        .conversation_title(room_display_name)
+        .conversation_title(content.room_display_name)
         .extra(
             "deepLink",
             crate::push_shared::matrix_uri(&room_id, &event_id),
         )
         .extra("room_id", room_id)
         .extra("event_id", event_id);
-    if !is_dm {
+    if !content.is_dm {
         builder = builder.group_conversation();
-        if let Some(avatar) = room_avatar {
+        if let Some(avatar) = content.room_avatar {
             builder = builder.conversation_avatar_bytes(avatar);
         }
     }

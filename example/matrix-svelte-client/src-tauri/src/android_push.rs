@@ -10,19 +10,24 @@
 //! In a real Matrix client, [`fetch_notification_event`] is where
 //! `matrix_sdk::NotificationClient` would load and decrypt the event from the
 //! on-disk store the main app shares.
+//!
+//! ponytail: everything here except the notification formatting is
+//! app-agnostic boilerplate (JNI entry, ndk_context/TLS/keyring init, push
+//! runtime) that every consumer would copy; planned to move into the plugin
+//! behind an `android_silent_push_handler!` macro (mirroring the notifications
+//! plugin's `ios_silent_push_handler!`) in a follow-up PR.
 
 // The shared helpers are `pub(crate)` for use from `lib.rs`; this module is
 // private, so clippy flags that as redundant — it isn't, the parent needs them.
 #![allow(clippy::redundant_pub_crate)]
 
-use base64::Engine;
 use std::collections::HashMap;
-use std::sync::OnceLock;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{LazyLock, OnceLock};
 
 use jni::JNIEnv;
 use jni::objects::{GlobalRef, JClass, JObject, JString};
 use jni::sys::jstring;
+use tauri_plugin_notifications::{NotificationData, NotificationMessage};
 
 use crate::push_shared::{fetch_notification_event, matrix_uri};
 
@@ -30,12 +35,6 @@ use crate::push_shared::{fetch_notification_event, matrix_uri};
 /// process and guarantees `ndk_context::initialize_android_context` runs at most
 /// once, regardless of which entry point reaches it first.
 static NDK_CONTEXT_REF: OnceLock<GlobalRef> = OnceLock::new();
-
-/// Whether the cold-path logcat `tracing` subscriber has been installed in this
-/// process (see [`init_cold_path_logging`]). Read by `setup_logging` so the app
-/// does not try to install a *second* global subscriber — which would panic —
-/// when the FCM/push process is reused to launch the activity.
-static COLD_LOG_INSTALLED: AtomicBool = AtomicBool::new(false);
 
 /// Initialize the `ndk_context` global exactly once per process.
 ///
@@ -72,24 +71,13 @@ pub(crate) fn ensure_ndk_context(env: &mut JNIEnv, context: &JObject) {
     });
 }
 
-/// Whether the cold-path logcat `tracing` subscriber is the process-global
-/// subscriber. Used by `setup_logging` to avoid a second (panicking) install.
-pub(crate) fn cold_logging_installed() -> bool {
-    COLD_LOG_INSTALLED.load(Ordering::Relaxed)
-}
-
-/// Base64-encoded demo avatar. Stands in for the bytes a real client gets from
-/// matrix-sdk's media store after downloading the sender/room `mxc://` avatar;
-/// here we just reuse the app icon so no extra asset is committed.
-pub(crate) fn demo_avatar_base64() -> String {
-    const AVATAR_PNG: &[u8] = include_bytes!("../icons/testavatar.png");
-    base64::engine::general_purpose::STANDARD.encode(AVATAR_PNG)
-}
-
 /// Derive a stable, positive notification id from a conversation key (the room
 /// id). Using the room as the key means every message in that room lands in the
 /// same notification, so the plugin accumulates them into one conversation
 /// instead of posting a separate notification per event.
+// ponytail: 31-bit hash, two rooms can collide (~n²/2³² per pair) and would
+// merge/dismiss together; map room id → id in persistent storage if that ever
+// bites.
 pub(crate) fn notification_id_for(key: &str) -> i32 {
     let hash = key.bytes().fold(0u32, |acc, b| {
         acc.wrapping_mul(31).wrapping_add(u32::from(b))
@@ -167,16 +155,10 @@ fn init_cold_path_logging() {
         .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
         // `try_init` fails only if a global subscriber is already set (e.g. the
         // app's own logging ran first in a warm process); ignore that.
-        if tracing_subscriber::registry()
+        let _ = tracing_subscriber::registry()
             .with(filter)
             .with(paranoid_android::layer("MatrixSilentPush"))
-            .try_init()
-            .is_ok()
-        {
-            // We installed the process-global subscriber; tell `setup_logging`
-            // not to install another one if the app later starts in this process.
-            COLD_LOG_INSTALLED.store(true, Ordering::Relaxed);
-        }
+            .try_init();
     });
 }
 
@@ -194,7 +176,7 @@ fn init_cold_path_logging() {
 /// pushes in one process is safe. Mirrors `MainActivity.initNdkContext`
 /// (`lib.rs`) and the matrix-svelte plugin `setup`.
 fn init_cold_path_context(env: &mut JNIEnv, context: &JObject) -> Result<(), String> {
-    use std::sync::Once;
+    use std::sync::Mutex;
 
     // 1. NDK context (used by the Android keyring backend). Shared guard with
     //    `MainActivity.initNdkContext` so it is initialized at most once per
@@ -203,11 +185,13 @@ fn init_cold_path_context(env: &mut JNIEnv, context: &JObject) -> Result<(), Str
 
     // 2. TLS platform verifier (used by matrix-sdk's HTTP client). Its
     //    `init_with_refs` is internally idempotent (`get_or_init`), but the JNI
-    //    work to build the refs isn't free, so guard it with a `Once`.
-    static TLS: Once = Once::new();
-    let mut tls_result: Result<(), String> = Ok(());
-    TLS.call_once(|| {
-        tls_result = (|| {
+    //    work to build the refs isn't free, so skip it once it has succeeded.
+    //    The flag is only set on success so a failed attempt is retried on the
+    //    next push instead of being latched as a silent permanent failure.
+    static TLS_DONE: Mutex<bool> = Mutex::new(false);
+    {
+        let mut done = TLS_DONE.lock().unwrap();
+        if !*done {
             let vm = env
                 .get_java_vm()
                 .map_err(|e| format!("getting JavaVM: {e}"))?;
@@ -223,13 +207,13 @@ fn init_cold_path_context(env: &mut JNIEnv, context: &JObject) -> Result<(), Str
                 .map_err(|e| format!("global-ref'ing ClassLoader: {e}"))?;
             rustls_platform_verifier::android::init_with_refs(vm, context_ref, loader_ref);
             tracing::info!("cold-path: rustls platform verifier initialized");
-            Ok(())
-        })();
-    });
-    tls_result?;
+            *done = true;
+        }
+    }
 
     // 3. Keyring backend. Idempotent inside the plugin; cheap to call each time.
-    tauri_plugin_matrix_svelte::init_keyring_store()
+    //    The access-group argument is iOS-only.
+    tauri_plugin_matrix_svelte::init_keyring_store(None)
         .map_err(|e| format!("initializing keyring store: {e}"))?;
     tracing::info!("cold-path: keyring store initialized");
 
@@ -242,22 +226,15 @@ fn init_cold_path_context(env: &mut JNIEnv, context: &JObject) -> Result<(), Str
 /// maintenance) must not be killed between two pushes by a runtime drop. In a
 /// warm process the fetch hops onto the app's runtime anyway, so this one only
 /// ever drives the cross-runtime await.
-static PUSH_RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
-
-fn push_runtime() -> Result<&'static tokio::runtime::Runtime, String> {
-    if let Some(runtime) = PUSH_RUNTIME.get() {
-        return Ok(runtime);
-    }
-    // One worker thread is plenty: pushes are serialized by the FCM service.
-    let runtime = tokio::runtime::Builder::new_multi_thread()
+///
+/// One worker thread is plenty: pushes are serialized by the FCM service.
+static PUSH_RUNTIME: LazyLock<tokio::runtime::Runtime> = LazyLock::new(|| {
+    tokio::runtime::Builder::new_multi_thread()
         .worker_threads(1)
         .enable_all()
         .build()
-        .map_err(|e| format!("building runtime: {e}"))?;
-    // If another thread raced us, our spare runtime is dropped (it is unused,
-    // so dropping it here on a non-async thread is fine).
-    Ok(PUSH_RUNTIME.get_or_init(|| runtime))
-}
+        .expect("couldn't build the push runtime")
+});
 
 fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<String, String> {
     let data_dir: String = env
@@ -294,47 +271,47 @@ fn process(env: &mut JNIEnv, data_dir: &JString, data_json: &JString) -> Result<
         "silent push (background/JNI): fetching {event_id} in {room_id} (data dir: {data_dir})"
     );
 
-    let runtime = push_runtime()?;
     let notif_id = notification_id_for(&room_id);
-    let (sender, body, summary, room_display_name, is_dm, sender_avatar, room_avatar) =
-        runtime.block_on(async {
-            fetch_notification_event(data_dir, room_id.clone(), event_id.clone()).await
-        });
-
-    let now_ms = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_or(0, |d| i64::try_from(d.as_millis()).unwrap_or(0));
+    let content = PUSH_RUNTIME.block_on(fetch_notification_event(
+        data_dir,
+        room_id.clone(),
+        event_id.clone(),
+    ));
 
     // MessagingStyle: the plugin decodes `avatarBytes` and renders a chat-style
     // notification with the sender's circular avatar and the room as the title.
     // The id is keyed by the room, and `appendMessages` lets the plugin stack
-    // each new event onto the same conversation notification.
-    let mut out = serde_json::json!({
-        "id": notif_id,
-        "channelId": "default",
-        "title": summary,
-        "body": body,
-        "conversationTitle": room_display_name,
-        "groupConversation": !is_dm,
-        "selfName": "Me",
-        "appendMessages": true,
+    // each new event onto the same conversation notification. `NotificationData`
+    // is the plugin's own wire format (camelCase serde ↔ Jackson on the Kotlin
+    // side), so the JSON stays in lockstep with the parser by construction.
+    let mut message = NotificationMessage::new(content.body.clone())
+        .sender(content.sender.clone())
+        .person_key(content.sender);
+    if let Some(avatar) = content.sender_avatar {
+        message = message.avatar_bytes(avatar);
+    }
+    let mut builder = NotificationData::builder()
+        .id(notif_id)
+        // The high-importance channel the frontend creates at startup
+        // (`MESSAGES_CHANNEL_ID` in `src/lib/notifications.ts`, also the
+        // manifest's `default_notification_channel_id`) — required for
+        // heads-up message notifications.
+        .channel_id("messages")
+        .title(content.summary)
+        .body(content.body)
+        .conversation_title(content.room_display_name)
+        .self_name("Me")
         // Tapping the notification opens this Matrix deep link (ACTION_VIEW),
         // routed by the app's `matrix:` intent-filter to tauri-plugin-deep-link
         // (Option B). This replaces the `notificationClicked` event for the tap.
-        "deepLink": matrix_uri(&room_id, &event_id),
-        "autoCancel": true,
-        "messages": [{
-            "sender": sender,
-            "personKey": sender,
-            "text": body,
-            "timestamp": now_ms,
-            "avatarBytes": sender_avatar.unwrap_or(demo_avatar_base64()),
-        }],
-    });
-    // Only insert the key when the room has an avatar: a JSON `null` would
-    // round-trip as the literal string "null" through `JSONObject.optString`.
-    if let Some(avatar) = room_avatar {
-        out["conversationAvatarBytes"] = avatar.into();
+        .deep_link(matrix_uri(&room_id, &event_id))
+        .auto_cancel()
+        .message(message);
+    if !content.is_dm {
+        builder = builder.group_conversation();
+        if let Some(avatar) = content.room_avatar {
+            builder = builder.conversation_avatar_bytes(avatar);
+        }
     }
-    Ok(out.to_string())
+    serde_json::to_string(&builder.build()).map_err(|e| format!("serializing notification: {e}"))
 }
