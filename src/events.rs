@@ -59,6 +59,11 @@ pub async fn event_forwarder<R: Runtime>(
             EmitEvent::MatrixUriIntent(intent) => {
                 app_handle.emit("matrix-svelte://matrix-uri-intent", intent)?;
             }
+            EmitEvent::RoomFullyRead(room_id) => {
+                // Consumed by the host app (and optionally the frontend) to dismiss
+                // the OS notification posted for this room once it has been read.
+                app_handle.emit("matrix-svelte://room-read", room_id.to_string())?;
+            }
         }
     }
     Ok(())

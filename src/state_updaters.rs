@@ -8,7 +8,7 @@ use matrix_ui_serializable::{
     models::state_updater::{StateUpdater, StateUpdaterFunctions},
 };
 use serde_json::Value;
-use tauri::{AppHandle, Emitter, Runtime};
+use tauri::{AppHandle, Runtime};
 use tauri_plugin_svelte::{ManagerExt, StoreState};
 
 use crate::{
@@ -177,14 +177,6 @@ impl<R: Runtime> StateUpdaterFunctions for Updaters<R> {
         let app_data_dir =
             get_app_dir_or_create_it(&self.app_handle).expect("app data dir should be defined");
         set_session_in_keyring(session.into_bytes(), app_data_dir)?;
-        Ok(())
-    }
-
-    fn room_fully_read(&self, room_id: &matrix_ui_serializable::RoomId) -> anyhow::Result<()> {
-        // Consumed by the host app (and optionally the frontend) to dismiss the
-        // OS notification posted for this room once it has been read.
-        self.app_handle
-            .emit("matrix-svelte://room-read", room_id.to_string())?;
         Ok(())
     }
 }
