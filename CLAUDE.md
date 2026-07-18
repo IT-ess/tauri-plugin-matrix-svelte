@@ -95,18 +95,23 @@ app's builder chain — it depends on both being ready first.
 ### Mobile push notifications (silent/data-only pushes)
 
 This is the most subtle part of the codebase — read `example/matrix-svelte-client/src-tauri/src/lib.rs`,
-`android_push.rs`, `silent_push.rs`, `android/src/main/java/*.kt`, and `ios/Sources/NotificationPlugin.swift`
-together before touching notification code:
+`push_handler.rs`, `push_shared.rs`, and the sibling `tauri-plugin-notifications`' `nse.rs` /
+`TauriFirebaseMessagingService.kt` together before touching notification code:
 
-- **Warm path**: while the Tauri runtime is alive, `tauri-plugin-notifications`' `on_silent_push` callback fires
-  (`process_silent_push` in the example app), fetches the event, and raises a native notification through the
-  plugin's builder API.
-- **Cold path (Android only)**: FCM can deliver a data-only message and start the process *without* a Tauri webview
-  (killed-state app). There is no `AppHandle` available, so this goes through a separate JNI entry
-  (`android_push.rs` in the example app) that calls `tauri_plugin_matrix_svelte::handle_silent_notification` and
-  `init_keyring_store` directly — the plugin's normal `setup()` never runs in this path. `ndk_context` must only be
-  initialized once per process; the guard is shared between this cold JNI entry and the `initNdkContext` call from
-  `MainActivity.onCreate` because Android may reuse the same process for both.
+- **One handler, every app state**: the example app registers a single Rust handler with the notifications
+  plugin's `silent_push_handler!` macro (`push_handler.rs`). It exports both the iOS NSE `dlsym` entry and the
+  Android JNI entry; the plugin's FCM service loads the app's `.so` itself (named by the `SILENT_PUSH_LIB`
+  manifest meta-data) and calls the handler for every data-only push — warm *or* cold-started — then posts the
+  returned `NotificationData`. The handler fetches the event via
+  `tauri_plugin_matrix_svelte::handle_silent_notification` (`push_shared.rs`).
+- **Android cold-start init**: a Firebase-started process never ran the plugin's `setup()`, so the macro's
+  `android_init` hook (`android_push_init`) replays logging, `ndk_context`, the rustls platform verifier, and
+  `init_keyring_store` before each handler run. `ndk_context` must only be initialized once per process; the
+  guard is shared between this hook and the `initNdkContext` call from `MainActivity.onCreate` because Android
+  may reuse the same process for both.
+- **Badge pushes**: a data message without `room_id`/`event_id` is the homeserver's unread-count update; when
+  `unread == 0` the handler returns `SilentPushResponse::ClearActive` and the plugin clears the notification
+  shade plus its stored conversation histories (Android only — iOS badge pushes never reach the NSE).
 - Android accumulates same-room notifications into one `MessagingStyle` notification (keyed by room id); iOS keys
   by event id and groups by conversation thread instead — this difference is intentional, not a bug.
 

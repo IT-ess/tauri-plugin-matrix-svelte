@@ -109,16 +109,19 @@
             android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- Declare our background silent-push handler on the plugin's FCM
-             service. `tools:node="merge"` adds this meta-data to the service
-             node contributed by the plugin manifest instead of redefining it.
-             The handler runs even when the app is killed (cold start). -->
+        <!-- Name the app's native library on the plugin's FCM service so
+             data-only pushes reach the Rust handler registered with
+             `silent_push_handler!` (src/push_handler.rs) — even when the app
+             is killed (cold start). The value is the cargo `[lib]` name (what
+             System.loadLibrary takes). `tools:node="merge"` adds this
+             meta-data to the service node contributed by the plugin
+             manifest. -->
         <service
             android:name="app.tauri.notification.TauriFirebaseMessagingService"
             tools:node="merge">
             <meta-data
-                android:name="app.tauri.notification.SILENT_PUSH_HANDLER"
-                android:value="com.matrix.svelte.client.DemoSilentPushHandler" />
+                android:name="app.tauri.notification.SILENT_PUSH_LIB"
+                android:value="matrix_svelte_client_lib" />
         </service>
     </application>
     <!-- ANDROID FS PLUGIN. AUTO-GENERATED. DO NOT REMOVE. -->

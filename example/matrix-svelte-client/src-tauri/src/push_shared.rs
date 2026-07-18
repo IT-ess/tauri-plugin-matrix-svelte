@@ -1,7 +1,7 @@
-//! Platform-agnostic silent-push helpers shared by every entry point that
-//! turns a Matrix push into notification content: Android's warm handler and
-//! killed-state JNI entry (`android_push.rs`), and iOS's Notification Service
-//! Extension entry (`ios_push.rs`).
+//! Platform-agnostic silent-push helpers backing the shared handler in
+//! `push_handler.rs` (registered with the notifications plugin's
+//! `silent_push_handler!` for both the Android FCM path and the iOS
+//! Notification Service Extension).
 
 // The shared helpers are `pub(crate)` for use from the sibling modules; this
 // module is private, so clippy flags that as redundant — it isn't, the
@@ -88,8 +88,8 @@ pub(crate) async fn fetch_notification_event(
 /// `matrix:roomid/abc:matrix.org/e/xyz` from `!abc:matrix.org` / `$xyz`.
 /// Sigils (`!`/`$`) are dropped; the spec keeps `:` literal in the path.
 ///
-/// On Android a notification tap fires `ACTION_VIEW` for this URI (see
-/// `android_push.rs`); on iOS it rides in the notification's `userInfo` (via
+/// On Android a notification tap fires `ACTION_VIEW` for this URI (the
+/// `deep_link` field); on iOS it rides in the notification's `userInfo` (via
 /// `extra`) and reaches JS through the `notificationClicked` event.
 pub(crate) fn matrix_uri(room_id: &str, event_id: &str) -> String {
     let room = room_id.strip_prefix('!').unwrap_or(room_id);
