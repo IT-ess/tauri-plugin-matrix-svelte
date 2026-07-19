@@ -9,7 +9,7 @@ use tauri_plugin_matrix_svelte::{
     LOGIN_STORE_READY, MediaFormat, MediaRequestParameters, MediaSource, MediaThumbnailSettings,
     Method, OwnedMxcUri, Standard, UInt, UrlSafe, V2EncryptedFileInfo,
 };
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 use tauri_plugin_notifications::NotificationsExt;
 use tauri_plugin_svelte::CborMarshaler;
 use tracing::{error, trace};
@@ -262,12 +262,12 @@ pub fn run() {
             // to the handler `push_handler` registers with
             // `silent_push_handler!`, then posts the returned notification
             // itself.
-            #[cfg(target_os = "android")]
+            #[cfg(mobile)]
             {
-                // Dismiss a room's notification (and its stored conversation)
-                // once the room has been read — locally or on another device.
-                // The matrix-svelte plugin emits this on the unread → 0
-                // transition it observes through sync.
+                // Dismiss a room's notifications (and, on Android, the stored
+                // conversation) once the room has been read — locally or on
+                // another device. The matrix-svelte plugin emits this on the
+                // unread → 0 transition it observes through sync.
                 use tauri::Listener;
                 let dismiss_handle = app.handle().clone();
                 app.handle().listen("matrix-svelte://room-read", move |event| {
@@ -275,12 +275,22 @@ pub fn run() {
                         tracing::error!("room-read event with unexpected payload: {}", event.payload());
                         return;
                     };
-                    let id = push_handler::notification_id_for(&room_id);
+                    // Android posts under a stable id derived from the room.
                     // A single-id list: an empty list would mean "cancel all".
-                    if let Err(e) = dismiss_handle.notifications().remove_active(vec![id]) {
-                        tracing::error!("failed to dismiss notification for read room {room_id}: {e}");
+                    #[cfg(target_os = "android")]
+                    let result = dismiss_handle
+                        .notifications()
+                        .remove_active(vec![push_handler::notification_id_for(&room_id)]);
+                    // iOS remote notifications keep their APNs-assigned ids, so
+                    // dismissal goes by group (threadIdentifier == room id).
+                    #[cfg(target_os = "ios")]
+                    let result = dismiss_handle
+                        .notifications()
+                        .remove_active_by_group(room_id.clone());
+                    if let Err(e) = result {
+                        tracing::error!("failed to dismiss notifications for read room {room_id}: {e}");
                     } else {
-                        tracing::debug!("dismissed notification for read room {room_id}");
+                        tracing::debug!("dismissed notifications for read room {room_id}");
                     }
                 });
             }

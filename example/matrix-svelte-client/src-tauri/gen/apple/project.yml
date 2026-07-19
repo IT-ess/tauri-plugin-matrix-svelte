@@ -2,7 +2,7 @@ name: matrix-svelte-client
 options:
   bundleIdPrefix: com.matrix.svelte.client
   deploymentTarget:
-    iOS: 14.0
+    iOS: 15.6
 fileGroups: [../../src]
 configs:
   debug: debug

@@ -9,6 +9,8 @@ use matrix_ui_serializable::{
 };
 use serde_json::Value;
 use tauri::{AppHandle, Runtime};
+#[cfg(target_os = "ios")]
+use tauri_plugin_notifications::NotificationsExt;
 use tauri_plugin_svelte::{ManagerExt, StoreState};
 
 use crate::{
@@ -24,11 +26,53 @@ pub const LOGIN_STATE_STORE_ID: &str = "login-state";
 #[derive(Debug)]
 pub struct Updaters<R: Runtime> {
     app_handle: AppHandle<R>,
+    /// Last badge count sent to the OS, to skip redundant bridge hops on the
+    /// frequent rooms-list updates. `-1` sentinel: the first sync always
+    /// fires, so a stale badge left by a killed app is corrected (even to 0).
+    #[cfg(target_os = "ios")]
+    last_badge: std::sync::atomic::AtomicI64,
 }
 
 impl<R: Runtime> Updaters<R> {
     pub fn new(app_handle: AppHandle<R>) -> Self {
-        Self { app_handle }
+        Self {
+            app_handle,
+            #[cfg(target_os = "ios")]
+            last_badge: std::sync::atomic::AtomicI64::new(-1),
+        }
+    }
+
+    /// Mirror the total unread count onto the iOS app icon badge.
+    ///
+    /// Reads the serialized `RoomsList` JSON because the struct's fields are
+    /// deliberately private to adapters. `is_marked_unread` is not counted:
+    /// the server-side `aps.badge` pushes that correct the badge while the
+    /// app is killed know nothing about that local flag, and counting it
+    /// would make the badge flip-flop between warm and killed states.
+    #[cfg(target_os = "ios")]
+    fn sync_ios_badge(&self, rooms_json: &Value) {
+        use std::sync::atomic::Ordering;
+
+        let total: u64 = rooms_json
+            .get("allJoinedRooms")
+            .and_then(Value::as_object)
+            .map(|rooms| {
+                rooms
+                    .values()
+                    .filter_map(|room| room.get("numUnreadMessages").and_then(Value::as_u64))
+                    .sum()
+            })
+            .unwrap_or(0);
+        let badge = i64::try_from(total).unwrap_or(i64::MAX);
+        if self.last_badge.swap(badge, Ordering::Relaxed) == badge {
+            return;
+        }
+        // Saturating clamp: the badge is cosmetic.
+        let count = i32::try_from(badge).unwrap_or(i32::MAX);
+        // Log-and-continue: a badge failure must never break store patching.
+        if let Err(e) = self.app_handle.notifications().set_badge_count(count) {
+            tracing::warn!("failed to set app badge to {count}: {e}");
+        }
     }
 }
 
@@ -36,6 +80,8 @@ impl<R: Runtime> Updaters<R> {
 impl<R: Runtime> StateUpdaterFunctions for Updaters<R> {
     fn update_rooms_list(&self, rooms_list: &RoomsList) -> anyhow::Result<()> {
         let json = serde_json::to_value(rooms_list).expect("Couldn't serialize Rooms List");
+        #[cfg(target_os = "ios")]
+        self.sync_ios_badge(&json);
         let mut empty_state = StoreState::new();
         let state = match json {
             Value::Object(map) => {

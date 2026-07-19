@@ -140,6 +140,20 @@ pub(crate) fn handle_silent_push(
         .extra("room_id", room_id)
         .extra("event_id", event_id);
 
+    // App icon badge: sygnal includes the account's unread count as a
+    // top-level custom key on event pushes ("unread_count"; "unread" on older
+    // configs), which the NSE's flattened data map passes through (`aps` is
+    // stripped, custom keys aren't). Only set the badge when the count is
+    // known — an absent field leaves the current badge untouched.
+    #[cfg(target_os = "ios")]
+    if let Some(count) = data
+        .get("unread_count")
+        .or_else(|| data.get("unread"))
+        .and_then(|unread| unread.trim().parse::<i32>().ok())
+    {
+        builder = builder.badge(count);
+    }
+
     // DMs draw the sender's avatar; group rooms brand as the room instead —
     // room name as the conversation title, room avatar (when it has one) as
     // the icon.
