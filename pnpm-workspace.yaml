@@ -4,3 +4,6 @@ packages:
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - esbuild
+
+allowBuilds:
+  '@choochmeque/tauri-plugin-notifications-api': true

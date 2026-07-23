@@ -21,7 +21,7 @@ tauri-build = { version = "2.6.1", features = [] }
 [dependencies]
 anyhow = "1.0.102"
 rustls-platform-verifier = "0.6"
-tauri = { version = "2.11.2", features = ["tray-icon"] }
+tauri = { version = "2.11.5", features = ["tray-icon"] }
 tauri-plugin-matrix-svelte = { path = "../../../" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -32,7 +32,7 @@ tauri-plugin-clipboard-manager = "2.3.2"
 tauri-plugin-dialog = "2.7.1"
 tauri-plugin-deep-link = "2.4.9"
 tauri-plugin-fs = "2.5.1"
-tauri-plugin-notifications = { path = "../../../../tauri-plugin-notifications", features = ["push-notifications"] }
+tauri-plugin-notifications = { git = "https://github.com/IT-ess/tauri-plugin-notifications", branch = "silent-notifications", features = ["push-notifications"] }
 tauri-plugin-opener = "2.5.4"
 tauri-plugin-os = "2.3.2"
 tauri-plugin-persisted-scope = "2.3.7"
