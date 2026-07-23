@@ -7,4 +7,3 @@ onlyBuiltDependencies:
 
 allowBuilds:
   '@choochmeque/tauri-plugin-notifications-api': true
-  '@choochmeque/tauri-plugin-notifications-api@https://codeload.github.com/IT-ess/tauri-plugin-notifications/tar.gz/f615d2a6210ae2830a706906fcec3fe7336273a1': true
