@@ -57,7 +57,7 @@
 		145D60FA0589C6B5051C9367 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		16F134773224C1D2CE2C289A /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		280DB29669A386E1844DAE19 /* android_push.rs */ = {isa = PBXFileReference; lastKnownFileType = file; path = android_push.rs; sourceTree = "<group>"; };
-		29BED54FFE1300F3EDB639FE /* ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ios; path = "../../../../../../tauri-plugin-notifications/ios"; sourceTree = SOURCE_ROOT; };
+		29BED54FFE1300F3EDB639FE /* ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ios; path = "../../../../../tauri-plugin-notifications/ios"; sourceTree = SOURCE_ROOT; };
 		3A2ABF597A04353CD07E3AF4 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		3B79296E865D67E41DDE3A63 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		3C57757B9888BAE120E7D8D9 /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
@@ -327,7 +327,7 @@
 			mainGroup = 94543EA7220BDFDD9E91FF84;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				F69B93B4DCD9D6EB2AFAA8D1 /* XCLocalSwiftPackageReference "../../../../../../tauri-plugin-notifications/ios" */,
+				F69B93B4DCD9D6EB2AFAA8D1 /* XCLocalSwiftPackageReference "../../../../../tauri-plugin-notifications/ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 327AF14FEF9EB77241721F13 /* Products */;
@@ -754,9 +754,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		F69B93B4DCD9D6EB2AFAA8D1 /* XCLocalSwiftPackageReference "../../../../../../tauri-plugin-notifications/ios" */ = {
+		F69B93B4DCD9D6EB2AFAA8D1 /* XCLocalSwiftPackageReference "../../../../../tauri-plugin-notifications/ios" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../../../../../tauri-plugin-notifications/ios";
+			relativePath = "../../../../../tauri-plugin-notifications/ios";
 		};
 /* End XCLocalSwiftPackageReference section */
 

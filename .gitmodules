@@ -1,0 +1,4 @@
+[submodule "tauri-plugin-notifications"]
+	path = tauri-plugin-notifications
+	url = https://github.com/IT-ess/tauri-plugin-notifications.git
+	branch = silent-notifications

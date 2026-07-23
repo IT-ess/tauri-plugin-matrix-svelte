@@ -32,7 +32,10 @@ tauri-plugin-clipboard-manager = "2.3.2"
 tauri-plugin-dialog = "2.7.1"
 tauri-plugin-deep-link = "2.4.9"
 tauri-plugin-fs = "2.5.1"
-tauri-plugin-notifications = { git = "https://github.com/IT-ess/tauri-plugin-notifications", branch = "silent-notifications", features = ["push-notifications"] }
+# Path-sourced from the repo-root git submodule (see the plugin's Cargo.toml).
+# Must match the plugin crate's source, and lets the iOS build generate the
+# submodule's `.tauri/tauri-api` bridge that the NSE Swift package depends on.
+tauri-plugin-notifications = { path = "../../../tauri-plugin-notifications", features = ["push-notifications"] }
 tauri-plugin-opener = "2.5.4"
 tauri-plugin-os = "2.3.2"
 tauri-plugin-persisted-scope = "2.3.7"

@@ -8,13 +8,15 @@ configs:
   debug: debug
   release: release
 packages:
-  # The notifications plugin's Swift package (sibling repo's `ios/` dir). The
-  # NSE target links its Tauri-free `tauri-plugin-notifications-nse` product;
-  # the app itself gets the main plugin product through libapp.a instead.
-  # Resolving this package needs `<plugin repo>/.tauri/tauri-api` to exist —
-  # run `cargo build --target aarch64-apple-ios` once on a clean checkout.
+  # The notifications plugin's Swift package, from the repo-root git submodule
+  # `tauri-plugin-notifications` (run `git submodule update --init`). The NSE
+  # target links its Tauri-free `tauri-plugin-notifications-nse` product; the app
+  # itself gets the main plugin product through libapp.a instead.
+  # Resolving this package needs the submodule's `.tauri/tauri-api` to exist —
+  # run `cargo build --target aarch64-apple-ios` once (the plugin is path-sourced
+  # from the submodule, so tauri-build generates it there).
   NotificationsNSE:
-    path: ../../../../../../tauri-plugin-notifications/ios
+    path: ../../../../../tauri-plugin-notifications/ios
 settingGroups:
   app:
     base:

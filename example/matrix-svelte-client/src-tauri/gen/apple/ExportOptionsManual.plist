@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>method</key>
+	<string>release-testing</string>
+	<key>destination</key>
+	<string>export</string>
+	<key>signingStyle</key>
+	<string>manual</string>
+	<key>teamID</key>
+	<string>9A6YPCKFPC</string>
+	<key>signingCertificate</key>
+	<string>4A7673269C02519321B685385C7A75BC201D1329</string>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>com.matrix.svelte.client</key>
+		<string>MatrixSvelteClientAdHocV3</string>
+		<!-- Manual signing needs a profile per nested bundle: without this entry
+		     the NSE appex is re-signed with EMPTY entitlements (no App Group) and
+		     silent pushes fall back to SINGLE_UNREAD. Must be an Ad Hoc
+		     distribution profile for com.matrix.svelte.client.nse with the
+		     group.com.matrix.svelte.client App Group enabled. -->
+		<key>com.matrix.svelte.client.nse</key>
+		<string>MatrixSvelteClientNSEAdHocAppGroup</string>
+	</dict>
+	<key>stripSwiftSymbols</key>
+	<true/>
+	<key>uploadSymbols</key>
+	<true/>
+	<key>thinning</key>
+	<string>&lt;none&gt;</string>
+</dict>
+</plist>
