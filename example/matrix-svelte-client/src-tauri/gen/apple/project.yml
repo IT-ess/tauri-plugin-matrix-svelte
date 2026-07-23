@@ -2,16 +2,27 @@ name: matrix-svelte-client
 options:
   bundleIdPrefix: com.matrix.svelte.client
   deploymentTarget:
-    iOS: 14.0
+    iOS: 15.6
 fileGroups: [../../src]
 configs:
   debug: debug
   release: release
+packages:
+  # The notifications plugin's Swift package, from the repo-root git submodule
+  # `tauri-plugin-notifications` (run `git submodule update --init`). The NSE
+  # target links its Tauri-free `tauri-plugin-notifications-nse` product; the app
+  # itself gets the main plugin product through libapp.a instead.
+  # Resolving this package needs the submodule's `.tauri/tauri-api` to exist —
+  # run `cargo build --target aarch64-apple-ios` once (the plugin is path-sourced
+  # from the submodule, so tauri-build generates it there).
+  NotificationsNSE:
+    path: ../../../../../tauri-plugin-notifications/ios
 settingGroups:
   app:
     base:
       PRODUCT_NAME: matrix-svelte-client
       PRODUCT_BUNDLE_IDENTIFIER: com.matrix.svelte.client
+      DEVELOPMENT_TEAM: 9A6YPCKFPC
 targetTemplates:
   app:
     type: application
@@ -30,7 +41,12 @@ targets:
     sources:
       - path: Sources
       - path: Assets.xcassets
+      # Visible in the project navigator only: the built libapp.a archives in
+      # here are linked via `dependencies`/LIBRARY_SEARCH_PATHS, and must NOT
+      # land in a Resources phase (xcodegen would otherwise copy any archives
+      # present on disk into the app bundle).
       - path: Externals
+        buildPhase: none
       - path: matrix-svelte-client_iOS
       - path: assets
         buildPhase: resources
@@ -53,8 +69,22 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         CFBundleShortVersionString: 0.4.0
         CFBundleVersion: "0.4.0"
+        # Required (with the communication-notifications entitlement) for the
+        # NSE's INSendMessageIntent rewrite: sender avatar as notification icon.
+        NSUserActivityTypes:
+          - INSendMessageIntent
     entitlements:
       path: matrix-svelte-client_iOS/matrix-svelte-client_iOS.entitlements
+      properties:
+        aps-environment: production
+        # Shared with the NSE target: its container holds the Matrix store and
+        # is the `data_dir` handed to the Rust silent-push handler.
+        com.apple.security.application-groups:
+          - group.com.matrix.svelte.client
+        # Communication notifications (sender avatar as the icon). Must also be
+        # enabled on BOTH App IDs in the developer portal (app and .nse) so the
+        # provisioning profiles carry it.
+        com.apple.developer.usernotifications.communication: true
     scheme:
       environmentVariables:
         RUST_BACKTRACE: full
@@ -79,6 +109,10 @@ targets:
       - sdk: Security.framework
       - sdk: UIKit.framework
       - sdk: WebKit.framework
+      # Builds the NSE first (its script phase produces libapp.a) and embeds it
+      # under PlugIns/ so iOS runs it for mutable-content pushes.
+      - target: matrix-svelte-client_NSE
+        embed: true
     preBuildScripts:
       - script: pnpm tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths "${FRAMEWORK_SEARCH_PATHS:?}" --header-search-paths "${HEADER_SEARCH_PATHS:?}" --gcc-preprocessor-definitions "${GCC_PREPROCESSOR_DEFINITIONS:-}" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}
         name: Build Rust Code
@@ -86,3 +120,66 @@ targets:
         outputFiles:
           - $(SRCROOT)/Externals/x86_64/${CONFIGURATION}/libapp.a
           - $(SRCROOT)/Externals/arm64/${CONFIGURATION}/libapp.a
+  # Notification Service Extension: iOS launches it for every push carrying
+  # `mutable-content: 1` (any app state, incl. force-quit). Its principal class
+  # subclasses the plugin's TauriNotificationService, which calls the Rust
+  # handler `src/push_handler.rs` exports from the same libapp.a the app links.
+  matrix-svelte-client_NSE:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: NotificationService
+    info:
+      path: NotificationService/Info.plist
+      properties:
+        CFBundleDisplayName: matrix-svelte-client NSE
+        CFBundleShortVersionString: 0.4.0
+        CFBundleVersion: "0.4.0"
+        # App Group whose container is passed to the Rust handler as
+        # `data_dir` — where the plugin keeps the Matrix store both the app
+        # and the extension read.
+        TauriNotificationsAppGroup: group.com.matrix.svelte.client
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.usernotifications.service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).NotificationService
+    entitlements:
+      path: NotificationService/NotificationService.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.matrix.svelte.client
+        # No communication-notifications entitlement here: the capability
+        # doesn't exist for NSE App IDs (the app carries it), and an
+        # entitlement missing from the NSE's profile would fail install
+        # validation — the export script pre-signs the appex with this file.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.matrix.svelte.client.nse
+        DEVELOPMENT_TEAM: 9A6YPCKFPC
+        APPLICATION_EXTENSION_API_ONLY: true
+        ENABLE_BITCODE: false
+        ARCHS: [arm64]
+        VALID_ARCHS: arm64
+        EXCLUDED_ARCHS[sdk=iphoneos*]: x86_64
+        LIBRARY_SEARCH_PATHS[arch=x86_64]: $(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)
+        LIBRARY_SEARCH_PATHS[arch=arm64]: $(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)
+        # libapp.a is a static archive: force the dlsym'd Rust entry points in,
+        # or the linker dead-strips them (an "undefined symbol" error here
+        # means silent_push_handler! was not invoked in the Rust crate).
+        # Do NOT add -ObjC: it would force-load every ObjC class in libapp.a.
+        OTHER_LDFLAGS: $(inherited) -Wl,-u,_tauri_notifications_process_silent_push -Wl,-u,_tauri_notifications_silent_push_free
+    dependencies:
+      - framework: libapp.a
+        embed: false
+      - package: NotificationsNSE
+        product: tauri-plugin-notifications-nse
+      - sdk: Security.framework
+      # INSendMessageIntent / INInteraction for communication notifications.
+      - sdk: Intents.framework
+    preBuildScripts:
+      # Same Rust build the app target runs; whichever target builds first
+      # produces Externals/<arch>/<config>/libapp.a and the other's run is an
+      # incremental no-op. No outputFiles here — duplicating the app target's
+      # declared outputs would trip the build system's duplicate-output check.
+      - script: pnpm tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths "${FRAMEWORK_SEARCH_PATHS:?}" --header-search-paths "${HEADER_SEARCH_PATHS:?}" --gcc-preprocessor-definitions "${GCC_PREPROCESSOR_DEFINITIONS:-}" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}
+        name: Build Rust Code
+        basedOnDependencyAnalysis: false

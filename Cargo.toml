@@ -12,7 +12,7 @@ readme = "README.md"
 license = "Apache-2.0"
 
 [dependencies]
-tauri = "2.11.2"
+tauri = "2.11.5"
 serde = "1.0"
 serde_json = "1.0.142"
 base64 = "0.22.1"
@@ -29,7 +29,11 @@ futures-util = "0.3.31"
 tauri-plugin-android-fs = { version = "28.1.0", default-features = false }
 tauri-plugin-dialog = "2.7.1"
 tauri-plugin-svelte = { version = "3.2.0", features = ["marshaler-cbor"] }
-tauri-plugin-notifications = { version = "0.5.0-rc.10", features = ["push-notifications"] }
+# Git submodule at the repo root (pinned to the `silent-notifications` branch).
+# Path-sourced (not git) so `cargo build --target aarch64-apple-ios` generates its
+# `.tauri/tauri-api` Swift bridge in the submodule, which the example app's iOS NSE
+# Swift package links. Run `git submodule update --init` after cloning.
+tauri-plugin-notifications = { path = "tauri-plugin-notifications", features = ["push-notifications"] }
 tracing = "0.1.43"
 infer = { version = "0.19", default-features = false }
 matrix-ui-serializable = { git = "https://github.com/IT-ess/matrix-ui-serializable" }
@@ -40,6 +44,16 @@ tauri-plugin = { version = "2.6.2", features = ["build"] }
 
 [target."cfg(any(target_os = \"macos\", target_os = \"ios\"))".dependencies]
 apple-native-keyring-store = { version = "1.0.0", features = ["protected"] }
+
+[target."cfg(target_os = \"ios\")".dependencies]
+# Resolves the App Group container the Matrix store lives in when
+# `ios_app_group` is configured (shared with the Notification Service Extension).
+objc2-foundation = { version = "0.3", default-features = false, features = [
+    "std",
+    "NSFileManager",
+    "NSString",
+    "NSURL",
+] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 dbus-secret-service-keyring-store = { version = "1.0.0", features = ["crypto-rust"] }

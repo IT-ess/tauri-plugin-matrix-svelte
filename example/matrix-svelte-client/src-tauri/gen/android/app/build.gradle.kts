@@ -59,7 +59,7 @@ android {
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "false"
         applicationId = "com.matrix.svelte.client"
-        minSdk = 34
+        minSdk = 29
         targetSdk = 36
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
         versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
@@ -119,9 +119,11 @@ dependencies {
     implementation("com.google.android.material:material:1.12.0")
     implementation ("rustls:rustls-platform-verifier:0.1.1")
     implementation("androidx.lifecycle:lifecycle-process:2.10.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.4")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
 }
 
+apply(plugin = "com.google.gms.google-services")
 apply(from = "tauri.build.gradle.kts")

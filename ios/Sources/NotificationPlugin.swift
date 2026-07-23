@@ -58,14 +58,14 @@ struct WatchNotificationResult: Encodable {
     let success: Bool
 }
 
-class NotificationsPlugin: Plugin, UNUserNotificationCenterDelegate {
+// IMPORTANT: this plugin must NOT become the `UNUserNotificationCenter`
+// delegate. That delegate belongs to tauri-plugin-notifications (this plugin
+// initializes after it in the builder chain, so setting it here would steal
+// it), and it is what routes notification taps into the `notificationClicked`
+// event — including the pending replay when a tap cold-starts the app.
+class NotificationsPlugin: Plugin {
     private var registrationInvoke: Invoke?
     private var notificationChannels: [Channel] = []
-
-    override init() {
-        super.init()
-        UNUserNotificationCenter.current().delegate = self
-    }
 
     @objc override public func load(webview: WKWebView) {
         super.load(webview: webview)
@@ -284,49 +284,6 @@ class NotificationsPlugin: Plugin, UNUserNotificationCenterDelegate {
             self.registrationInvoke?.resolve(result)
             self.registrationInvoke = nil
         }
-    }
-
-    // Called when a notification arrives while app is in foreground
-    public func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) ->
-            Void
-    ) {
-        Logger.debug("NotificationsPlugin: Received notification while app in foreground")
-
-        let userInfo = notification.request.content.userInfo as? [String: Any] ?? [:]
-        emitNotificationEvent(
-            NotificationEvent(
-                type: .foregroundDelivery,
-                payload: userInfo
-            ))
-
-        if #available(iOS 14.0, *) {
-            completionHandler([.banner, .sound, .badge, .list])
-        } else {
-            completionHandler([.alert, .sound, .badge])
-        }
-    }
-
-    // Called when user taps on a notification
-    public func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse,
-        withCompletionHandler completionHandler: @escaping () -> Void
-    ) {
-        Logger.debug("NotificationsPlugin: User responded to notification")
-
-        let userInfo = response.notification.request.content.userInfo as? [String: Any] ?? [:]
-        let isBackground = UIApplication.shared.applicationState != .active
-
-        emitNotificationEvent(
-            NotificationEvent(
-                type: isBackground ? .backgroundTap : .foregroundTap,
-                payload: userInfo
-            ))
-
-        completionHandler()
     }
 
     // Add method to handle background notifications

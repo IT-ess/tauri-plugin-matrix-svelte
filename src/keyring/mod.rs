@@ -19,6 +19,17 @@ pub fn get_matrix_session_option(app_data_path: PathBuf) -> Option<String> {
 
 fn create_entry(salt: &str) -> crate::Result<Entry> {
     let entry_username = format!("{}/{}/{}", "service.name", "current_user", salt);
+    // The iOS Notification Service Extension reads the session while the
+    // device may still be locked (pushes arrive any time), so the entry must
+    // be accessible after first unlock instead of the default when-unlocked.
+    #[cfg(target_os = "ios")]
+    {
+        let modifiers =
+            std::collections::HashMap::from([("access-policy", "after-first-unlock")]);
+        return Entry::new_with_modifiers("service.name", &entry_username, &modifiers)
+            .map_err(Into::into);
+    }
+    #[cfg(not(target_os = "ios"))]
     Entry::new("service.name", &entry_username).map_err(Into::into)
 }
 
@@ -69,18 +80,59 @@ pub(crate) fn clear_session_in_keyring(app_data_path: PathBuf) -> crate::Result<
     fs::remove_file(app_data_path.join("salt")).map_err(|e| e.into())
 }
 
-pub(crate) fn init_keyring_store() -> anyhow::Result<()> {
+/// Install the platform-native keyring backend as the process-wide default
+/// `keyring_core` store.
+///
+/// `ios_access_group` is only read on iOS: the keychain access group shared
+/// between the app and its Notification Service Extension (the App Group id,
+/// e.g. `group.com.example.app`), so both processes read/write the same
+/// session entry. `None` keeps the app's default access group (no NSE
+/// support). Other platforms ignore it.
+///
+/// Idempotent: the underlying `keyring_core::set_default_store` may only be
+/// called once per process, and this has to be callable both from the plugin
+/// `setup` (warm path) and from the background silent-push entries (cold
+/// paths where `setup` never runs). A failed init is *not* latched — the
+/// mutex flag is only set on success, so the next caller retries instead of
+/// being handed a spurious `Ok(())` with no store installed.
+pub fn init_keyring_store(ios_access_group: Option<&str>) -> anyhow::Result<()> {
+    use std::sync::Mutex;
+    static INIT: Mutex<bool> = Mutex::new(false);
+    let mut done = INIT.lock().unwrap();
+    if *done {
+        return Ok(());
+    }
+    #[cfg(target_os = "ios")]
+    init_keyring_store_inner(ios_access_group)?;
+    #[cfg(not(target_os = "ios"))]
+    {
+        let _ = ios_access_group;
+        init_keyring_store_inner()?;
+    }
+    *done = true;
+    Ok(())
+}
+
+#[cfg(target_os = "ios")]
+fn init_keyring_store_inner(access_group: Option<&str>) -> anyhow::Result<()> {
+    use apple_native_keyring_store::protected::Store as IOSStore;
+    let store = match access_group {
+        Some(group) => {
+            let config = std::collections::HashMap::from([("access-group", group)]);
+            IOSStore::new_with_configuration(&config).map_err(anyhow::Error::from)?
+        }
+        None => IOSStore::new().map_err(anyhow::Error::from)?,
+    };
+    keyring_core::set_default_store(store);
+    Ok(())
+}
+
+#[cfg(not(target_os = "ios"))]
+fn init_keyring_store_inner() -> anyhow::Result<()> {
     #[cfg(target_os = "android")]
     {
         use android_native_keyring_store::Store as AndroidStore;
         let store = AndroidStore::new().map_err(anyhow::Error::from)?;
-        keyring_core::set_default_store(store);
-    }
-
-    #[cfg(target_os = "ios")]
-    {
-        use apple_native_keyring_store::protected::Store as IOSStore;
-        let store = IOSStore::new().map_err(anyhow::Error::from)?;
         keyring_core::set_default_store(store);
     }
 

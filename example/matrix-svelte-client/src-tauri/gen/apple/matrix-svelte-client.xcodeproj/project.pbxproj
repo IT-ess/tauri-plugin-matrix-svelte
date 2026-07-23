@@ -3,12 +3,16 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		074B5B8A9C2DAF784DF57AD9 /* Intents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5238D1CA6BF6B14D51BA42EC /* Intents.framework */; };
+		1C111393541FF867010F86DC /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 11E64F2625525EC993551C9B /* libapp.a */; };
 		2E9A2783F7F22D907A515DDE /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0DACC69F861FF633C00F14E /* MetalKit.framework */; };
 		4696569DCEAB481DE53A4DA4 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B79296E865D67E41DDE3A63 /* Metal.framework */; };
+		4C97D4DD45C675633CF1158A /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60C4E2E8F6126B0A9F1E1D5 /* NotificationService.swift */; };
+		4E5E2297654DD56946FE295E /* matrix-svelte-client_NSE.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E1AEDFD7C940F5998DC9BC66 /* matrix-svelte-client_NSE.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		50E04D100CD4B2CD129253D8 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 71252E0EE4D670DB5D5D270F /* Security.framework */; };
 		624EA34E846FA971EA0F94CB /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E72EB9B96ED821878D233AE /* CoreGraphics.framework */; };
 		6C26ADB4649FE1D30628FB97 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 16F134773224C1D2CE2C289A /* main.mm */; };
@@ -16,34 +20,82 @@
 		8DF192B195CC9FE905A2B853 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A5B6423C656E3D447860EF1 /* WebKit.framework */; };
 		C5D7BECF8EAEE41D204E1768 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DD13A2E23C55A5E1D08ADCF3 /* UIKit.framework */; };
 		CF8BA08FE7676C908485DA41 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 145D60FA0589C6B5051C9367 /* Assets.xcassets */; };
+		D3202B5199357EBEE82065A5 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 71252E0EE4D670DB5D5D270F /* Security.framework */; };
 		D4217651501D8C45143C8982 /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 11E64F2625525EC993551C9B /* libapp.a */; };
+		DCA227BE84EC73A2AAF01905 /* tauri-plugin-notifications-nse in Frameworks */ = {isa = PBXBuildFile; productRef = B28038BBC63E87A2B34950FB /* tauri-plugin-notifications-nse */; };
 		E60D974A5CD043B2FC63FAF0 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6966CFF7087D28AD9771DB70 /* LaunchScreen.storyboard */; };
 		EC01B1B339714F1F8B76D9ED /* assets in Resources */ = {isa = PBXBuildFile; fileRef = F01C364287686A03E223C27C /* assets */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		DAC0B9971792250BC9D34579 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 121BB3B19E0DC044F30F84D8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D3A2AB60F267E8A11E229D7E;
+			remoteInfo = "matrix-svelte-client_NSE";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		07A53EF034653DCBA0FD4FF9 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				4E5E2297654DD56946FE295E /* matrix-svelte-client_NSE.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		052AB4B66AF048B0EC746558 /* logging.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = logging.rs; sourceTree = "<group>"; };
 		11E64F2625525EC993551C9B /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		145D60FA0589C6B5051C9367 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		16F134773224C1D2CE2C289A /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
+		280DB29669A386E1844DAE19 /* android_push.rs */ = {isa = PBXFileReference; lastKnownFileType = file; path = android_push.rs; sourceTree = "<group>"; };
+		29BED54FFE1300F3EDB639FE /* ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ios; path = "../../../../../tauri-plugin-notifications/ios"; sourceTree = SOURCE_ROOT; };
+		3A2ABF597A04353CD07E3AF4 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		3B79296E865D67E41DDE3A63 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		3C57757B9888BAE120E7D8D9 /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
+		4D272F472F588D0885EB749E /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
+		5238D1CA6BF6B14D51BA42EC /* Intents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Intents.framework; path = System/Library/Frameworks/Intents.framework; sourceTree = SDKROOT; };
 		6966CFF7087D28AD9771DB70 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		6A5B6423C656E3D447860EF1 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		6E72EB9B96ED821878D233AE /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		71252E0EE4D670DB5D5D270F /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		757E57E98E34AEA59F32EEF4 /* ios_push.rs */ = {isa = PBXFileReference; lastKnownFileType = file; path = ios_push.rs; sourceTree = "<group>"; };
+		830ABD8B409131ECDB8A08A8 /* NotificationService.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NotificationService.entitlements; sourceTree = "<group>"; };
 		87A23F543FB3D529794352E1 /* lib.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = lib.rs; sourceTree = "<group>"; };
 		8A5F8AEEBE4685B000980E05 /* matrix-svelte-client_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "matrix-svelte-client_iOS.entitlements"; sourceTree = "<group>"; };
 		910C192A92254BF49072DA3A /* main.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = main.rs; sourceTree = "<group>"; };
+		947F6A3435EC0F71A4BEB028 /* push_shared.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = push_shared.rs; sourceTree = "<group>"; };
 		A36619B33F8E75866415CDE4 /* matrix-svelte-client.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "matrix-svelte-client.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A954AF3F4A424BA1C7018E8D /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		B3A0899138A54A73509DE9AD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		D0DACC69F861FF633C00F14E /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		D60C4E2E8F6126B0A9F1E1D5 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		DD13A2E23C55A5E1D08ADCF3 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		E1AEDFD7C940F5998DC9BC66 /* matrix-svelte-client_NSE.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "matrix-svelte-client_NSE.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F01C364287686A03E223C27C /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
 		F2953C6FA2AB498B2C097F09 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4D56AAA7B9E9543AED34B474 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1C111393541FF867010F86DC /* libapp.a in Frameworks */,
+				DCA227BE84EC73A2AAF01905 /* tauri-plugin-notifications-nse in Frameworks */,
+				D3202B5199357EBEE82065A5 /* Security.framework in Frameworks */,
+				074B5B8A9C2DAF784DF57AD9 /* Intents.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FAF688D4CE258207F1538D08 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -70,12 +122,48 @@
 			path = Sources;
 			sourceTree = "<group>";
 		};
+		25B117438CD2E326C9C12AA2 /* NotificationService */ = {
+			isa = PBXGroup;
+			children = (
+				B3A0899138A54A73509DE9AD /* Info.plist */,
+				830ABD8B409131ECDB8A08A8 /* NotificationService.entitlements */,
+				D60C4E2E8F6126B0A9F1E1D5 /* NotificationService.swift */,
+			);
+			path = NotificationService;
+			sourceTree = "<group>";
+		};
 		327AF14FEF9EB77241721F13 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				A36619B33F8E75866415CDE4 /* matrix-svelte-client.app */,
+				E1AEDFD7C940F5998DC9BC66 /* matrix-svelte-client_NSE.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		37F86D276B2B62B0D74A8C65 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				29BED54FFE1300F3EDB639FE /* ios */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		3B938154EE5B3176AF2339BF /* arm64 */ = {
+			isa = PBXGroup;
+			children = (
+				4D77906F7F6B2499917388ED /* debug */,
+				9EED9387AF0D7DB2141A23FE /* release */,
+			);
+			path = arm64;
+			sourceTree = "<group>";
+		};
+		4D77906F7F6B2499917388ED /* debug */ = {
+			isa = PBXGroup;
+			children = (
+				3A2ABF597A04353CD07E3AF4 /* libapp.a */,
+			);
+			path = debug;
 			sourceTree = "<group>";
 		};
 		8798567D53DB0F7D37E754AE /* matrix-svelte-client */ = {
@@ -95,6 +183,8 @@
 				6966CFF7087D28AD9771DB70 /* LaunchScreen.storyboard */,
 				D4C2FF5723A2A7647F405CB8 /* Externals */,
 				FD60E6EF88346E3277EBE5F9 /* matrix-svelte-client_iOS */,
+				25B117438CD2E326C9C12AA2 /* NotificationService */,
+				37F86D276B2B62B0D74A8C65 /* Packages */,
 				029B22D6202C1E675D9D147B /* Sources */,
 				E2C98171D4FA0E6B6884047F /* src */,
 				B40B56A3707FE211FA724D27 /* Frameworks */,
@@ -102,10 +192,19 @@
 			);
 			sourceTree = "<group>";
 		};
+		9EED9387AF0D7DB2141A23FE /* release */ = {
+			isa = PBXGroup;
+			children = (
+				4D272F472F588D0885EB749E /* libapp.a */,
+			);
+			path = release;
+			sourceTree = "<group>";
+		};
 		B40B56A3707FE211FA724D27 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				6E72EB9B96ED821878D233AE /* CoreGraphics.framework */,
+				5238D1CA6BF6B14D51BA42EC /* Intents.framework */,
 				11E64F2625525EC993551C9B /* libapp.a */,
 				3B79296E865D67E41DDE3A63 /* Metal.framework */,
 				D0DACC69F861FF633C00F14E /* MetalKit.framework */,
@@ -128,6 +227,7 @@
 		D4C2FF5723A2A7647F405CB8 /* Externals */ = {
 			isa = PBXGroup;
 			children = (
+				3B938154EE5B3176AF2339BF /* arm64 */,
 			);
 			path = Externals;
 			sourceTree = "<group>";
@@ -135,9 +235,12 @@
 		E2C98171D4FA0E6B6884047F /* src */ = {
 			isa = PBXGroup;
 			children = (
+				280DB29669A386E1844DAE19 /* android_push.rs */,
+				757E57E98E34AEA59F32EEF4 /* ios_push.rs */,
 				87A23F543FB3D529794352E1 /* lib.rs */,
 				052AB4B66AF048B0EC746558 /* logging.rs */,
 				910C192A92254BF49072DA3A /* main.rs */,
+				947F6A3435EC0F71A4BEB028 /* push_shared.rs */,
 			);
 			name = src;
 			path = ../../src;
@@ -163,10 +266,12 @@
 				DB3F37180071872348793E59 /* Sources */,
 				158F10565A29CE1C13C254AA /* Resources */,
 				FAF688D4CE258207F1538D08 /* Frameworks */,
+				07A53EF034653DCBA0FD4FF9 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				02C8311C8201C46A1ECEFF71 /* PBXTargetDependency */,
 			);
 			name = "matrix-svelte-client_iOS";
 			packageProductDependencies = (
@@ -174,6 +279,26 @@
 			productName = "matrix-svelte-client_iOS";
 			productReference = A36619B33F8E75866415CDE4 /* matrix-svelte-client.app */;
 			productType = "com.apple.product-type.application";
+		};
+		D3A2AB60F267E8A11E229D7E /* matrix-svelte-client_NSE */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3DC6730E102588C12C2626A1 /* Build configuration list for PBXNativeTarget "matrix-svelte-client_NSE" */;
+			buildPhases = (
+				62D31BFF7C2601CBB5841E53 /* Build Rust Code */,
+				60386F0939EE3B80A13E467D /* Sources */,
+				4D56AAA7B9E9543AED34B474 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "matrix-svelte-client_NSE";
+			packageProductDependencies = (
+				B28038BBC63E87A2B34950FB /* tauri-plugin-notifications-nse */,
+			);
+			productName = "matrix-svelte-client_NSE";
+			productReference = E1AEDFD7C940F5998DC9BC66 /* matrix-svelte-client_NSE.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -183,9 +308,16 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					25525833B1AF085D21489A42 = {
+						DevelopmentTeam = 9A6YPCKFPC;
+					};
+					D3A2AB60F267E8A11E229D7E = {
+						DevelopmentTeam = 9A6YPCKFPC;
+					};
+				};
 			};
 			buildConfigurationList = 853993BF3C99CBAFE8B25BB3 /* Build configuration list for PBXProject "matrix-svelte-client" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -194,9 +326,15 @@
 			);
 			mainGroup = 94543EA7220BDFDD9E91FF84;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F69B93B4DCD9D6EB2AFAA8D1 /* XCLocalSwiftPackageReference "../../../../../tauri-plugin-notifications/ios" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 327AF14FEF9EB77241721F13 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				D3A2AB60F267E8A11E229D7E /* matrix-svelte-client_NSE */,
 				25525833B1AF085D21489A42 /* matrix-svelte-client_iOS */,
 			);
 		};
@@ -237,9 +375,36 @@
 			shellPath = /bin/sh;
 			shellScript = "pnpm tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths \"${FRAMEWORK_SEARCH_PATHS:?}\" --header-search-paths \"${HEADER_SEARCH_PATHS:?}\" --gcc-preprocessor-definitions \"${GCC_PREPROCESSOR_DEFINITIONS:-}\" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}";
 		};
+		62D31BFF7C2601CBB5841E53 /* Build Rust Code */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build Rust Code";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "pnpm tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths \"${FRAMEWORK_SEARCH_PATHS:?}\" --header-search-paths \"${HEADER_SEARCH_PATHS:?}\" --gcc-preprocessor-definitions \"${GCC_PREPROCESSOR_DEFINITIONS:-}\" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		60386F0939EE3B80A13E467D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4C97D4DD45C675633CF1158A /* NotificationService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DB3F37180071872348793E59 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -250,7 +415,61 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		02C8311C8201C46A1ECEFF71 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D3A2AB60F267E8A11E229D7E /* matrix-svelte-client_NSE */;
+			targetProxy = DAC0B9971792250BC9D34579 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		0A01870FD1B51EE392091D7C /* debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ARCHS = arm64;
+				CODE_SIGN_ENTITLEMENTS = NotificationService/NotificationService.entitlements;
+				DEVELOPMENT_TEAM = 9A6YPCKFPC;
+				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				INFOPLIST_FILE = NotificationService/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION)",
+					"$(SDKROOT)/usr/lib/swift",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION)",
+					"$(SDKROOT)/usr/lib/swift",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-Wl,-u,_tauri_notifications_process_silent_push",
+					"-Wl,-u,_tauri_notifications_silent_push_free",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.matrix.svelte.client.nse;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = arm64;
+			};
+			name = debug;
+		};
 		20514C39354CDF41088790F9 /* release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -267,6 +486,7 @@
 					"\".\"",
 				);
 				INFOPLIST_FILE = "matrix-svelte-client_iOS/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -309,6 +529,7 @@
 					"\".\"",
 				);
 				INFOPLIST_FILE = "matrix-svelte-client_iOS/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -454,6 +675,52 @@
 			};
 			name = release;
 		};
+		EE7E284B9F8FB02924514880 /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ARCHS = arm64;
+				CODE_SIGN_ENTITLEMENTS = NotificationService/NotificationService.entitlements;
+				DEVELOPMENT_TEAM = 9A6YPCKFPC;
+				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				INFOPLIST_FILE = NotificationService/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION)",
+					"$(SDKROOT)/usr/lib/swift",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION)",
+					"$(SDKROOT)/usr/lib/swift",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-Wl,-u,_tauri_notifications_process_silent_push",
+					"-Wl,-u,_tauri_notifications_silent_push_free",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.matrix.svelte.client.nse;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = arm64;
+			};
+			name = release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -462,6 +729,15 @@
 			buildConfigurations = (
 				4E789761866AA756DC1B7FB3 /* debug */,
 				20514C39354CDF41088790F9 /* release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = debug;
+		};
+		3DC6730E102588C12C2626A1 /* Build configuration list for PBXNativeTarget "matrix-svelte-client_NSE" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A01870FD1B51EE392091D7C /* debug */,
+				EE7E284B9F8FB02924514880 /* release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = debug;
@@ -476,6 +752,20 @@
 			defaultConfigurationName = debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		F69B93B4DCD9D6EB2AFAA8D1 /* XCLocalSwiftPackageReference "../../../../../tauri-plugin-notifications/ios" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../../../../tauri-plugin-notifications/ios";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B28038BBC63E87A2B34950FB /* tauri-plugin-notifications-nse */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = "tauri-plugin-notifications-nse";
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 121BB3B19E0DC044F30F84D8 /* Project object */;
 }

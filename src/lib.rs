@@ -49,6 +49,13 @@ pub struct PluginConfig {
     pub oauth_client_uri: Url,
     /// The redirect URI called at the end of the OAuth flow.
     pub oauth_redirect_uri: Url,
+    /// The App Group identifier shared between the iOS app and its
+    /// Notification Service Extension (e.g. `group.com.example.app`). When set,
+    /// the Matrix store lives in the App Group container and the session
+    /// keychain entry in the matching keychain access group, so the NSE
+    /// process can read both. iOS only; ignored on other platforms.
+    #[serde(default)]
+    pub ios_app_group: Option<String>,
 }
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the Matrix Svelte APIs.
@@ -109,8 +116,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, PluginConfig> {
 
             let app_data_dir = get_app_dir_or_create_it(&init_app_handle)?;
 
-            // keyring
-            keyring::init_keyring_store().expect("couldn't init keyring store");
+            let plugin_config =
+                get_plugin_config(&init_app_handle).expect("Some plugin configuration is missing");
+            keyring::init_keyring_store(plugin_config.ios_app_group.as_deref())
+                .expect("couldn't init keyring store");
 
             // Create download dir for files
             let path = init_app_handle
@@ -179,3 +188,68 @@ pub use matrix_ui_serializable::{
     UInt, UrlSafe, V2EncryptedFileInfo,
 };
 pub use matrix_ui_serializable::{CLIENT, LOGIN_STORE_READY};
+
+// Exposed for the background silent-push entries (cold paths), which must
+// initialize the keyring backend themselves because the plugin `setup` never
+// runs there: the Android FCM/JNI entry when only the messaging service
+// cold-starts the process, and the iOS Notification Service Extension, a
+// separate process without a Tauri runtime. The argument is the shared
+// keychain access group (the App Group id), only read on iOS.
+#[cfg(any(target_os = "android", target_os = "ios"))]
+pub use crate::keyring::init_keyring_store;
+
+// Mobile notifications
+//
+// This is a "background" entry point, that doesn't require a full Tauri webview to launch.
+
+pub use matrix_ui_serializable::models::notification::{
+    FrontendNotificationResult, FrontendNotificationStatus,
+};
+
+#[cfg(any(target_os = "android", target_os = "ios"))]
+pub async fn handle_silent_notification(
+    app_data_dir: String,
+    room_id: String,
+    event_id: String,
+) -> crate::Result<FrontendNotificationStatus> {
+    use keyring::get_matrix_session_option;
+    use matrix_ui_serializable::{NotificationProcessMode, OwnedRoomId, commands::OwnedEventId};
+    use std::path::PathBuf;
+
+    let app_data_dir = PathBuf::from(app_data_dir);
+    let Some(session) = get_matrix_session_option(app_data_dir.clone()) else {
+        return Ok(FrontendNotificationStatus::InvalidSession);
+    };
+
+    let Ok(room_id) = OwnedRoomId::try_from(room_id) else {
+        return Ok(FrontendNotificationStatus::WrongPayload);
+    };
+
+    let Ok(event_id) = OwnedEventId::try_from(event_id) else {
+        return Ok(FrontendNotificationStatus::WrongPayload);
+    };
+
+    // Only the iOS Notification Service Extension is a genuinely separate
+    // process; the Android push handler (warm or FCM cold start) always runs
+    // inside the app's own process and must share the app's client/stores.
+    let mode = if cfg!(target_os = "ios") {
+        NotificationProcessMode::MultipleProcesses
+    } else {
+        NotificationProcessMode::SingleProcess
+    };
+
+    let item = matrix_ui_serializable::commands::get_notification_item(
+        session,
+        app_data_dir.clone(),
+        room_id,
+        event_id,
+        mode,
+    )
+    .await?;
+
+    if let Some(session) = item.refreshed_session {
+        keyring::set_session_in_keyring(session.into_bytes(), app_data_dir)?;
+    }
+
+    Ok(item.status)
+}

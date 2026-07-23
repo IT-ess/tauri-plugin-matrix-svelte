@@ -11,7 +11,7 @@
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { m } from '$lib/paraglide/messages';
 	import '@saurl/tauri-plugin-safe-area-insets-css-api';
-	import { loginStore } from '../hooks.client';
+	import { loginStore, roomsCollection } from '../hooks.client';
 	import { platform } from '@tauri-apps/plugin-os';
 	import { getCurrent } from '@tauri-apps/plugin-deep-link';
 	import {
@@ -23,7 +23,9 @@
 		type ToastNotificationEventType,
 		type VerificationEmojisEventType
 	} from 'tauri-plugin-matrix-svelte-api';
-	import { gotoProfile, gotoRoomPreview } from '$lib/utils.svelte';
+	import { gotoProfile, gotoRoom, gotoRoomPreview, pollWithBackoff } from '$lib/utils.svelte';
+	import { onNotificationClicked } from '@choochmeque/tauri-plugin-notifications-api';
+	import type { PluginListener } from '@tauri-apps/api/core';
 
 	let { children }: LayoutProps = $props();
 
@@ -39,13 +41,53 @@
 	let emojisUnlistener: UnlistenFn;
 	let toastUnlistener: UnlistenFn;
 	let matrixIntentUnlistener: UnlistenFn;
+	let notificationClickedListener: PluginListener | undefined;
 
 	onMount(async () => {
+		// iOS: notifications posted by the Notification Service Extension carry
+		// the Matrix deep link in their userInfo (`deepLink` extra) instead of
+		// Android's ACTION_VIEW intent. This listener also replays a pending
+		// tap when the app was cold-started from a notification.
+		// Foreground pushes intentionally show no system banner (the plugin's
+		// delegate suppresses them); the room list's unread state covers it.
+		notificationClickedListener = await onNotificationClicked(({ data }) => {
+			const deepLink = data?.deepLink;
+			if (deepLink && deepLink.startsWith('matrix:')) {
+				handleMatrixUri(deepLink);
+			}
+		});
+
 		matrixIntentUnlistener = await listen<MatrixUriIntent>(
 			MatrixSvelteListenEvent.MatrixUriIntent,
-			(event) => {
+			async (event) => {
 				if (event.payload.kind == 'room') {
-					gotoRoomPreview(null, null, event.payload.payload[0]);
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
+					const [roomId, _viaServers, eventId] = event.payload.payload;
+
+					// If the intent points to an event in a joined room, open the room
+					// directly without the preview. `roomId` can also be a room *alias*
+					// (`#…`), which never keys `allJoinedRooms` — those, unjoined rooms,
+					// and slow initial syncs all fall back to the preview instead of
+					// polling forever.
+					if (eventId && roomId.startsWith('!')) {
+						try {
+							// Await the room list being populated (a few seconds at most).
+							await pollWithBackoff(
+								() => !!roomsCollection.state.allJoinedRooms[roomId],
+								() =>
+									gotoRoom(
+										roomId,
+										roomsCollection.state.allJoinedRooms[roomId]?.avatar ?? null,
+										eventId
+									),
+								{ initialDelay: 50, maxDelay: 500, maxRetries: 20, factor: 1.5 }
+							);
+						} catch {
+							gotoRoomPreview(null, null, roomId);
+						}
+					} else {
+						gotoRoomPreview(null, null, roomId);
+					}
 				} else {
 					gotoProfile(event.payload.payload);
 				}
@@ -114,6 +156,7 @@
 		if (toastUnlistener) {
 			toastUnlistener();
 		}
+		notificationClickedListener?.unregister();
 	});
 
 	beforeNavigate(({ cancel, to }) => {

@@ -18,6 +18,14 @@
 			<key>CFBundleURLName</key>
 			<string>mxsvelte</string>
 		</dict>
+        <dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>matrix</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>matrix</string>
+		</dict>
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Sending voice messages</string>

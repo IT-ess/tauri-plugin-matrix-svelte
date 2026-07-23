@@ -22,10 +22,15 @@ Check out the pre-built binaries in the [latest release](https://github.com/IT-e
 ## Running the app in dev mode
 
 - Check out if you meet Tauri [prerequisites](https://tauri.app/start/prerequisites/)
+- Fetch the `tauri-plugin-notifications` git submodule: `git submodule update --init` (from the repo root). The Rust
+  and iOS builds both depend on it.
 - Build the tauri-plugin-matrix-svelte TS API: `cd ../.. && pnpm install && pnpm build`
 - Install the TS package: `pnpm install`
 - [android] : add a keystore.properties file with your keystore data (see [here](https://tauri.app/distribute/sign/android/))
 - `pnpm tauri dev` for desktop or `pnpm tauri [android|ios] dev` for mobile
+- [ios] first build only: generate the notifications submodule's Swift bridge with
+  `cargo build --manifest-path src-tauri/Cargo.toml -p tauri-plugin-notifications --target aarch64-apple-ios` before
+  building in Xcode / `pnpm tauri ios build`.
 
 ## Caveats
 

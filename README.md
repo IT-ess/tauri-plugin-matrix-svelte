@@ -36,6 +36,9 @@ Even if this is a plugin, most of the logic stays tighly related to the example 
 -	`oauth_client_uri`: Client URI for OAuth 
 -	`oauth_redirect_uri`: Redirect URI once the OAuth process is validated (must be the same host as redirect)
 
+Optional:
+- `ios_app_group`: iOS App Group id (e.g. `group.com.example.app`) shared with a Notification Service Extension. When set, the Matrix store and salt file live in the App Group container and the session is saved in the shared keychain access group (with `after-first-unlock` accessibility), so the NSE can decrypt pushed events. **Breaking for existing installs**: enabling it (or changing the value) relocates the store and keychain entry with no migration — users are logged out and must re-authenticate. The `after-first-unlock` accessibility likewise only applies to sessions saved after enabling it.
+
 ### Plugin requirements
 This plugin works along two other plugins, [tauri-plugin-svelte](https://tb.dev.br/tauri-store/plugin-svelte/guide/getting-started) and [tauri-plugin-notifications](https://github.com/Choochmeque/tauri-plugin-notifications), that also must be initialized with default capabilities by your Tauri app before this plugin.
 

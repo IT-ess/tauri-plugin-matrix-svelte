@@ -20,3 +20,7 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 -keep, includedescriptorclasses class org.rustls.platformverifier.** { *; }
+
+# Silent pushes: the JNI bridge (SilentPushNative) now lives in the
+# notifications plugin, whose consumer-rules.pro carries the keep — no
+# app-side rules needed.
