@@ -28,6 +28,53 @@ Even if this is a plugin, most of the logic stays tighly related to the example 
 - If you need to use OAuth authentication (that is the case for matrix.org), you'll need to configure an OAuth client. The example implementation use this preconfigured [website](https://github.com/IT-ess/oauth-redirect-deeplink), that uses deeplinks to pass the OAuth code upon redirect.
 - A [Sygnal push notification gateway](https://github.com/matrix-org/sygnal) if you want to configure push notifications on mobile.
 
+### Android network security config
+
+**Required on Android**, otherwise logging in fails against most homeservers with
+`invalid peer certificate: Revoked`.
+
+`matrix-rust-sdk` no longer bundles its own root certificates on Android — it delegates to
+[`rustls-platform-verifier`](https://github.com/rustls/rustls-platform-verifier), which calls into
+Android's Java certificate verifier. Trust anchors come from the system store and work fine, but
+the verifier also runs a revocation check, and it has to fetch the leaf's OCSP response or CRL when
+the server doesn't staple one. Those endpoints are mandated to be plain `http://` by the CA/Browser
+Forum Baseline Requirements, so Android's default "no cleartext traffic" policy blocks the fetch and
+the certificate is reported as revoked. See
+[rustls-platform-verifier#221](https://github.com/rustls/rustls-platform-verifier/issues/221) and
+[matrix-rust-sdk#6319](https://github.com/matrix-org/matrix-rust-sdk/issues/6319).
+
+To fix it in your app:
+
+1. Copy [the example app's `network_security_config.xml`](example/matrix-svelte-client/src-tauri/gen/android/app/src/main/res/xml/network_security_config.xml)
+   to `src-tauri/gen/android/app/src/main/res/xml/network_security_config.xml`.
+2. Reference it from `<application>` in `src-tauri/gen/android/app/src/main/AndroidManifest.xml`:
+   ```xml
+   <application android:networkSecurityConfig="@xml/network_security_config" ...>
+   ```
+
+Keep the `localhost` / `10.0.2.2` entries — a `networkSecurityConfig` overrides
+`android:usesCleartextTraffic` on API 24+, and without them `tauri android dev` can no longer reach
+the dev server.
+
+#### When a homeserver still fails
+
+The CA list is finite, so a homeserver behind a CA that isn't in it will fail the same way. To find
+the missing domain:
+
+```bash
+# 1. Confirm what is actually failing on the device
+adb logcat | grep -iE "rustls|platform-verifier|Revoked|[Cc]leartext"
+
+# 2. Ask the homeserver's certificate which endpoints its CA uses
+openssl s_client -connect <host>:443 -servername <host> </dev/null 2>/dev/null \
+  | openssl x509 -noout -ext authorityInfoAccess,crlDistributionPoints
+```
+
+Take the registrable domain out of each `URI:http://…` (e.g. `http://c.pki.goog/…` → `pki.goog`)
+and add it to the CA `<domain-config>` block. Note that homeservers usually delegate via
+`.well-known/matrix/client`, so check the delegated host (`matrix-client.example.org`), not just the
+server name you typed.
+
 ### Plugin configuration
 
 **Required** configuration variables in your `tauri.conf.json` in the plugin part, for the `matrix-svelte` key.

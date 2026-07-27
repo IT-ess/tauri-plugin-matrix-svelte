@@ -124,6 +124,19 @@ This is the most subtle part of the codebase — read `example/matrix-svelte-cli
 - Android accumulates same-room notifications into one `MessagingStyle` notification (keyed by room id); iOS keys
   by event id and groups by conversation thread instead — this difference is intentional, not a bug.
 
+### Android TLS / certificate verification
+
+`matrix-rust-sdk` dropped its Android `WebPkiServerVerifier` special case, so rustls now delegates to
+`rustls-platform-verifier`, i.e. Android's Java verifier. That verifier runs a `PKIXRevocationChecker` which
+must fetch OCSP/CRL over plain HTTP whenever the server doesn't staple a response — blocked by default, and
+it surfaces as a false `invalid peer certificate: Revoked`. The second `<domain-config>` block in the example's
+`gen/android/app/src/main/res/xml/network_security_config.xml` exists solely to permit those CA fetches; it is
+a list of CA infrastructure hostnames, **not** trust anchors, and it is finite by nature — a homeserver on a CA
+that isn't listed needs a new entry (see the README for the `openssl`/`adb logcat` recipe). Don't remove entries
+that look unrelated to Matrix, and note the example app pins `rustls-platform-verifier` to the same version
+reqwest resolves to — two copies in the tree means the app's `init_with_refs` initializes the wrong one and all
+TLS fails.
+
 ### Custom `mxc://` media protocol
 
 The example app's `src-tauri/src/lib.rs` registers an async URI scheme handler for `mxc://` to stream Matrix media

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config xmlns:tools="http://schemas.android.com/tools">
+    <!-- Ref: https://developer.android.com/training/articles/security-config.html -->
+    <!-- By default, do not allow clearText traffic -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates
+                src="user"
+                tools:ignore="AcceptsUserCertificates" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Allow clearText traffic on some specified host -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Localhost -->
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <!-- Localhost for Android emulator -->
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <!-- Onion services -->
+        <domain includeSubdomains="true">onion</domain>
+
+        <!-- Domains that are used for LANs -->
+        <!-- These are IANA recognized special use domain names, see https://www.iana.org/assignments/special-use-domain-names/special-use-domain-names.xhtml -->
+        <domain includeSubdomains="true">home.arpa</domain>
+        <domain includeSubdomains="true">local</domain> <!-- Note this has been reserved for use with mDNS -->
+        <domain includeSubdomains="true">test</domain>
+        <!-- These are observed in the wild either by convention or RFCs that have not been accepted, and are not currently TLDs -->
+        <domain includeSubdomains="true">home</domain>
+        <domain includeSubdomains="true">lan</domain>
+        <domain includeSubdomains="true">localdomain</domain>
+    </domain-config>
+
+    <!--
+        Certificate revocation endpoints of public CAs.
+
+        These are NOT trust anchors — Android already gets those from the system store, and that
+        part works fine. After building the chain, Android's verifier runs a PKIXRevocationChecker
+        (see org.rustls.platformverifier.CertificateVerifier in the rustls-platform-verifier AAR
+        wired up in app/build.gradle.kts), which has to fetch the leaf's OCSP response or CRL when
+        the server doesn't staple one. The CA/Browser Forum Baseline Requirements mandate those
+        endpoints be plain http://, so `cleartextTrafficPermitted="false"` blocks the fetch and the
+        certificate comes back as a false `Revoked`.
+
+        matrix-rust-sdk started delegating to the platform verifier when it dropped its Android
+        WebPkiServerVerifier special case, so every Matrix client on Android now needs this:
+          https://github.com/rustls/rustls-platform-verifier/issues/221
+          https://github.com/matrix-org/matrix-rust-sdk/issues/6319
+
+        This list is finite by nature — a homeserver on a CA that isn't here fails the same way.
+        To find the missing domain, see "Android network security config" in the plugin README.
+        Do not "clean up" entries that look unrelated to Matrix; they are all CA infrastructure.
+    -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">lencr.org</domain>          <!-- Let's Encrypt (OCSP retired, CRL only) -->
+        <domain includeSubdomains="true">pki.goog</domain>           <!-- Google Trust Services; also GoDaddy + ZeroSSL today -->
+        <domain includeSubdomains="true">digicert.com</domain>       <!-- DigiCert -->
+        <domain includeSubdomains="true">geotrust.com</domain>       <!-- DigiCert (GeoTrust brand) -->
+        <domain includeSubdomains="true">sectigo.com</domain>        <!-- Sectigo -->
+        <domain includeSubdomains="true">usertrust.com</domain>      <!-- Sectigo (USERTrust roots) -->
+        <domain includeSubdomains="true">comodoca.com</domain>       <!-- Sectigo (legacy Comodo) -->
+        <domain includeSubdomains="true">globalsign.com</domain>     <!-- GlobalSign -->
+        <domain includeSubdomains="true">amazontrust.com</domain>    <!-- Amazon Trust Services -->
+        <domain includeSubdomains="true">godaddy.com</domain>        <!-- GoDaddy (legacy) -->
+        <domain includeSubdomains="true">starfieldtech.com</domain>  <!-- Starfield (legacy) -->
+        <domain includeSubdomains="true">entrust.net</domain>        <!-- Entrust (legacy roots) -->
+        <domain includeSubdomains="true">identrust.com</domain>      <!-- IdenTrust -->
+        <domain includeSubdomains="true">ssl.com</domain>            <!-- SSL.com -->
+        <domain includeSubdomains="true">buypass.no</domain>         <!-- Buypass (CRL) -->
+        <domain includeSubdomains="true">buypass.com</domain>        <!-- Buypass (OCSP) -->
+        <domain includeSubdomains="true">actalis.it</domain>         <!-- Actalis -->
+        <domain includeSubdomains="true">certum.pl</domain>          <!-- Certum (CRL, repository) -->
+        <domain includeSubdomains="true">ocsp-certum.com</domain>    <!-- Certum (OCSP) -->
+        <domain includeSubdomains="true">harica.gr</domain>          <!-- HARICA -->
+        <domain includeSubdomains="true">telesec.de</domain>         <!-- T-Systems -->
+        <domain includeSubdomains="true">quovadisglobal.com</domain> <!-- QuoVadis / DigiCert -->
+        <domain includeSubdomains="true">d-trust.net</domain>        <!-- D-TRUST / Bundesdruckerei -->
+        <domain includeSubdomains="true">certainly.com</domain>      <!-- Certainly (Fastly) -->
+        <domain includeSubdomains="true">twca.com.tw</domain>        <!-- TWCA -->
+        <domain includeSubdomains="true">microsoft.com</domain>      <!-- Microsoft -->
+        <domain includeSubdomains="true">msocsp.com</domain>         <!-- Microsoft (legacy OCSP) -->
+        <domain includeSubdomains="true">apple.com</domain>          <!-- Apple -->
+    </domain-config>
+</network-security-config>
