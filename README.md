@@ -108,13 +108,18 @@ A lot of requests are async, and should be submitted with the `submitAsyncReques
 
 ## Building
 
+This repo is a single Cargo workspace and a single pnpm workspace, both rooted here: the plugin and the
+`example/matrix-svelte-client` app share one `Cargo.lock`/`target/` and one `node_modules`. Install once from
+the repo root.
+
 ### Building the javascript bindings
 
-- `pnpm install`
+- `pnpm install` (from the repo root, installs the example app too)
 - `pnpm build`
 
 ### Building the Rust lib
 
+- `git submodule update --init` (fetches the `tauri-plugin-notifications` submodule)
 - `cargo build`
 
 ## Main Dependencies

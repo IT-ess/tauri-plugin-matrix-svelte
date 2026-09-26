@@ -1,0 +1,18 @@
+# Dev-watcher ignore list for `pnpm tauri dev`.
+#
+# The example app depends on the plugin crate by path, so Tauri watches this
+# whole repo in addition to `example/matrix-svelte-client/src-tauri`, and it
+# reads this file from the common ancestor of the watched folders (the repo
+# root). The app also links the plugin's npm package with `workspace:*`, i.e.
+# `example/matrix-svelte-client/node_modules/tauri-plugin-matrix-svelte-api` is
+# a symlink back here — so the shared `target/` is reachable under a path Tauri
+# doesn't recognise as the cargo target dir. Without these patterns every
+# artifact cargo writes looks like a source change and dev rebuilds in a loop.
+#
+# Patterns are matched against the full path (no parent-directory matching),
+# hence the `**/` prefixes and `/**` suffixes.
+**/node_modules/**
+**/target/**
+**/.git/**
+**/.svelte-kit/**
+example/matrix-svelte-client/build/**
