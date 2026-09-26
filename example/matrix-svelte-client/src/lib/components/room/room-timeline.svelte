@@ -7,7 +7,7 @@
 	import Item from './items/item.svelte';
 	import { useDebounce } from 'runed';
 	import SvelteVirtualChat from '@humanspeak/svelte-virtual-chat';
-	import { tick, untrack } from 'svelte';
+	import { tick } from 'svelte';
 	import { loginStore, roomsCollection, roomStore } from '../../../hooks.client';
 	import RoomInput from './room-input.svelte';
 	import MediaViewer from '../common/media-viewer.svelte';
@@ -54,9 +54,12 @@
 	let highlightedEventId = $state<string | null>(null);
 
 	let items = $derived(roomStore.state.tlState?.items ?? []);
-	let hasItems = $derived(items.length > 0);
 	let itemsByEventId = $derived(new Map(items.map((i) => [i.eventId, i])));
 	let unreadCount = $derived(roomsCollection.state.allJoinedRooms[roomId]?.numUnreadMessages ?? 0);
+	// Read receipts target the latest message from someone else (remote msgLike events have event ids)
+	let latestRemoteEventId = $derived(
+		items.findLast((i) => i.kind === 'msgLike' && !i.isOwn)?.eventId ?? null
+	);
 
 	// Consecutive messages from the same sender within 5 minutes are visually grouped
 	const sameSender = (a?: TimelineItem, b?: TimelineItem) =>
@@ -67,39 +70,16 @@
 
 	// Send a read receipt when reaching the bottom, or when a message arrives while at the bottom
 	$effect(() => {
-		if (!isFollowing || unreadCount === 0 || !hasItems) return;
-		untrack(() => {
-			try {
-				const request = createMatrixRequest.readReceipt({
-					eventId: getLatestEventId(),
-					receiptType: 'm.read',
-					roomId,
-					threadRootEventId: threadRoot
-				});
-				submitAsyncRequest(request);
-			} catch (err) {
-				console.error(err);
-				toast.error(err as string);
-			}
-		});
+		if (!isFollowing || unreadCount === 0 || !latestRemoteEventId) return;
+		submitAsyncRequest(
+			createMatrixRequest.readReceipt({
+				eventId: latestRemoteEventId,
+				receiptType: 'm.read',
+				roomId,
+				threadRootEventId: threadRoot
+			})
+		).catch((err) => console.error(err));
 	});
-
-	const getLatestEventId = (): string => {
-		if (roomStore.state.tlState?.items && roomStore.state.tlState.items.length > 0) {
-			const timelineLength = roomStore.state.tlState.items.length;
-			let newArray = Array.from(
-				{ length: timelineLength },
-				(value, index) => timelineLength - index - 1
-			);
-			for (const i of newArray) {
-				const item = roomStore.state.tlState.items[i];
-				if (item.kind == 'msgLike' && !item.isOwn) {
-					return roomStore.state.tlState.items[i].eventId as string; // All remote msgLike events have eventIds
-				}
-			}
-		}
-		throw Error('No message like event to read in this room');
-	};
 
 	// Load more messages when scrolling up with 1 sec debounce
 	// (onNeedHistory fires on every scroll event near the top)
