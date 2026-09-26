@@ -164,6 +164,8 @@
 		}
 		await tick();
 		chat?.scrollToMessage(itemsByEventId.get(eventId)!.uniqueId);
+		// The library leaves follow-bottom without notifying when it was already off
+		isFollowing = false;
 
 		highlightedEventId = eventId;
 		setTimeout(() => {
@@ -271,8 +273,8 @@
 	// We use afterNavigate instead of onMount because sometimes the navigation
 	// is done between rooms, thus this component is already mounted
 	afterNavigate(() => {
-		// The keyed timeline remounts pinned to the bottom without emitting onFollowBottomChange
-		isFollowing = true;
+		// The timeline may have remounted (keyed by room) without emitting onFollowBottomChange
+		isFollowing = chat?.isAtBottom() ?? true;
 		if (openingFocus) {
 			// We wait for the timeline to be mounted
 			setTimeout(() => {
