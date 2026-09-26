@@ -5,6 +5,7 @@
 		TimelineItem
 	} from 'tauri-plugin-matrix-svelte-api';
 	import { roomsCollection } from '../../../../hooks.client';
+	import * as Marker from '$lib/components/ui/marker';
 	import MessageLike from './message-like.svelte';
 	import Virtual from './virtual.svelte';
 
@@ -13,6 +14,9 @@
 		roomId: string;
 		currentUserId: string;
 		repliedToMessage?: TimelineItem;
+		groupedWithPrev: boolean;
+		groupedWithNext: boolean;
+		highlighted: boolean;
 		onReply?: (eventId: string, senderName: string, content: string) => void;
 		onScrollToMessage?: (eventId: string) => void;
 		handleOpenMediaViewMode: (
@@ -36,6 +40,9 @@
 		currentUserId,
 		onReply,
 		repliedToMessage,
+		groupedWithPrev,
+		groupedWithNext,
+		highlighted,
 		onScrollToMessage,
 		handleOpenMediaViewMode,
 		threadRootEventId,
@@ -44,9 +51,9 @@
 	}: Props = $props();
 </script>
 
-{#if item.kind === 'msgLike'}
-	<!-- msg like always have event ids -->
-	<div data-event-id={item.eventId as string}>
+<!-- Virtualized rows can't use a flex gap, so spacing lives on each row -->
+<div class={groupedWithPrev ? 'pt-1' : 'pt-4'}>
+	{#if item.kind === 'msgLike'}
 		<MessageLike
 			data={item.data}
 			timestamp={item.timestamp ?? 0}
@@ -64,35 +71,38 @@
 			{threadRootEventId}
 			{roomAvatar}
 			{roomMembers}
+			{groupedWithPrev}
+			{groupedWithNext}
+			{highlighted}
 		/>
-	</div>
-{:else if item.kind === 'virtual'}
-	<Virtual
-		timestamp={item.timestamp ?? undefined}
-		data={item.data}
-		roomHasUnreadMessages={roomsCollection.state.allJoinedRooms[roomId]
-			? roomsCollection.state.allJoinedRooms[roomId].numUnreadMessages > 0
-			: false}
-	/>
-{:else if item.kind === 'call'}
-	{@render stateMessage('Someone started a call')}
-{:else if item.kind === 'stateChange'}
-	{#if item.data.kind === 'profileChange'}
-		{@render stateMessage(`${item.data.body.user_id} profile update`)}
-	{:else if item.data.kind === 'membershipChange'}
-		{@render stateMessage(
-			`${item.data.body.content?.content?.displayname} membership update: ${
-				item.data.body.content?.content?.membership
-			}`
-		)}
-	{:else if item.data.kind === 'otherState'}
-		{@render stateMessage(`State change: ${Object.keys(item.data.body)[0]}`)}
-		<!-- TODO: implement full mapping -->
+	{:else if item.kind === 'virtual'}
+		<Virtual
+			timestamp={item.timestamp ?? undefined}
+			data={item.data}
+			roomHasUnreadMessages={roomsCollection.state.allJoinedRooms[roomId]
+				? roomsCollection.state.allJoinedRooms[roomId].numUnreadMessages > 0
+				: false}
+		/>
+	{:else if item.kind === 'call'}
+		{@render stateMessage('Someone started a call')}
+	{:else if item.kind === 'stateChange'}
+		{#if item.data.kind === 'profileChange'}
+			{@render stateMessage(`${item.data.body.user_id} profile update`)}
+		{:else if item.data.kind === 'membershipChange'}
+			{@render stateMessage(
+				`${item.data.body.content?.content?.displayname} membership update: ${item.data.body.content?.content?.membership}`
+			)}
+		{:else if item.data.kind === 'otherState'}
+			{@render stateMessage(`State change: ${Object.keys(item.data.body)[0]}`)}
+			<!-- TODO: implement full mapping -->
+		{/if}
+	{:else if item.kind === 'error'}
+		{@render stateMessage(`Received error: ${item.data.error}`, 'text-destructive')}
 	{/if}
-{:else if item.kind === 'error'}
-	<p class="text-destructive text-center">Received error: {item.data.error}</p>
-{/if}
+</div>
 
-{#snippet stateMessage(text: string)}
-	<p class="text-center text-sm text-slate-400">{text}</p>
+{#snippet stateMessage(text: string, className?: string)}
+	<Marker.Root class={['justify-center', className]}>
+		<Marker.Content>{text}</Marker.Content>
+	</Marker.Root>
 {/snippet}

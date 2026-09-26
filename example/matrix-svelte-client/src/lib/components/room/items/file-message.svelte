@@ -1,6 +1,8 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { Download, Paperclip } from '@lucide/svelte';
+	import * as Attachment from '$lib/components/ui/attachment';
+	import { Spinner } from '$lib/components/ui/spinner';
+	import { DownloadIcon, ExternalLinkIcon, FileIcon, RotateCwIcon } from '@lucide/svelte';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { BaseDirectory, exists } from '@tauri-apps/plugin-fs';
 	import { onMount } from 'svelte';
 	import { openPath } from '@tauri-apps/plugin-opener';
@@ -21,6 +23,16 @@
 	let { itemContent }: Props = $props();
 
 	let alt = $derived(itemContent.filename ?? itemContent.body);
+
+	const formatSize = (bytes: number) => {
+		const i = Math.max(0, Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), 3));
+		return new Intl.NumberFormat(getLocale(), {
+			style: 'unit',
+			unit: ['byte', 'kilobyte', 'megabyte', 'gigabyte'][i],
+			unitDisplay: 'narrow',
+			maximumFractionDigits: 1
+		}).format(bytes / 1024 ** i);
+	};
 
 	// State variables
 	let isLoading = $state(false);
@@ -79,27 +91,33 @@
 	});
 </script>
 
-<div class="bg-card mt-1 overflow-hidden rounded-lg border">
-	{#if !fileExistsInFs}
-		<div class="bg-secondary inset-0 flex items-center justify-center">
-			<div class="text-center text-white">
-				<Button variant="default" size="lg" onclick={() => loadFile()}><Download />{alt}</Button>
-			</div>
-		</div>
-
-		{#if error}
-			<div class="bg-destructive/80 inset-0 flex items-center justify-center">
-				<div class="text-center text-white">
-					<p class="mb-2 text-sm">
-						{m.failed_to_load()} <span class="text-destructive">{error}</span>
-					</p>
-					<Button variant="secondary" size="sm" onclick={() => loadFile()}
-						>{m.button_retry()}</Button
-					>
-				</div>
-			</div>
-		{/if}
-	{:else}
-		<Button size="lg" variant="link" onclick={() => handleOpenFile()}><Paperclip />{alt}</Button>
-	{/if}
-</div>
+<Attachment.Root state={error ? 'error' : isLoading ? 'processing' : 'done'} class="mt-1">
+	<Attachment.Media>
+		{#if isLoading}<Spinner />{:else}<FileIcon />{/if}
+	</Attachment.Media>
+	<Attachment.Content>
+		<Attachment.Title>{alt}</Attachment.Title>
+		<Attachment.Description>
+			{error
+				? `${m.failed_to_load()} ${error}`
+				: itemContent.info?.size
+					? formatSize(itemContent.info.size)
+					: (itemContent.info?.mimetype ?? '')}
+		</Attachment.Description>
+	</Attachment.Content>
+	<Attachment.Actions>
+		<Attachment.Action
+			aria-label={fileExistsInFs ? `Open ${alt}` : `Download ${alt}`}
+			disabled={isLoading}
+			onclick={() => (fileExistsInFs ? handleOpenFile() : loadFile())}
+		>
+			{#if fileExistsInFs}
+				<ExternalLinkIcon />
+			{:else if error}
+				<RotateCwIcon />
+			{:else}
+				<DownloadIcon />
+			{/if}
+		</Attachment.Action>
+	</Attachment.Actions>
+</Attachment.Root>

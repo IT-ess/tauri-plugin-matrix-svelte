@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { LoaderIcon, ArrowDownIcon } from '@lucide/svelte';
+	import * as Marker from '$lib/components/ui/marker';
+	import { ArrowDownIcon } from '@lucide/svelte';
 	import { fade } from 'svelte/transition';
 	import './room.css';
 	import Item from './items/item.svelte';
-	import { ScrollState } from 'runed';
 	import { useDebounce } from 'runed';
-	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
-	import { tick } from 'svelte';
-	import { cn } from '$lib/utils.svelte';
+	import SvelteVirtualChat from '@humanspeak/svelte-virtual-chat';
+	import { tick, untrack } from 'svelte';
 	import { loginStore, roomsCollection, roomStore } from '../../../hooks.client';
 	import RoomInput from './room-input.svelte';
 	import MediaViewer from '../common/media-viewer.svelte';
@@ -19,6 +18,7 @@
 		createMatrixRequest,
 		sendMediaMessage,
 		submitAsyncRequest,
+		type TimelineItem,
 		type AttachmentInfo,
 		type BaseAudioInfo,
 		type MediaRequestParameters
@@ -49,37 +49,39 @@
 		content: string;
 	} | null>(null);
 
-	let viewportElement = $state<HTMLElement | null>(null)!;
-	const scroll = new ScrollState({
-		element: () => viewportElement,
-		idle: 100, // Shorter idle time for messaging
-		offset: { top: 100 }, // Consider "on top" when within 100px
-		onScroll: async () => {
-			if (scroll.arrived.top && !isLoadingMore) {
-				await loadMoreMessages();
+	let chat = $state<SvelteVirtualChat<TimelineItem>>();
+	let isFollowing = $state(true);
+	let highlightedEventId = $state<string | null>(null);
+
+	let items = $derived(roomStore.state.tlState?.items ?? []);
+	let hasItems = $derived(items.length > 0);
+	let itemsByEventId = $derived(new Map(items.map((i) => [i.eventId, i])));
+	let unreadCount = $derived(roomsCollection.state.allJoinedRooms[roomId]?.numUnreadMessages ?? 0);
+
+	// Consecutive messages from the same sender within 5 minutes are visually grouped
+	const sameSender = (a?: TimelineItem, b?: TimelineItem) =>
+		a?.kind === 'msgLike' &&
+		b?.kind === 'msgLike' &&
+		a.data.senderId === b.data.senderId &&
+		Math.abs((b.timestamp ?? 0) - (a.timestamp ?? 0)) < 5 * 60 * 1000;
+
+	// Send a read receipt when reaching the bottom, or when a message arrives while at the bottom
+	$effect(() => {
+		if (!isFollowing || unreadCount === 0 || !hasItems) return;
+		untrack(() => {
+			try {
+				const request = createMatrixRequest.readReceipt({
+					eventId: getLatestEventId(),
+					receiptType: 'm.read',
+					roomId,
+					threadRootEventId: threadRoot
+				});
+				submitAsyncRequest(request);
+			} catch (err) {
+				console.error(err);
+				toast.error(err as string);
 			}
-		},
-		onStop: () => {
-			if (
-				scroll.arrived.bottom &&
-				roomStore.state.tlState &&
-				roomsCollection.state.allJoinedRooms[roomId] &&
-				roomsCollection.state.allJoinedRooms[roomId].numUnreadMessages > 0
-			) {
-				try {
-					const request = createMatrixRequest.readReceipt({
-						eventId: getLatestEventId(),
-						receiptType: 'm.read',
-						roomId,
-						threadRootEventId: threadRoot
-					});
-					submitAsyncRequest(request);
-				} catch (err) {
-					console.error(err);
-					toast.error(err as string);
-				}
-			}
-		}
+		});
 	});
 
 	const getLatestEventId = (): string => {
@@ -99,16 +101,15 @@
 		throw Error('No message like event to read in this room');
 	};
 
-	let showScrollButton = $derived(!scroll.arrived.bottom && scroll.y > 100);
-
 	// Load more messages when scrolling up with 1 sec debounce
+	// (onNeedHistory fires on every scroll event near the top)
 	const loadMoreMessages = useDebounce(async () => {
 		if (
 			isLoadingMore ||
 			roomStore.state.tlState?.fullyPaginated ||
 			(roomStore.state.timelineKind?.kind == 'mainRoom' &&
-				roomStore.state.tlState?.items[0].kind === 'virtual' &&
-				roomStore.state.tlState?.items[0].data.kind === 'timelineStart')
+				items[0]?.kind === 'virtual' &&
+				items[0].data.kind === 'timelineStart')
 		)
 			return;
 
@@ -138,12 +139,9 @@
 	};
 
 	const scrollToMessage = async (eventId: string) => {
-		if (!viewportElement) return;
-
-		// Find the element with the matching event ID
 		let counter = 0;
-		while (!viewportElement.querySelector(`[data-event-id="${eventId}"]`)) {
-			// Paginate at most 200 events
+		while (!itemsByEventId.has(eventId)) {
+			// Paginate at most 250 events
 			if (counter > 4) {
 				toast.error(m.timeline_focus_error());
 				return;
@@ -164,46 +162,14 @@
 				isLoadingMore = false;
 			}
 		}
-		const messageElement = viewportElement.querySelector(`[data-event-id="${eventId}"]`);
+		await tick();
+		chat?.scrollToMessage(itemsByEventId.get(eventId)!.uniqueId);
 
-		if (messageElement) {
-			const messageRect = messageElement.getBoundingClientRect();
-			const containerRect = viewportElement.getBoundingClientRect();
-
-			// Calculate the element's position relative to the scroll container
-			const elementTopInContainer = messageRect.top - containerRect.top + viewportElement.scrollTop;
-			const containerHeight = viewportElement.clientHeight;
-
-			// Scroll to center the message in the viewport
-			const targetScrollTop =
-				elementTopInContainer - containerHeight / 2 + messageElement.clientHeight / 2;
-
-			scroll.scrollTo(0, Math.max(0, targetScrollTop));
-
-			messageElement.classList.add('highlight-message');
-			setTimeout(() => {
-				messageElement.classList.remove('highlight-message');
-			}, 3000);
-		}
+		highlightedEventId = eventId;
+		setTimeout(() => {
+			if (highlightedEventId === eventId) highlightedEventId = null;
+		}, 3000);
 	};
-
-	$effect.pre(() => {
-		if (!viewportElement) return; // not yet mounted
-
-		// reference `messages` array length so that this code re-runs whenever it changes
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		roomStore.state.tlState?.items.length;
-
-		// autoscroll when new messages are added
-		if (
-			viewportElement.offsetHeight + viewportElement.scrollTop >
-			viewportElement.scrollHeight - 20
-		) {
-			tick().then(() => {
-				scroll.scrollTo(0, viewportElement.scrollHeight);
-			});
-		}
-	});
 
 	// Media viewer
 	let showMediaViewer = $state(false);
@@ -305,8 +271,10 @@
 	// We use afterNavigate instead of onMount because sometimes the navigation
 	// is done between rooms, thus this component is already mounted
 	afterNavigate(() => {
+		// The keyed timeline remounts pinned to the bottom without emitting onFollowBottomChange
+		isFollowing = true;
 		if (openingFocus) {
-			// We wait for the viewportElement to be available
+			// We wait for the timeline to be mounted
 			setTimeout(() => {
 				scrollToMessage(openingFocus);
 			}, 100);
@@ -315,45 +283,54 @@
 </script>
 
 {#if roomStore.state.tlState}
-	<div class={cn('w-full flex-1 overflow-hidden')}>
-		<ScrollArea bind:viewportRef={viewportElement} class="h-full bg-white">
-			<div class="flex flex-col gap-4 p-4 pb-2">
+	{#key `${roomId}|${threadRoot}`}
+		<SvelteVirtualChat
+			bind:this={chat}
+			messages={items}
+			getMessageId={(item) => item.uniqueId}
+			onNeedHistory={() => void loadMoreMessages()}
+			onFollowBottomChange={(following) => (isFollowing = following)}
+			containerClass="w-full flex-1 min-h-0"
+			viewportClass="bg-white px-4"
+		>
+			{#snippet header()}
 				{#if isLoadingMore}
-					<div class="flex justify-center py-2" transition:fade|local>
-						<LoaderIcon class="text-muted-foreground h-6 w-6 animate-spin" />
-					</div>
+					<Marker.Root role="status" class="justify-center pt-2">
+						<Marker.Icon><Spinner /></Marker.Icon>
+					</Marker.Root>
 				{/if}
-				{#each roomStore.state.tlState.items as item (item.uniqueId)}
-					<div transition:fade|local>
-						<Item
-							{item}
-							{roomId}
-							currentUserId={loginStore.state.userId ?? 'shouldbedefined'}
-							onReply={handleReplyTo}
-							onScrollToMessage={scrollToMessage}
-							repliedToMessage={item.kind === 'msgLike' && item.data.inReplyToId !== null
-								? roomStore.state.tlState?.items.find((i) => i.eventId === item.data.inReplyToId)
-								: undefined}
-							{handleOpenMediaViewMode}
-							roomAvatar={roomAvatarUrl}
-							roomMembers={roomStore.state.members}
-							threadRootEventId={threadRoot}
-						/>
-					</div>
-				{:else}
-					<p>No items yet</p>
-				{/each}
-				<div id="bottomscroll"></div>
-			</div>
-		</ScrollArea>
-	</div>
+			{/snippet}
+			{#snippet renderMessage(item, index)}
+				<Item
+					{item}
+					{roomId}
+					currentUserId={loginStore.state.userId ?? 'shouldbedefined'}
+					onReply={handleReplyTo}
+					onScrollToMessage={scrollToMessage}
+					repliedToMessage={item.kind === 'msgLike' && item.data.inReplyToId !== null
+						? itemsByEventId.get(item.data.inReplyToId)
+						: undefined}
+					groupedWithPrev={sameSender(items[index - 1], item)}
+					groupedWithNext={sameSender(item, items[index + 1])}
+					highlighted={item.eventId !== null && item.eventId === highlightedEventId}
+					{handleOpenMediaViewMode}
+					roomAvatar={roomAvatarUrl}
+					roomMembers={roomStore.state.members}
+					threadRootEventId={threadRoot}
+				/>
+			{/snippet}
+			{#snippet footer()}
+				<div id="bottomscroll" class="h-2"></div>
+			{/snippet}
+		</SvelteVirtualChat>
+	{/key}
 
-	{#if showScrollButton && !replyingTo}
+	{#if !isFollowing && !replyingTo}
 		<div transition:fade class="absolute right-4 bottom-32 z-10">
 			<Button
 				size="icon"
 				variant="secondary"
-				onclick={() => scroll.scrollToBottom()}
+				onclick={() => chat?.scrollToBottom({ smooth: true })}
 				class="rounded-full shadow-lg"
 			>
 				<ArrowDownIcon class="h-4 w-4" />

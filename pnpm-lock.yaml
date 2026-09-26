@@ -75,6 +75,9 @@ importers:
 
   example/matrix-svelte-client:
     dependencies:
+      '@humanspeak/svelte-virtual-chat':
+        specifier: ^0.1.23
+        version: 0.1.23(svelte@5.57.1(@typescript-eslint/types@8.70.1))
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.3.1(jiti@2.7.0))
@@ -453,6 +456,11 @@ packages:
   '@humanfs/types@0.15.0':
     resolution: {integrity: sha512-ZZ1w0aoQkwuUuC7Yf+7sdeaNfqQiiLcSRbfI08oAxqLtpXQr9AIVX7Ay7HLDuiLYAaFPu8oBYNq/QIi9URHJ3Q==}
     engines: {node: '>=18.18.0'}
+
+  '@humanspeak/svelte-virtual-chat@0.1.23':
+    resolution: {integrity: sha512-/hUXQyhX43Te8LJOwzet7JCV9DaU6W2jdQq6O2K7Qp31POJ1JB4FrhKyGw2N+Oli9LB2k9E7KsOBY9n+mMvwKg==}
+    peerDependencies:
+      svelte: ^5.0.0
 
   '@humanwhocodes/module-importer@1.0.1':
     resolution: {integrity: sha512-bxveV4V8v5Yb4ncFTT3rPSgZBOpCkjfK0y4oVVVJwIuDVBRMDXrPyXRL988i5ap9m9bnyEEjWfm5WkBmtffLfA==}
@@ -2700,6 +2708,11 @@ snapshots:
       '@humanwhocodes/retry': 0.4.3
 
   '@humanfs/types@0.15.0': {}
+
+  '@humanspeak/svelte-virtual-chat@0.1.23(svelte@5.57.1(@typescript-eslint/types@8.70.1))':
+    dependencies:
+      esm-env: 1.2.2
+      svelte: 5.57.1(@typescript-eslint/types@8.70.1)
 
   '@humanwhocodes/module-importer@1.0.1': {}
 

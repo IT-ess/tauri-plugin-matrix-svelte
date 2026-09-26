@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as Marker from '$lib/components/ui/marker';
 	import { m } from '$lib/paraglide/messages';
 	import { SvelteDate } from 'svelte/reactivity';
 	import type { VirtualTimelineItem } from 'tauri-plugin-matrix-svelte-api';
@@ -57,20 +58,19 @@
 </script>
 
 {#if data.kind === 'dateDivider'}
-	<div class="relative my-6">
-		<div class="absolute inset-0 flex items-center">
-			<div class="w-full border-t"></div>
-		</div>
-		<div class="relative flex justify-center">
-			<div class="bg-background text-muted-foreground px-2 text-xs">
-				{formatDate(timestamp ?? 0)}
-				{m.at()}
-				{formatTime(timestamp ?? 0)}
-			</div>
-		</div>
-	</div>
+	<Marker.Root variant="separator" class="text-xs">
+		<Marker.Content>
+			{formatDate(timestamp ?? 0)}
+			{m.at()}
+			{formatTime(timestamp ?? 0)}
+		</Marker.Content>
+	</Marker.Root>
 {:else if data.kind === 'timelineStart'}
-	<p class="text-muted-foreground text-center text-sm">{m.room_no_more_messages()}</p>
+	<Marker.Root class="justify-center">
+		<Marker.Content>{m.room_no_more_messages()}</Marker.Content>
+	</Marker.Root>
 {:else if data.kind === 'readMarker' && roomHasUnreadMessages}
-	<div class="border-primary/80 w-full border-t"></div>
+	<Marker.Root variant="separator" class="text-primary before:bg-primary/80 after:bg-primary/80">
+		<Marker.Content>{m.timeline_new_messages()}</Marker.Content>
+	</Marker.Root>
 {/if}

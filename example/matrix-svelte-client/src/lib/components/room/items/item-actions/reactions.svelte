@@ -10,9 +10,11 @@
 
 	type Props = {
 		reactions: ReactionsByKeyBySender;
+		currentUserId: string;
+		onToggle: (emoji: string) => void;
 	};
 
-	let { reactions }: Props = $props();
+	let { reactions, currentUserId, onToggle }: Props = $props();
 
 	let reactionKeys = $derived(Object.keys(reactions));
 
@@ -31,22 +33,27 @@
 	};
 </script>
 
-<div class="flex flex-wrap gap-1">
+<TooltipProvider>
 	{#each reactionKeys as reaction (reaction)}
-		<TooltipProvider>
-			<Tooltip>
-				<TooltipTrigger>
-					{#snippet child({ props: triggerProps })}
-						<Button variant="secondary" size="sm" class="h-6 gap-1 px-2 text-xs" {...triggerProps}>
-							<span>{reaction}</span>
-							<span class="font-medium">{formatUsersList(Object.keys(reactions[reaction]))}</span>
-						</Button>
-					{/snippet}
-				</TooltipTrigger>
-				<TooltipContent>
-					<p>{Object.keys(reactions[reaction])}</p>
-				</TooltipContent>
-			</Tooltip>
-		</TooltipProvider>
+		{@const users = Object.keys(reactions[reaction])}
+		<Tooltip>
+			<TooltipTrigger>
+				{#snippet child({ props: triggerProps })}
+					<Button
+						{...triggerProps}
+						variant={users.includes(currentUserId) ? 'secondary' : 'ghost'}
+						size="xs"
+						aria-label={`${reaction} ${formatUsersList(users)}`}
+						onclick={() => onToggle(reaction)}
+					>
+						{reaction}
+						{users.length}
+					</Button>
+				{/snippet}
+			</TooltipTrigger>
+			<TooltipContent>
+				<p>{formatUsersList(users)}</p>
+			</TooltipContent>
+		</Tooltip>
 	{/each}
-</div>
+</TooltipProvider>
