@@ -140,6 +140,10 @@ The current implementation is a memory hog, especially with accounts with a lot 
 
 Join this [Matrix room](https://matrix.to/#/#matrix-ui-serializable:matrix.org) if you have questions about this project !
 
+# AI Notice
+
+This project uses AI agent tools for some tasks. 
+Most of the code remains human-written, and all of the merged code has been reviewed by a human. AI commits are marked as such in the description / co-author field.
 
 # Special thanks to :
 
