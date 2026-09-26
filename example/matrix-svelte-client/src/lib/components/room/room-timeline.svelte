@@ -149,7 +149,12 @@
 			}
 		}
 		await tick();
-		chat?.scrollToMessage(itemsByEventId.get(eventId)!.uniqueId);
+		const targetId = itemsByEventId.get(eventId)!.uniqueId;
+		chat?.scrollToMessage(targetId);
+		// ponytail: the first jump uses estimated heights for unmeasured rows, so jump again once the rows
+		// around the target are rendered and measured. Loop until the offset is stable if long jumps still miss.
+		await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+		chat?.scrollToMessage(targetId);
 		// The library leaves follow-bottom without notifying when it was already off
 		isFollowing = false;
 
