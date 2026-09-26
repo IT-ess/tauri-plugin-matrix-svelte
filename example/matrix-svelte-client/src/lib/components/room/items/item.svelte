@@ -4,7 +4,6 @@
 		MediaRequestParameters,
 		TimelineItem
 	} from 'tauri-plugin-matrix-svelte-api';
-	import { roomsCollection } from '../../../../hooks.client';
 	import * as Marker from '$lib/components/ui/marker';
 	import MessageLike from './message-like.svelte';
 	import Virtual from './virtual.svelte';
@@ -76,13 +75,7 @@
 			{highlighted}
 		/>
 	{:else if item.kind === 'virtual'}
-		<Virtual
-			timestamp={item.timestamp ?? undefined}
-			data={item.data}
-			roomHasUnreadMessages={roomsCollection.state.allJoinedRooms[roomId]
-				? roomsCollection.state.allJoinedRooms[roomId].numUnreadMessages > 0
-				: false}
-		/>
+		<Virtual timestamp={item.timestamp ?? undefined} data={item.data} />
 	{:else if item.kind === 'call'}
 		{@render stateMessage('Someone started a call')}
 	{:else if item.kind === 'stateChange'}
