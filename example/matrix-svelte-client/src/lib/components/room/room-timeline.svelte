@@ -58,7 +58,14 @@
 	});
 	let highlightedEventId = $state<string | null>(null);
 
-	let items = $derived(roomStore.state.tlState?.items ?? []);
+	// The read marker is only shown while the room has unreads. Dropping it otherwise avoids an empty
+	// row and keeps the messages around it grouped.
+	let items = $derived.by(() => {
+		const all = roomStore.state.tlState?.items ?? [];
+		return unreadCount > 0
+			? all
+			: all.filter((i) => !(i.kind === 'virtual' && i.data.kind === 'readMarker'));
+	});
 	let itemsByEventId = $derived(new Map(items.map((i) => [i.eventId, i])));
 	let unreadCount = $derived(roomsCollection.state.allJoinedRooms[roomId]?.numUnreadMessages ?? 0);
 	// Read receipts target the latest message from someone else (remote msgLike events have event ids)

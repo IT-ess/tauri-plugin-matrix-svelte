@@ -7,10 +7,9 @@
 	type Props = {
 		timestamp?: number;
 		data: VirtualTimelineItem;
-		roomHasUnreadMessages: boolean;
 	};
 
-	let { timestamp, data, roomHasUnreadMessages }: Props = $props();
+	let { timestamp, data }: Props = $props();
 
 	// Format the date for the separator
 	const formatDate = (timestamp: number) => {
@@ -69,7 +68,7 @@
 	<Marker.Root class="justify-center">
 		<Marker.Content>{m.room_no_more_messages()}</Marker.Content>
 	</Marker.Root>
-{:else if data.kind === 'readMarker' && roomHasUnreadMessages}
+{:else if data.kind === 'readMarker'}
 	<Marker.Root variant="separator" class="text-primary before:bg-primary/80 after:bg-primary/80">
 		<Marker.Content>{m.timeline_new_messages()}</Marker.Content>
 	</Marker.Root>
