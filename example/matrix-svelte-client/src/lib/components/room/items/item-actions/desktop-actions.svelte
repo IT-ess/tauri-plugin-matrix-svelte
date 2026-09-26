@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Reactions from './reactions.svelte';
 	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
 	import { Tooltip, TooltipContent, TooltipProvider } from '$lib/components/ui/tooltip';
 	import { Button } from '$lib/components/ui/button';
@@ -98,9 +97,5 @@
 				</Popover>
 			</TooltipProvider>
 		{/if}
-	{/if}
-
-	{#if reactionsArray.length > 0}
-		<Reactions {reactions} />
 	{/if}
 </div>

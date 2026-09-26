@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
+	import * as Message from '$lib/components/ui/message';
+	import * as Bubble from '$lib/components/ui/bubble';
 	import {
 		Copy,
 		MessageSquareReply,
@@ -10,7 +12,6 @@
 	} from '@lucide/svelte';
 	import ImageMessage from './image-message.svelte';
 	import {
-		cn,
 		getCustomMxcUriFromOriginal,
 		getInitials,
 		gotoProfile,
@@ -76,6 +77,9 @@
 		threadRootEventId: string | null;
 		roomAvatar: string | null;
 		roomMembers: Record<string, FrontendRoomMember>;
+		groupedWithPrev: boolean;
+		groupedWithNext: boolean;
+		highlighted: boolean;
 	};
 
 	let {
@@ -94,7 +98,10 @@
 		handleOpenMediaViewMode,
 		threadRootEventId,
 		roomAvatar,
-		roomMembers
+		roomMembers,
+		groupedWithPrev,
+		groupedWithNext,
+		highlighted
 	}: Props = $props();
 
 	let senderId = $derived(data.senderId);
@@ -104,7 +111,7 @@
 	let showActions = $state(false);
 	let showDropdown = $state(false);
 	let isEditing = $state(false);
-	let reactionsPopoverAnchor = $state<HTMLElement>(null!);
+	let reactionsPopoverAnchor = $state<HTMLElement | null>(null);
 
 	// Format timestamp
 	const formatTime = (timestamp: number) => {
@@ -263,7 +270,8 @@
 </script>
 
 <Popover bind:open={showDropdown}>
-	<div
+	<Message.Root
+		align={isOwn ? 'end' : 'start'}
 		onmouseenter={() => (showActions = true)}
 		onmouseleave={() => (showActions = false)}
 		{...usePress(
@@ -285,135 +293,160 @@
 			}
 		)}
 		style="transform: translateX({swipeOffset.current}px)"
-		class={cn(
-			'group flex gap-1 transition-transform duration-200',
-			isOwn && 'flex-row-reverse',
-			`translate-[${swipeOffset.current}]px`
-		)}
+		class={['rounded-3xl transition-transform duration-200', highlighted && 'highlight-message']}
 		role="button"
-		tabindex="0"
+		tabindex={0}
 		aria-label="Swipe to reply"
 	>
 		<PopoverTrigger />
-		<Avatar onclick={() => gotoProfile(senderId)} class="border border-primary">
-			<AvatarImage src={getCustomMxcUriFromOriginal(roomMembers[senderId]?.avatar)} alt={sender} />
-			<AvatarFallback>{getInitials(sender ?? '?')}</AvatarFallback>
-		</Avatar>
+		<Message.Avatar>
+			{#if !groupedWithNext}
+				<Avatar onclick={() => gotoProfile(senderId)} class="border-primary border">
+					<AvatarImage
+						src={getCustomMxcUriFromOriginal(roomMembers[senderId]?.avatar)}
+						alt={sender}
+					/>
+					<AvatarFallback>{getInitials(sender ?? '?')}</AvatarFallback>
+				</Avatar>
+			{/if}
+		</Message.Avatar>
 		<DropdownMenu bind:open={showDropdown}>
 			<DropdownMenuTrigger />
-			{#if data.kind === 'sticker'}
-				<!-- Render sticker outside the block -->
-				<div class={cn('relative max-w-[30%] p-3', isSwipeActive ? 'ring-2 ring-blue-300' : '')}>
-					<ImageMessage itemContent={data.body} isSticker {handleOpenMediaViewMode} />
-				</div>
-			{:else}
-				<div bind:this={reactionsPopoverAnchor} class="relative max-w-[70%]">
+			<Message.Content class="w-fit max-w-[80%]">
+				{#if !groupedWithPrev && !isOwn}
+					<Message.Header>{sender}</Message.Header>
+				{/if}
+				{#if data.kind === 'sticker'}
+					<!-- Render sticker outside the bubble -->
 					<div
+						bind:this={reactionsPopoverAnchor}
 						class={[
-							'relative w-full rounded-lg p-3',
-							isOwn ? 'bg-primary text-primary-foreground' : 'bg-muted',
-							isSwipeActive ? 'ring-2 ring-blue-300' : ''
+							'w-40 rounded-lg [&_img]:h-auto [&_img]:w-full',
+							isSwipeActive && 'ring-ring ring-2'
 						]}
 					>
-						<div class="flex items-center gap-2">
-							<p class="text-sm font-medium">{data.sender}</p>
-							<span class="text-xs opacity-70">{formatTime(timestamp ?? 0)}</span>
-						</div>
-						{#if repliedToMessage && !threadRootEventId}
-							<div
-								class="relative mt-1 cursor-pointer rounded-lg bg-white p-2 text-sm text-black transition-colors hover:bg-gray-100"
-								onclick={handleReplyClick}
-								role="button"
-								tabindex="0"
-								onkeydown={(e) => e.key === 'Enter' && handleReplyClick()}
-							>
-								<MessageSquareReply class="absolute top-1 right-1" />
-								<p class="mr-8 text-sm font-medium">{repliedToMessage.sender}</p>
-								<p class="text-sm">{extractContentFromMsg(repliedToMessage)}</p>
-							</div>
-						{/if}
-						{#if data.kind === 'text'}
-							{#if isEditing}
-								<EditTextMessage
-									bind:isEditing
-									message={data.body.body}
-									onEdit={onSubmitEditMessage}
-								/>
-							{:else}
-								<TextMessage textMessage={data.body} />
-							{/if}
-						{:else if data.kind === 'emote'}
-							<p class="mt-1 text-sm">
-								<b>{data.sender}:</b>{data.body.body}
-								<!-- same as a text message, but with sender name in front -->
-							</p>
-						{:else if data.kind === 'image'}
-							<ImageMessage itemContent={data.body} isSticker={false} {handleOpenMediaViewMode} />
-							{#if data.body.body}
-								<TextMessage
-									textMessage={{
-										body: data.body.body,
-										formatted_body: data.body.formatted_body,
-										format: data.body.format,
-										matched_urls: null
-									}}
-								/>
-							{/if}
-						{:else if data.kind === 'audio'}
-							<AudioMessage itemContent={data.body} {isOwn} />
-						{:else if data.kind === 'video'}
-							<VideoMessage itemContent={data.body} {handleOpenMediaViewMode} />
-							{#if data.body.body}
-								<TextMessage
-									textMessage={{
-										body: data.body.body,
-										formatted_body: data.body.formatted_body,
-										format: data.body.format,
-										matched_urls: null
-									}}
-								/>
-							{/if}
-						{:else if data.kind === 'file'}
-							<FileMessage itemContent={data.body} />
-							{#if data.body.body}
-								<TextMessage
-									textMessage={{
-										body: data.body.body,
-										formatted_body: data.body.formatted_body,
-										format: data.body.format,
-										matched_urls: null
-									}}
-								/>
-							{/if}
-						{:else if data.kind === 'notice'}
-							<TextMessage textMessage={data.body} />
-						{:else if data.kind === 'serverNotice'}
-							<TextMessage
-								textMessage={{
-									body: data.body.body,
-									matched_urls: null
-								}}
-							/>
-						{:else if data.kind === 'redacted'}
-							<Badge variant="destructive">{m.message_has_been_deleted()}</Badge>
-						{:else if data.kind === 'unableToDecrypt'}
-							<Badge variant={isOwn ? 'secondary' : 'default'}>{m.message_encrypted()}</Badge>
-						{:else}
-							<p class="text-sm text-muted">
-								The message type: {data.kind} is not supported yet
-							</p>
-						{/if}
+						<ImageMessage itemContent={data.body} isSticker {handleOpenMediaViewMode} />
 					</div>
-					{#if data.threadSummary && !threadRootEventId}
-						<ThreadPreview
-							threadSummary={data.threadSummary}
-							{roomId}
-							rootId={eventId}
-							{roomAvatar}
-						/>
+					{#if reactionsArray.length > 0}
+						<div class="flex flex-wrap gap-1">
+							<Reactions reactions={data.reactions} {currentUserId} onToggle={handleAddReaction} />
+						</div>
 					{/if}
-				</div>
-			{/if}
+				{:else}
+					<Bubble.Root
+						bind:ref={reactionsPopoverAnchor}
+						variant={isOwn ? 'default' : 'muted'}
+						class="max-w-full has-data-[slot=bubble-reactions]:mb-5"
+					>
+						<Bubble.Content class={isSwipeActive ? 'ring-ring ring-2' : undefined}>
+							{#if repliedToMessage && !threadRootEventId}
+								<div
+									class="relative mt-1 cursor-pointer rounded-lg bg-white p-2 text-sm text-black transition-colors hover:bg-gray-100"
+									onclick={handleReplyClick}
+									role="button"
+									tabindex="0"
+									onkeydown={(e) => e.key === 'Enter' && handleReplyClick()}
+								>
+									<MessageSquareReply class="absolute top-1 right-1" />
+									<p class="mr-8 text-sm font-medium">{repliedToMessage.sender}</p>
+									<p class="text-sm">{extractContentFromMsg(repliedToMessage)}</p>
+								</div>
+							{/if}
+							{#if data.kind === 'text'}
+								{#if isEditing}
+									<EditTextMessage
+										bind:isEditing
+										message={data.body.body}
+										onEdit={onSubmitEditMessage}
+									/>
+								{:else}
+									<TextMessage textMessage={data.body} />
+								{/if}
+							{:else if data.kind === 'emote'}
+								<p class="mt-1 text-sm">
+									<b>{data.sender}:</b>{data.body.body}
+									<!-- same as a text message, but with sender name in front -->
+								</p>
+							{:else if data.kind === 'image'}
+								<ImageMessage itemContent={data.body} isSticker={false} {handleOpenMediaViewMode} />
+								{#if data.body.body}
+									<TextMessage
+										textMessage={{
+											body: data.body.body,
+											formatted_body: data.body.formatted_body,
+											format: data.body.format,
+											matched_urls: null
+										}}
+									/>
+								{/if}
+							{:else if data.kind === 'audio'}
+								<AudioMessage itemContent={data.body} {isOwn} />
+							{:else if data.kind === 'video'}
+								<VideoMessage itemContent={data.body} {handleOpenMediaViewMode} />
+								{#if data.body.body}
+									<TextMessage
+										textMessage={{
+											body: data.body.body,
+											formatted_body: data.body.formatted_body,
+											format: data.body.format,
+											matched_urls: null
+										}}
+									/>
+								{/if}
+							{:else if data.kind === 'file'}
+								<FileMessage itemContent={data.body} />
+								{#if data.body.body}
+									<TextMessage
+										textMessage={{
+											body: data.body.body,
+											formatted_body: data.body.formatted_body,
+											format: data.body.format,
+											matched_urls: null
+										}}
+									/>
+								{/if}
+							{:else if data.kind === 'notice'}
+								<TextMessage textMessage={data.body} />
+							{:else if data.kind === 'serverNotice'}
+								<TextMessage
+									textMessage={{
+										body: data.body.body,
+										matched_urls: null
+									}}
+								/>
+							{:else if data.kind === 'redacted'}
+								<Badge variant="destructive">{m.message_has_been_deleted()}</Badge>
+							{:else if data.kind === 'unableToDecrypt'}
+								<Badge variant={isOwn ? 'secondary' : 'default'}>{m.message_encrypted()}</Badge>
+							{:else}
+								<p class="text-muted text-sm">
+									The message type: {data.kind} is not supported yet
+								</p>
+							{/if}
+						</Bubble.Content>
+						{#if reactionsArray.length > 0}
+							<Bubble.Reactions align={isOwn ? 'start' : 'end'}>
+								<Reactions
+									reactions={data.reactions}
+									{currentUserId}
+									onToggle={handleAddReaction}
+								/>
+							</Bubble.Reactions>
+						{/if}
+					</Bubble.Root>
+				{/if}
+				{#if data.threadSummary && !threadRootEventId}
+					<ThreadPreview
+						threadSummary={data.threadSummary}
+						{roomId}
+						rootId={eventId}
+						{roomAvatar}
+					/>
+				{/if}
+				{#if !groupedWithNext}
+					<Message.Footer>{formatTime(timestamp)}</Message.Footer>
+				{/if}
+			</Message.Content>
 
 			{#if currentPlatform !== 'android' && currentPlatform !== 'ios'}
 				<DesktopActions
@@ -427,10 +460,6 @@
 					{handleShowdropdown}
 					{abilities}
 				/>
-			{:else}
-				<div class={['flex items-center gap-1', isOwn && 'flex-row-reverse']}>
-					<Reactions reactions={data.reactions} />
-				</div>
 			{/if}
 			<DropdownMenuContent
 				customAnchor={reactionsPopoverAnchor}
@@ -468,7 +497,7 @@
 				{/if}
 			</DropdownMenuContent>
 		</DropdownMenu>
-	</div>
+	</Message.Root>
 	<PopoverContent
 		side="top"
 		align={isOwn ? 'end' : 'start'}

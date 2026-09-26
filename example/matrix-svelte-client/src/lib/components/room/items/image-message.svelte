@@ -62,10 +62,7 @@
 	let imageHeightOrDefault = $derived(itemContent.info?.h ?? 200);
 </script>
 
-<div
-	class={cn('bg-card relative mt-1 overflow-hidden', isSticker ? '' : 'rounded-lg border')}
-	style="content-visibility: auto;"
->
+<div class={cn('bg-card relative mt-1 overflow-hidden', isSticker ? '' : 'rounded-lg border')}>
 	{#if !isLoaded}
 		<canvas
 			{@attach (canvas) => {

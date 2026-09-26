@@ -28,6 +28,7 @@
 	},
 	"license": "MIT",
 	"dependencies": {
+		"@humanspeak/svelte-virtual-chat": "^0.1.23",
 		"@tailwindcss/vite": "^4.3.3",
 		"@tauri-apps/api": "^2.12.0",
 		"@tauri-apps/plugin-fs": "^2.6.0",
