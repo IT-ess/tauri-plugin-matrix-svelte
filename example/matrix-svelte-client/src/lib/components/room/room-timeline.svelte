@@ -50,7 +50,12 @@
 	} | null>(null);
 
 	let chat = $state<SvelteVirtualChat<TimelineItem>>();
-	let isFollowing = $state(true);
+	// Resets when the keyed timeline remounts (pinned to the bottom) and stays off while a focus jump is
+	// pending, so no read receipt is sent before it; onFollowBottomChange overrides it afterwards.
+	let isFollowing = $derived.by(() => {
+		void [roomId, threadRoot];
+		return !openingFocus;
+	});
 	let highlightedEventId = $state<string | null>(null);
 
 	let items = $derived(roomStore.state.tlState?.items ?? []);
@@ -124,6 +129,7 @@
 			// Paginate at most 250 events
 			if (counter > 4) {
 				toast.error(m.timeline_focus_error());
+				isFollowing = chat?.isAtBottom() ?? true;
 				return;
 			}
 			counter++;
@@ -253,8 +259,6 @@
 	// We use afterNavigate instead of onMount because sometimes the navigation
 	// is done between rooms, thus this component is already mounted
 	afterNavigate(() => {
-		// The timeline may have remounted (keyed by room) without emitting onFollowBottomChange
-		isFollowing = chat?.isAtBottom() ?? true;
 		if (openingFocus) {
 			// We wait for the timeline to be mounted
 			setTimeout(() => {
