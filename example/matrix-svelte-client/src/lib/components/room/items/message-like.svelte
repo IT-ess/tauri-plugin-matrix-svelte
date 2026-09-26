@@ -108,7 +108,6 @@
 	let sender = $derived(data.sender);
 	let reactionsArray = $derived(Object.keys(data.reactions));
 
-	let showActions = $state(false);
 	let showDropdown = $state(false);
 	let isEditing = $state(false);
 	let reactionsPopoverAnchor = $state<HTMLElement | null>(null);
@@ -259,6 +258,7 @@
 	};
 
 	const currentPlatform = platform();
+	const isDesktop = currentPlatform !== 'android' && currentPlatform !== 'ios';
 
 	const handleReplyClick = () => {
 		if (onScrollToMessage && data.inReplyToId) {
@@ -269,11 +269,30 @@
 	let canReplyTo = $derived(abilities.includes('canReplyTo'));
 </script>
 
+<!-- Overlaid on the bubble's top edge (not the content's, which starts with the sender name)
+     so it never takes layout space and grouped rows stay tight -->
+{#snippet desktopActions()}
+	{#if isDesktop}
+		<Message.Header
+			class={['absolute top-0 z-10 -translate-y-1/2 px-0', isOwn ? 'left-0' : 'right-0']}
+		>
+			<DesktopActions
+				{commonEmojis}
+				{currentUserId}
+				{isOwn}
+				{handleAddReaction}
+				{handleReply}
+				reactions={data.reactions}
+				{handleShowdropdown}
+				{abilities}
+			/>
+		</Message.Header>
+	{/if}
+{/snippet}
+
 <Popover bind:open={showDropdown}>
 	<Message.Root
 		align={isOwn ? 'end' : 'start'}
-		onmouseenter={() => (showActions = true)}
-		onmouseleave={() => (showActions = false)}
 		{...usePress(
 			() => {
 				showDropdown = true;
@@ -321,10 +340,11 @@
 					<div
 						bind:this={reactionsPopoverAnchor}
 						class={[
-							'w-40 rounded-lg [&_img]:h-auto [&_img]:w-full',
+							'relative w-40 rounded-lg [&_img]:h-auto [&_img]:w-full',
 							isSwipeActive && 'ring-ring ring-2'
 						]}
 					>
+						{@render desktopActions()}
 						<ImageMessage itemContent={data.body} isSticker {handleOpenMediaViewMode} />
 					</div>
 					{#if reactionsArray.length > 0}
@@ -338,6 +358,7 @@
 						variant={isOwn ? 'default' : 'muted'}
 						class="max-w-full has-data-[slot=bubble-reactions]:mb-5"
 					>
+						{@render desktopActions()}
 						<Bubble.Content class={isSwipeActive ? 'ring-ring ring-2' : undefined}>
 							{#if repliedToMessage && !threadRootEventId}
 								<div
@@ -448,19 +469,6 @@
 				{/if}
 			</Message.Content>
 
-			{#if currentPlatform !== 'android' && currentPlatform !== 'ios'}
-				<DesktopActions
-					bind:showActions
-					{commonEmojis}
-					{currentUserId}
-					{isOwn}
-					{handleAddReaction}
-					{handleReply}
-					reactions={data.reactions}
-					{handleShowdropdown}
-					{abilities}
-				/>
-			{/if}
 			<DropdownMenuContent
 				customAnchor={reactionsPopoverAnchor}
 				align={isOwn ? 'end' : 'start'}
