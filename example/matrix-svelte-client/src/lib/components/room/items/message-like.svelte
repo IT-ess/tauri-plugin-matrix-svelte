@@ -425,7 +425,7 @@
 							{/if}
 						</Bubble.Content>
 						{#if reactionsArray.length > 0}
-							<Bubble.Reactions align={isOwn ? 'start' : 'end'}>
+							<Bubble.Reactions align={isOwn ? 'end' : 'start'}>
 								<Reactions
 									reactions={data.reactions}
 									{currentUserId}
