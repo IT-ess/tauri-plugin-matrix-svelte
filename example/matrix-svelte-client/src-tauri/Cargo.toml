@@ -54,7 +54,7 @@ base64 = "0.22"
 
 [target."cfg(target_os = \"android\")".dependencies]
 jni = "0.21.1"
-tokio = "1.52.1"
+tokio = "1.53.1"
 tauri-plugin-android-fs = { version = "28.1.0", default-features = false }
 # Routes the cold-path (killed-state) silent-push `tracing` output to logcat,
 # since the Tauri runtime's logging setup never runs in that path.
@@ -63,7 +63,7 @@ paranoid-android = "0.2"
 [target."cfg(target_os = \"ios\")".dependencies]
 # Runtime for the Notification Service Extension's silent-push handler
 # (`ios_push.rs`), which drives the async Matrix fetch without a Tauri runtime.
-tokio = { version = "1.52.1", features = ["rt"] }
+tokio = { version = "1.53.1", features = ["rt"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 tauri-plugin-devtools = "2.1.0"
