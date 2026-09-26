@@ -1,10 +1,50 @@
-[package]
-name = "tauri-plugin-matrix-svelte"
+[workspace]
+members = ["example/matrix-svelte-client/src-tauri"]
+
+[workspace.package]
 version = "0.4.0"
 authors = ["IT-ess"]
-description = "A Tauri plugin that exposes high level Matrix data through Svelte Rune stores"
 edition = "2024"
-exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]
+
+# Dependencies shared by the plugin and the example app. Bump them here so both
+# crates always resolve to the same version/source.
+[workspace.dependencies]
+anyhow = "1.0.102"
+base64 = "0.22.1"
+mime_serde_shim = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.142"
+tauri = "2.11.5"
+tauri-plugin-android-fs = { version = "28.1.0", default-features = false }
+tauri-plugin-dialog = "2.7.1"
+# Git submodule at the repo root (pinned to the `silent-notifications` branch).
+# Path-sourced (not git) so `cargo build --target aarch64-apple-ios` generates its
+# `.tauri/tauri-api` Swift bridge in the submodule, which the example app's iOS NSE
+# Swift package links. Run `git submodule update --init` after cloning.
+tauri-plugin-notifications = { path = "tauri-plugin-notifications", features = ["push-notifications"] }
+tauri-plugin-svelte = { version = "3.2.0", features = ["marshaler-cbor"] }
+tracing = "0.1.43"
+tracing-subscriber = "0.3.22"
+
+# Profiles only take effect from the workspace root, so the example app's
+# release tuning lives here.
+[profile.dev]
+incremental = true # Compile your binary in smaller steps.
+
+[profile.release]
+codegen-units = 1 # Allows LLVM to perform better optimization.
+lto = true        # Enables link-time-optimizations.
+opt-level = 3     # Prioritizes small binary size. Use `3` if you prefer speed.
+panic = "abort"   # Higher performance by disabling panic handlers.
+strip = true      # Ensures debug symbols are removed.
+
+[package]
+name = "tauri-plugin-matrix-svelte"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description = "A Tauri plugin that exposes high level Matrix data through Svelte Rune stores"
+exclude = ["/example", "/dist-js", "/guest-js", "/node_modules"]
 links = "tauri-plugin-matrix-svelte"
 keywords = ["matrix", "svelte", "tauri", "plugin", "chat"]
 repository = "https://github.com/IT-ess/tauri-plugin-matrix-svelte"
@@ -12,29 +52,25 @@ readme = "README.md"
 license = "Apache-2.0"
 
 [dependencies]
-tauri = "2.11.5"
-serde = "1.0"
-serde_json = "1.0.142"
-base64 = "0.22.1"
+tauri.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+base64.workspace = true
 async-trait = "0.1.89"
 thiserror = "2"
-anyhow = "1.0.102"
+anyhow.workspace = true
 keyring-core = "1.0.0"
-tracing-subscriber = "0.3.19"
+tracing-subscriber.workspace = true
 rand = "0.10"
 url = "2.5.7"
-mime_serde_shim = "0.2"
+mime_serde_shim.workspace = true
 futures = "0.3.31"
 futures-util = "0.3.31"
-tauri-plugin-android-fs = { version = "28.1.0", default-features = false }
-tauri-plugin-dialog = "2.7.1"
-tauri-plugin-svelte = { version = "3.2.0", features = ["marshaler-cbor"] }
-# Git submodule at the repo root (pinned to the `silent-notifications` branch).
-# Path-sourced (not git) so `cargo build --target aarch64-apple-ios` generates its
-# `.tauri/tauri-api` Swift bridge in the submodule, which the example app's iOS NSE
-# Swift package links. Run `git submodule update --init` after cloning.
-tauri-plugin-notifications = { path = "tauri-plugin-notifications", features = ["push-notifications"] }
-tracing = "0.1.43"
+tauri-plugin-android-fs.workspace = true
+tauri-plugin-dialog.workspace = true
+tauri-plugin-svelte.workspace = true
+tauri-plugin-notifications.workspace = true
+tracing.workspace = true
 infer = { version = "0.19", default-features = false }
 matrix-ui-serializable = { git = "https://github.com/IT-ess/matrix-ui-serializable" }
 # matrix-ui-serializable = { path = "../matrix-ui-serializable" }
