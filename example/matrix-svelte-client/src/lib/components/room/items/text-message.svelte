@@ -1,19 +1,17 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages';
+	import * as Collapsible from '$lib/components/ui/collapsible';
+	import { Button } from '$lib/components/ui/button';
+	import { ChevronDownIcon } from '@lucide/svelte';
 	import { adaptBaseUriToPlatform } from '$lib/utils.svelte';
 	import type { Attachment } from 'svelte/attachments';
 	import { fetchMatrixPillInfo, type FrontendTextMessage } from 'tauri-plugin-matrix-svelte-api';
 
 	let { textMessage }: { textMessage: FrontendTextMessage } = $props();
 
-	let textElement = $state<HTMLParagraphElement>();
-	let needsToggle = $derived.by(() => {
-		if (textElement) {
-			return textElement.scrollHeight > textElement.clientHeight;
-		} else {
-			return false;
-		}
-	});
+	// Long plain-text messages are collapsed to a preview (Bubble collapsible pattern)
+	const PREVIEW_LENGTH = 280;
+	let isLong = $derived(textMessage.body.length > PREVIEW_LENGTH);
 	let isExpanded = $state(false);
 
 	// Small AI generated utility that checks the presence of anchor elements,
@@ -82,23 +80,26 @@
 			{@html textMessage.formatted_body}
 		</div>
 	{:else}
-		<p
-			bind:this={textElement}
-			class="wrap-break-words w-full overflow-hidden text-sm wrap-normal hyphens-auto {isExpanded
-				? ''
-				: 'line-clamp-5'}"
-		>
-			{textMessage.body}
-		</p>
-	{/if}
-
-	{#if needsToggle || isExpanded}
-		<button
-			onclick={() => (isExpanded = !isExpanded)}
-			class="mt-1 text-xs font-semibold text-blue-500"
-		>
-			{isExpanded ? m.message_show_less() : m.message_view_more()}
-		</button>
+		<Collapsible.Root bind:open={isExpanded}>
+			<p class="text-sm hyphens-auto whitespace-pre-line">
+				{isExpanded || !isLong
+					? textMessage.body
+					: `${textMessage.body.slice(0, PREVIEW_LENGTH)}...`}
+			</p>
+			{#if isLong}
+				<Collapsible.Trigger>
+					{#snippet child({ props })}
+						<Button variant="link" class="h-auto gap-1 p-0 text-current opacity-80" {...props}>
+							{isExpanded ? m.message_show_less() : m.message_view_more()}
+							<ChevronDownIcon
+								data-icon="inline-end"
+								class="group-data-[state=open]/button:rotate-180"
+							/>
+						</Button>
+					{/snippet}
+				</Collapsible.Trigger>
+			{/if}
+		</Collapsible.Root>
 	{/if}
 </div>
 
