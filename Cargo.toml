@@ -5,6 +5,7 @@ members = ["example/matrix-svelte-client/src-tauri"]
 version = "0.4.0"
 authors = ["IT-ess"]
 edition = "2024"
+rust-version = "1.98"
 
 # Dependencies shared by the plugin and the example app. Bump them here so both
 # crates always resolve to the same version/source.
@@ -14,9 +15,9 @@ base64 = "0.22.1"
 mime_serde_shim = "0.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.142"
-tauri = "2.11.5"
+tauri = "2.12.0"
 tauri-plugin-android-fs = { version = "28.1.0", default-features = false }
-tauri-plugin-dialog = "2.7.1"
+tauri-plugin-dialog = "2.8.0"
 # Git submodule at the repo root (pinned to the `silent-notifications` branch).
 # Path-sourced (not git) so `cargo build --target aarch64-apple-ios` generates its
 # `.tauri/tauri-api` Swift bridge in the submodule, which the example app's iOS NSE
@@ -76,7 +77,7 @@ matrix-ui-serializable = { git = "https://github.com/IT-ess/matrix-ui-serializab
 # matrix-ui-serializable = { path = "../matrix-ui-serializable" }
 
 [build-dependencies]
-tauri-plugin = { version = "2.6.2", features = ["build"] }
+tauri-plugin = { version = "2.7.0", features = ["build"] }
 
 [target."cfg(any(target_os = \"macos\", target_os = \"ios\"))".dependencies]
 apple-native-keyring-store = { version = "1.0.0", features = ["protected"] }
