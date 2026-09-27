@@ -3949,7 +3949,7 @@ dependencies = [
 [[package]]
 name = "matrix-ui-serializable"
 version = "0.4.0"
-source = "git+https://github.com/IT-ess/matrix-ui-serializable#35e0b79c15abff8444551fba4830160339338979"
+source = "git+https://github.com/IT-ess/matrix-ui-serializable#7e07b862164de3ced0b51f0e34782e8530531c1d"
 dependencies = [
  "anyhow",
  "async-trait",

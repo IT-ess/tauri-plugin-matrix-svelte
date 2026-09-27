@@ -25,6 +25,7 @@
 	import { toast } from 'svelte-sonner';
 	import { afterNavigate } from '$app/navigation';
 	import { m } from '$lib/paraglide/messages';
+	import { threadRootPlaceholder } from '$lib/utils.svelte';
 
 	type Props = {
 		roomId: string;
@@ -59,8 +60,22 @@
 
 	// The read marker is only shown while the room has unreads. Dropping it otherwise avoids an empty
 	// row and keeps the messages around it grouped.
+	// A thread page renders before the backend swaps the store to the thread timeline, and that
+	// timeline stays empty until its first pagination completes: show the root and a spinner meanwhile.
+	let tlState = $derived(roomStore.state.tlState);
+	let isThreadLoading = $derived(
+		threadRoot !== null &&
+			(tlState?.timelineKind !== 'thread' ||
+				tlState.threadRootEventId !== threadRoot ||
+				(tlState.items.length === 0 && !tlState.fullyPaginated))
+	);
+
 	let items = $derived.by(() => {
-		const all = roomStore.state.tlState?.items ?? [];
+		if (isThreadLoading) {
+			const root = threadRootPlaceholder.item;
+			return root?.eventId === threadRoot ? [root] : [];
+		}
+		const all = tlState?.items ?? [];
 		return unreadCount > 0
 			? all
 			: all.filter((i) => !(i.kind === 'virtual' && i.data.kind === 'readMarker'));
@@ -293,7 +308,7 @@
 			viewportClass="bg-white"
 		>
 			{#snippet header()}
-				{#if isLoadingMore}
+				{#if isLoadingMore || isThreadLoading}
 					<Marker.Root variant="separator" role="status" class="pt-2">
 						<Marker.Icon><Spinner /></Marker.Icon>
 					</Marker.Root>

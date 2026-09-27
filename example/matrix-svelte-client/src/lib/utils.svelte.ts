@@ -10,9 +10,11 @@ import {
 	type EncryptedFile,
 	type RoomDisplayName,
 	type RoomPreview,
-	type Thumbnail
+	type Thumbnail,
+	type TimelineItem
 } from 'tauri-plugin-matrix-svelte-api';
 import { platform } from '@tauri-apps/plugin-os';
+import { roomStore } from '../hooks.client';
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -63,7 +65,13 @@ export async function gotoRoom(roomId: string, avatarUri: string | null, focusOn
 	);
 }
 
+// Root of the thread being opened, taken from the main timeline. The thread page shows it
+// until the thread's own timeline has loaded (its first pagination takes a few seconds).
+export const threadRootPlaceholder = $state<{ item: TimelineItem | null }>({ item: null });
+
 export async function gotoThread(roomId: string, threadRoot: string, avatarUri: string | null) {
+	threadRootPlaceholder.item =
+		roomStore.state.tlState?.items.find((i) => i.eventId === threadRoot) ?? null;
 	return await goto(
 		`/room/thread?id=${encodeURIComponent(roomId)}&threadRoot=${encodeURIComponent(threadRoot)}${avatarUri ? '&avatar=' + encodeURIComponent(avatarUri) : ''}#bottomscroll`
 	);
