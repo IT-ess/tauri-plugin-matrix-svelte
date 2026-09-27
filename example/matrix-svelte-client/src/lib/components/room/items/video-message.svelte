@@ -167,7 +167,6 @@
 
 <div
 	class="bg-card relative mt-1 flex items-center justify-center overflow-hidden rounded-lg border"
-	style="content-visibility: auto;"
 >
 	{#if !isThumbLoaded}
 		<canvas
