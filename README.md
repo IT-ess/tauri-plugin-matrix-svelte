@@ -28,52 +28,58 @@ Even if this is a plugin, most of the logic stays tighly related to the example 
 - If you need to use OAuth authentication (that is the case for matrix.org), you'll need to configure an OAuth client. The example implementation use this preconfigured [website](https://github.com/IT-ess/oauth-redirect-deeplink), that uses deeplinks to pass the OAuth code upon redirect.
 - A [Sygnal push notification gateway](https://github.com/matrix-org/sygnal) if you want to configure push notifications on mobile.
 
-### Android network security config
+### Android TLS setup (rustls-platform-verifier)
 
-**Required on Android**, otherwise logging in fails against most homeservers with
-`invalid peer certificate: Revoked`.
+**Required on Android**, otherwise every HTTPS request to the homeserver fails.
 
-`matrix-rust-sdk` no longer bundles its own root certificates on Android — it delegates to
-[`rustls-platform-verifier`](https://github.com/rustls/rustls-platform-verifier), which calls into
-Android's Java certificate verifier. Trust anchors come from the system store and work fine, but
-the verifier also runs a revocation check, and it has to fetch the leaf's OCSP response or CRL when
-the server doesn't staple one. Those endpoints are mandated to be plain `http://` by the CA/Browser
-Forum Baseline Requirements, so Android's default "no cleartext traffic" policy blocks the fetch and
-the certificate is reported as revoked. See
-[rustls-platform-verifier#221](https://github.com/rustls/rustls-platform-verifier/issues/221) and
-[matrix-rust-sdk#6319](https://github.com/matrix-org/matrix-rust-sdk/issues/6319).
+`matrix-rust-sdk` no longer bundles its own root certificates on Android. It delegates to
+[`rustls-platform-verifier`](https://github.com/rustls/rustls-platform-verifier), which calls into Android's
+Java certificate verifier through a small Kotlin component. Your app needs three things:
 
-To fix it in your app:
+1. **The crate**, version `0.7.1` or later, as a dependency of your app (`src-tauri/Cargo.toml`). It has to
+   resolve to the same single copy `reqwest` uses, otherwise you initialize one copy and matrix-sdk uses the
+   other. Check with `cargo tree -i rustls-platform-verifier --target aarch64-linux-android`, and if two
+   versions show up, run `cargo update -p rustls-platform-verifier@<old version>`.
+2. **The Kotlin component**, fetched by Gradle from the Maven repository hosted on the project's GitHub. Its
+   version must match the `rustls-platform-verifier-android` crate in your `Cargo.lock`. Copy the
+   `repositories` / `RustlsVersion` / `configurations.configureEach` blocks and the unversioned
+   `implementation("org.rustls:rustls-platform-verifier")` line from
+   [the example app's `build.gradle.kts`](example/matrix-svelte-client/src-tauri/gen/android/app/build.gradle.kts),
+   and adjust the relative path to your `Cargo.lock`. See also the
+   [upstream Gradle setup](https://github.com/rustls/rustls-platform-verifier#gradle-setup). The Maven group
+   is `org.rustls`. The upstream README's `implementation "rustls:rustls-platform-verifier"` line uses the
+   wrong group, so its version rule never applies. If you use R8/Proguard, keep the rule
+   `-keep, includedescriptorclasses class org.rustls.platformverifier.** { *; }`.
+3. **Initialization** from Rust before any network call, with the Android context. `rustls-platform-verifier`
+   0.7 uses `jni` 0.22 while Tauri (wry) is still on `jni` 0.21, so the raw JNI pointers have to be re-wrapped.
+   Copy `init_platform_verifier` from
+   [the example's `push_handler.rs`](example/matrix-svelte-client/src-tauri/src/push_handler.rs) and call it
+   from `setup` via `webview.jni_handle().exec(...)`, as the example's `lib.rs` does. If you handle silent
+   pushes natively, also call it from your cold-start init hook.
 
-1. Copy [the example app's `network_security_config.xml`](example/matrix-svelte-client/src-tauri/gen/android/app/src/main/res/xml/network_security_config.xml)
-   to `src-tauri/gen/android/app/src/main/res/xml/network_security_config.xml`.
-2. Reference it from `<application>` in `src-tauri/gen/android/app/src/main/AndroidManifest.xml`:
-   ```xml
-   <application android:networkSecurityConfig="@xml/network_security_config" ...>
-   ```
+#### Certificate revocation
 
-Keep the `localhost` / `10.0.2.2` entries — a `networkSecurityConfig` overrides
-`android:usesCleartextTraffic` on API 24+, and without them `tauri android dev` can no longer reach
-the dev server.
+The verifier also checks revocation, which usually means downloading the CA's CRL over plain `http://`.
+Android blocks cleartext traffic by default, which used to surface as a false
+`invalid peer certificate: Revoked`
+([rustls-platform-verifier#221](https://github.com/rustls/rustls-platform-verifier/issues/221)). Since
+`rustls-platform-verifier-android` 0.2.0 (pulled in by `rustls-platform-verifier` 0.7.1), the AAR ships its own
+network security config: cleartext is allowed only for the CRL hosts listed in the CCADB, and Android's manifest
+merger adds it to your app automatically. Nothing needs to be configured.
 
-#### When a homeserver still fails
+**Don't declare your own `android:networkSecurityConfig`** in `AndroidManifest.xml`, and don't add a
+`res/xml/network_security_config.xml`. Either one replaces the library's config and brings the false
+`Revoked` errors back. This also means user-installed CAs are no longer trusted by the platform verifier,
+because Android's default applies.
 
-The CA list is finite, so a homeserver behind a CA that isn't in it will fail the same way. To find
-the missing domain:
+If a homeserver still fails with `Revoked`, its CA's CRL host is probably missing from the upstream list.
+Confirm on the device with:
 
 ```bash
-# 1. Confirm what is actually failing on the device
 adb logcat | grep -iE "rustls|platform-verifier|Revoked|[Cc]leartext"
-
-# 2. Ask the homeserver's certificate which endpoints its CA uses
-openssl s_client -connect <host>:443 -servername <host> </dev/null 2>/dev/null \
-  | openssl x509 -noout -ext authorityInfoAccess,crlDistributionPoints
 ```
 
-Take the registrable domain out of each `URI:http://…` (e.g. `http://c.pki.goog/…` → `pki.goog`)
-and add it to the CA `<domain-config>` block. Note that homeservers usually delegate via
-`.well-known/matrix/client`, so check the delegated host (`matrix-client.example.org`), not just the
-server name you typed.
+Then report it upstream, or bump `rustls-platform-verifier` if a newer release has already added it.
 
 ### Plugin configuration
 

@@ -20,7 +20,7 @@ tauri-build = { version = "2.7.0", features = [] }
 
 [dependencies]
 anyhow.workspace = true
-rustls-platform-verifier = "0.6"
+rustls-platform-verifier = "0.7.1"
 tauri = { workspace = true, features = ["tray-icon"] }
 tauri-plugin-matrix-svelte = { path = "../../../" }
 serde.workspace = true
@@ -50,6 +50,9 @@ base64.workspace = true
 
 [target."cfg(target_os = \"android\")".dependencies]
 jni = "0.21.1"
+# rustls-platform-verifier 0.7 speaks jni 0.22 while wry/tauri-plugin-notifications are on 0.21;
+# see `init_platform_verifier` in push_handler.rs.
+jni_022 = { package = "jni", version = "0.22" }
 # Borrowed by the silent-push init hook to build the keyring store (`push_handler.rs`).
 ndk-context = "0.1.1"
 tokio = "1.53.1"

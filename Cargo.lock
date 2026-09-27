@@ -98,7 +98,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48c6349ddff23194f8fdce2ea8849380f5a4868c1648965b70e801e104cba9b3"
 dependencies = [
  "base64 0.22.1",
- "jni",
+ "jni 0.21.1",
  "keyring-core",
  "log",
  "ndk-context",
@@ -3198,7 +3198,7 @@ dependencies = [
  "cesu8",
  "cfg-if",
  "combine",
- "jni-sys",
+ "jni-sys 0.3.0",
  "log",
  "thiserror 1.0.69",
  "walkdir",
@@ -3206,10 +3206,59 @@ dependencies = [
 ]
 
 [[package]]
+name = "jni"
+version = "0.22.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5efd9a482cf3a427f00d6b35f14332adc7902ce91efb778580e180ff90fa3498"
+dependencies = [
+ "cfg-if",
+ "combine",
+ "jni-macros",
+ "jni-sys 0.4.1",
+ "log",
+ "simd_cesu8",
+ "thiserror 2.0.21",
+ "walkdir",
+ "windows-link 0.2.1",
+]
+
+[[package]]
+name = "jni-macros"
+version = "0.22.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a00109accc170f0bdb141fed3e393c565b6f5e072365c3bd58f5b062591560a3"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "rustc_version",
+ "simd_cesu8",
+ "syn 2.0.114",
+]
+
+[[package]]
 name = "jni-sys"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8eaf4bc02d17cbdd7ff4c7438cafcdf7fb9a4613313ad11b4f8fefe7d3fa0130"
+
+[[package]]
+name = "jni-sys"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6377a88cb3910bee9b0fa88d4f42e1d2da8e79915598f65fb0c7ee14c878af2"
+dependencies = [
+ "jni-sys-macros",
+]
+
+[[package]]
+name = "jni-sys-macros"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38c0b942f458fe50cdac086d2f946512305e5631e720728f2a61aabcd47a6264"
+dependencies = [
+ "quote",
+ "syn 2.0.114",
+]
 
 [[package]]
 name = "jobserver"
@@ -3864,7 +3913,8 @@ version = "0.4.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
- "jni",
+ "jni 0.21.1",
+ "jni 0.22.4",
  "mime_serde_shim",
  "ndk-context",
  "paranoid-android",
@@ -4062,7 +4112,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3f42e7bbe13d351b6bead8286a43aac9534b82bd3cc43e47037f012ebfd62d4"
 dependencies = [
  "bitflags 2.13.2",
- "jni-sys",
+ "jni-sys 0.3.0",
  "log",
  "ndk-sys 0.6.0+11769913",
  "num_enum",
@@ -4082,7 +4132,7 @@ version = "0.5.0+25.2.9519653"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c196769dd60fd4f363e11d948139556a344e79d451aeb2fa2fd040738ef7691"
 dependencies = [
- "jni-sys",
+ "jni-sys 0.3.0",
 ]
 
 [[package]]
@@ -4091,7 +4141,7 @@ version = "0.6.0+11769913"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee6cda3051665f1fb8d9e08fc35c96d5a244fb1be711a03b71118828afc9a873"
 dependencies = [
- "jni-sys",
+ "jni-sys 0.3.0",
 ]
 
 [[package]]
@@ -5669,13 +5719,13 @@ dependencies = [
 
 [[package]]
 name = "rustls-platform-verifier"
-version = "0.6.2"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d99feebc72bae7ab76ba994bb5e121b8d83d910ca40b36e0921f53becc41784"
+checksum = "1167586491e2b18b8bfbb293e8180ec17c201c4f076d7cb3070ca964e7598f98"
 dependencies = [
  "core-foundation",
  "core-foundation-sys",
- "jni",
+ "jni 0.22.4",
  "log",
  "once_cell",
  "rustls",
@@ -5690,9 +5740,9 @@ dependencies = [
 
 [[package]]
 name = "rustls-platform-verifier-android"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f87165f0995f63a9fbeea62b64d10b4d9d8e78ec6d7d51fb2125fda7bb36788f"
+checksum = "eec689c0bc40ff2458a5977b6619cb718087084a18e02a131c599b62d05e1a5f"
 
 [[package]]
 name = "rustls-webpki"
@@ -6158,6 +6208,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e320a6c5ad31d271ad523dcf3ad13e2767ad8b1cb8f047f75a8aeaf8da139da2"
 
 [[package]]
+name = "simd_cesu8"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11031e251abf8611c80f460e19dbdeb54a66db918e49c65a7065b46ac7aec520"
+dependencies = [
+ "rustc_version",
+ "simdutf8",
+]
+
+[[package]]
+name = "simdutf8"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e"
+
+[[package]]
 name = "siphasher"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6440,7 +6506,7 @@ dependencies = [
  "gdkwayland-sys",
  "gdkx11-sys",
  "gtk",
- "jni",
+ "jni 0.21.1",
  "libc",
  "log",
  "ndk",
@@ -6496,7 +6562,7 @@ dependencies = [
  "gtk",
  "heck 0.5.0",
  "http",
- "jni",
+ "jni 0.21.1",
  "libc",
  "log",
  "mime",
@@ -6772,7 +6838,7 @@ version = "0.5.0-rc.14"
 dependencies = [
  "color-backtrace",
  "ctor",
- "jni",
+ "jni 0.21.1",
  "log",
  "maplit",
  "notify-rust",
@@ -6935,7 +7001,7 @@ dependencies = [
  "dpi",
  "gtk",
  "http",
- "jni",
+ "jni 0.21.1",
  "objc2",
  "objc2-ui-kit",
  "objc2-web-kit",
@@ -6958,7 +7024,7 @@ checksum = "fa829eb69860cf1fb0bedb21d2d5f1effce3527d054a68ca1cd7355c654400a3"
 dependencies = [
  "gtk",
  "http",
- "jni",
+ "jni 0.21.1",
  "log",
  "objc2",
  "objc2-app-kit",
@@ -8850,7 +8916,7 @@ dependencies = [
  "gtk",
  "http",
  "javascriptcore-rs",
- "jni",
+ "jni 0.21.1",
  "libc",
  "ndk",
  "objc2",
