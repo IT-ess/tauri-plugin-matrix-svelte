@@ -17,7 +17,11 @@
 //!
 //! On Android, a cold-started push process skipped every process-wide
 //! initialization the app performs at startup; [`android_push_init`] (the
-//! macro's `android_init` hook) replays them before each handler run.
+//! macro's `android_init` hook) replays them before each handler run. The
+//! `ndk_context` global is special: tao (Tauri's windowing layer) initializes
+//! it when `MainActivity` is created and aborts if it is already set, so the
+//! push path only borrows it while no activity has started — see
+//! `ACTIVITY_OWNS_NDK_CONTEXT`.
 
 // The shared helpers are `pub(crate)` for use from `lib.rs`; this module is
 // private, so clippy flags that as redundant — it isn't, the parent needs them.
@@ -209,12 +213,12 @@ static PUSH_RUNTIME: std::sync::LazyLock<tokio::runtime::Runtime> =
 ///
 /// 1. logcat logging, so the fetch below is debuggable (`adb logcat -s
 ///    MatrixSilentPush`);
-/// 2. `ndk_context` — the Android keyring backend resolves its `Context`
-///    through this global;
-/// 3. `rustls-platform-verifier` — matrix-sdk fetches the event from the
+/// 2. `rustls-platform-verifier` — matrix-sdk fetches the event from the
 ///    homeserver over TLS, which needs the Android trust roots;
-/// 4. the keyring backend (`init_keyring_store`) — sets the process-wide
-///    `keyring_core` default store the session is read from.
+/// 3. the keyring backend (`init_keyring_store`) — sets the process-wide
+///    `keyring_core` default store the session is read from. Building it
+///    needs the `ndk_context` global, which is borrowed for that call only
+///    and released, because tao initializes it when the activity starts.
 ///
 /// A failure is logged but not fatal: the fetch then falls back to the
 /// placeholder message, which is exactly the symptom we want to surface.
@@ -226,46 +230,26 @@ pub(crate) fn android_push_init(env: &mut jni::JNIEnv, context: &jni::objects::J
     }
 }
 
-/// Keeps the global ref to the Android `Context` alive for the lifetime of the
-/// process and guarantees `ndk_context::initialize_android_context` runs at most
-/// once, regardless of which entry point reaches it first.
+/// Whether `MainActivity` has started, i.e. tao owns the `ndk_context` global:
+/// it initializes it in the activity's `onCreate` and asserts it was empty,
+/// never releasing it. The push path holds this lock for the whole time it
+/// borrows the global, so the claim below and a borrow never interleave.
 #[cfg(target_os = "android")]
-static NDK_CONTEXT_REF: std::sync::OnceLock<jni::objects::GlobalRef> = std::sync::OnceLock::new();
+static ACTIVITY_OWNS_NDK_CONTEXT: std::sync::Mutex<bool> = std::sync::Mutex::new(false);
 
-/// Initialize the `ndk_context` global exactly once per process.
-///
-/// `ndk_context::initialize_android_context` panics (`assert!(previous.is_none())`)
-/// if called twice. Both the push init hook ([`android_push_init`]) and
-/// `MainActivity.onCreate` (`initNdkContext` in `lib.rs`) need the context
-/// initialized; because the FCM service shares the app's process and Android may
-/// reuse that process to launch the activity (or it is already the warm app),
-/// both can run in one process. This shared guard makes the second call a no-op
-/// instead of an abort.
+/// Called from `MainActivity.onCreate` before `super.onCreate`, i.e. before
+/// tao initializes `ndk_context`. Waits for an in-flight borrow to be released,
+/// then switches the push path's borrowing off for the rest of the process.
 #[cfg(target_os = "android")]
-pub(crate) fn ensure_ndk_context(env: &mut jni::JNIEnv, context: &jni::objects::JObject) {
-    if NDK_CONTEXT_REF.get().is_some() {
-        return;
-    }
-    let Ok(context_ref) = env.new_global_ref(context) else {
-        tracing::error!("ensure_ndk_context: couldn't create global ref for context");
-        return;
-    };
-    let Ok(vm) = env.get_java_vm() else {
-        tracing::error!("ensure_ndk_context: couldn't get JavaVM");
-        return;
-    };
-    // `get_or_init` makes the unsafe init + store atomic; if another thread won
-    // the race the closure never runs and our spare `context_ref` is dropped.
-    NDK_CONTEXT_REF.get_or_init(|| {
-        unsafe {
-            ndk_context::initialize_android_context(
-                vm.get_java_vm_pointer().cast::<std::ffi::c_void>(),
-                context_ref.as_obj().as_raw().cast::<std::ffi::c_void>(),
-            );
-        }
-        tracing::info!("ndk_context initialized");
-        context_ref
-    });
+#[allow(non_snake_case)]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_matrix_svelte_client_MainActivity_claimNdkContext(
+    _env: jni::JNIEnv,
+    _class: jni::objects::JClass,
+) {
+    *ACTIVITY_OWNS_NDK_CONTEXT
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = true;
 }
 
 /// Install a `tracing` subscriber that writes to Android's logcat. Idempotent.
@@ -295,8 +279,7 @@ fn init_cold_path_logging() {
 
 /// See [`android_push_init`] for what is replayed and why. All steps are
 /// idempotent (guarded by `Once`/internally) so handling several pushes in one
-/// process is safe. Mirrors `MainActivity.initNdkContext` (`lib.rs`) and the
-/// matrix-svelte plugin `setup`.
+/// process is safe. Mirrors the matrix-svelte plugin `setup`.
 #[cfg(target_os = "android")]
 fn init_cold_path_context(
     env: &mut jni::JNIEnv,
@@ -304,12 +287,7 @@ fn init_cold_path_context(
 ) -> Result<(), String> {
     use std::sync::Mutex;
 
-    // 1. NDK context (used by the Android keyring backend). Shared guard with
-    //    `MainActivity.initNdkContext` so it is initialized at most once per
-    //    process even when this push process is reused to launch the app.
-    ensure_ndk_context(env, context);
-
-    // 2. TLS platform verifier (used by matrix-sdk's HTTP client). Its
+    // 1. TLS platform verifier (used by matrix-sdk's HTTP client). Its
     //    `init_with_refs` is internally idempotent (`get_or_init`), but the JNI
     //    work to build the refs isn't free, so skip it once it has succeeded.
     //    The flag is only set on success so a failed attempt is retried on the
@@ -337,10 +315,35 @@ fn init_cold_path_context(
         }
     }
 
-    // 3. Keyring backend. Idempotent inside the plugin; cheap to call each time.
+    // 2. Keyring backend. Once the activity has started, tao owns `ndk_context`
+    //    and the plugin `setup` initializes the keyring: don't touch either.
+    //    Otherwise borrow `ndk_context` just to build the store — it keeps its
+    //    own context ref afterwards — and release it, so tao's init doesn't
+    //    abort if Android reuses this process to launch the app. Later pushes
+    //    borrow again, but `init_keyring_store` is latched and won't read it.
     //    The access-group argument is iOS-only.
-    tauri_plugin_matrix_svelte::init_keyring_store(None)
-        .map_err(|e| format!("initializing keyring store: {e}"))?;
+    let activity_owns_ndk_context = ACTIVITY_OWNS_NDK_CONTEXT
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    if *activity_owns_ndk_context {
+        return Ok(());
+    }
+    let vm = env
+        .get_java_vm()
+        .map_err(|e| format!("getting JavaVM: {e}"))?;
+    // Must outlive the borrow: `ndk_context` stores the raw pointer only.
+    let context_ref = env
+        .new_global_ref(context)
+        .map_err(|e| format!("global-ref'ing context: {e}"))?;
+    unsafe {
+        ndk_context::initialize_android_context(
+            vm.get_java_vm_pointer().cast::<std::ffi::c_void>(),
+            context_ref.as_obj().as_raw().cast::<std::ffi::c_void>(),
+        );
+    }
+    let result = tauri_plugin_matrix_svelte::init_keyring_store(None);
+    unsafe { ndk_context::release_android_context() };
+    result.map_err(|e| format!("initializing keyring store: {e}"))?;
     tracing::info!("cold-path: keyring store initialized");
 
     Ok(())

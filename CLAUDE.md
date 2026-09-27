@@ -143,10 +143,11 @@ This is the most subtle part of the codebase — read `example/matrix-svelte-cli
   returned `NotificationData`. The handler fetches the event via
   `tauri_plugin_matrix_svelte::handle_silent_notification` (`push_shared.rs`).
 - **Android cold-start init**: a Firebase-started process never ran the plugin's `setup()`, so the macro's
-  `android_init` hook (`android_push_init`) replays logging, `ndk_context`, the rustls platform verifier, and
-  `init_keyring_store` before each handler run. `ndk_context` must only be initialized once per process; the
-  guard is shared between this hook and the `initNdkContext` call from `MainActivity.onCreate` because Android
-  may reuse the same process for both.
+  `android_init` hook (`android_push_init`) replays logging, the rustls platform verifier, and
+  `init_keyring_store` before each handler run. tao (Tauri ≥ 2.12) initializes `ndk_context` in the activity's
+  `onCreate` and aborts if it is already set, so the hook only *borrows* it to build the keyring store (init →
+  `init_keyring_store` → release). `MainActivity.onCreate` calls `claimNdkContext()` before `super.onCreate`, which
+  switches the borrowing off under the same mutex — Android may reuse a push process to launch the app, and vice versa.
 - **Badge pushes**: a data message without `room_id`/`event_id` is the homeserver's unread-count update; when
   `unread == 0` the handler returns `SilentPushResponse::ClearActive` and the plugin clears the notification
   shade plus its stored conversation histories (Android only — iOS badge pushes never reach the NSE).

@@ -26,7 +26,6 @@ tauri-plugin-matrix-svelte = { path = "../../../" }
 serde.workspace = true
 serde_json.workspace = true
 mime_serde_shim.workspace = true
-ndk-context = "0.1.1"
 serde_urlencoded = "0.7.1"
 tauri-plugin-clipboard-manager = "2.4.0"
 tauri-plugin-dialog.workspace = true
@@ -51,6 +50,8 @@ base64.workspace = true
 
 [target."cfg(target_os = \"android\")".dependencies]
 jni = "0.21.1"
+# Borrowed by the silent-push init hook to build the keyring store (`push_handler.rs`).
+ndk-context = "0.1.1"
 tokio = "1.53.1"
 tauri-plugin-android-fs.workspace = true
 # Routes the cold-path (killed-state) silent-push `tracing` output to logcat,
