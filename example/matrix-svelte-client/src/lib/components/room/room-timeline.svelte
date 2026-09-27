@@ -5,7 +5,6 @@
 	import { fade } from 'svelte/transition';
 	import './room.css';
 	import Item from './items/item.svelte';
-	import { useDebounce } from 'runed';
 	import SvelteVirtualChat from '@humanspeak/svelte-virtual-chat';
 	import { tick } from 'svelte';
 	import { loginStore, roomsCollection, roomStore } from '../../../hooks.client';
@@ -93,9 +92,9 @@
 		).catch((err) => console.error(err));
 	});
 
-	// Load more messages when scrolling up with 1 sec debounce
-	// (onNeedHistory fires on every scroll event near the top)
-	const loadMoreMessages = useDebounce(async () => {
+	// onNeedHistory fires on every scroll event near the top: the isLoadingMore guard drops calls
+	// while a pagination is in flight
+	const loadMoreMessages = async () => {
 		if (
 			isLoadingMore ||
 			roomStore.state.tlState?.fullyPaginated ||
@@ -121,7 +120,7 @@
 		} finally {
 			isLoadingMore = false;
 		}
-	}, 1000);
+	};
 
 	// Handle reply to message
 	const handleReplyTo = (eventId: string, senderName: string, content: string) => {
@@ -288,7 +287,7 @@
 			bind:this={chat}
 			messages={items}
 			getMessageId={(item) => item.uniqueId}
-			onNeedHistory={() => void loadMoreMessages()}
+			onNeedHistory={loadMoreMessages}
 			onFollowBottomChange={(following) => (isFollowing = following)}
 			containerClass="w-full flex-1 min-h-0"
 			viewportClass="bg-white"
