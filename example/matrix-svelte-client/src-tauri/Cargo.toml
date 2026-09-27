@@ -4,7 +4,7 @@ version.workspace = true
 description = "A Matrix client using tauri-plugin-matrix-svelte"
 authors.workspace = true
 edition.workspace = true
-rust-version = "1.97"
+rust-version.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -16,7 +16,7 @@ name = "matrix_svelte_client_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.6.1", features = [] }
+tauri-build = { version = "2.7.0", features = [] }
 
 [dependencies]
 anyhow.workspace = true
@@ -28,18 +28,18 @@ serde_json.workspace = true
 mime_serde_shim.workspace = true
 ndk-context = "0.1.1"
 serde_urlencoded = "0.7.1"
-tauri-plugin-clipboard-manager = "2.3.2"
+tauri-plugin-clipboard-manager = "2.4.0"
 tauri-plugin-dialog.workspace = true
-tauri-plugin-deep-link = "2.4.9"
-tauri-plugin-fs = "2.5.1"
+tauri-plugin-deep-link = "2.5.0"
+tauri-plugin-fs = "2.6.0"
 # Path-sourced from the repo-root git submodule (see [workspace.dependencies]).
 tauri-plugin-notifications.workspace = true
-tauri-plugin-opener = "2.5.4"
-tauri-plugin-os = "2.3.2"
-tauri-plugin-persisted-scope = "2.3.7"
+tauri-plugin-opener = "2.6.0"
+tauri-plugin-os = "2.4.0"
+tauri-plugin-persisted-scope = "2.4.0"
 tauri-plugin-safe-area-insets-css = "0.2.0"
 tauri-plugin-svelte.workspace = true
-tauri-plugin-single-instance = { version = "2.4.0", features = ["deep-link"] }
+tauri-plugin-single-instance = { version = "2.5.0", features = ["deep-link"] }
 tauri-plugin-web-auth = "1.0.0"
 time = "0.3.44"
 tracing.workspace = true
@@ -64,4 +64,4 @@ paranoid-android = "0.2"
 tokio = { version = "1.53.1", features = ["rt"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-tauri-plugin-devtools = "2.1.0"
+tauri-plugin-devtools = "2.2.1"
