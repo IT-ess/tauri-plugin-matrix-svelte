@@ -19,7 +19,7 @@
 	{role}
 	name={name === null ? undefined : name}
 	color={color === null ? undefined : color}
-	stroke={stroke === null ? undefined : stroke}
+	stroke={stroke ?? color ?? 'currentColor'}
 	aria-label={ariaLabel}
 	class={cn('size-4 animate-spin', className)}
 	{...restProps}
