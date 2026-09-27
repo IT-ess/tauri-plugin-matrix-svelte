@@ -277,6 +277,37 @@ fn init_cold_path_logging() {
     });
 }
 
+/// Initializes `rustls-platform-verifier` with the given Android `context`.
+/// Idempotent: once an attempt has succeeded, later calls do no JNI work.
+///
+/// The verifier (0.7+) speaks jni 0.22, while wry and the notifications plugin
+/// hand us jni 0.21 wrappers, so the same raw `JNIEnv`/context pointers are
+/// re-wrapped on the 0.22 side. Used by both the app `setup` and the
+/// silent-push cold path.
+#[cfg(target_os = "android")]
+pub(crate) fn init_platform_verifier(
+    env: &jni::JNIEnv,
+    context: &jni::objects::JObject,
+) -> Result<(), String> {
+    use jni_022::Outcome;
+    let raw_context = context.as_raw();
+    // SAFETY: `env` is a live attachment of the current thread, and
+    // `raw_context` a local ref valid for the caller's frame. jni 0.22's
+    // `JObject` doesn't delete the ref on drop, so the caller keeps ownership.
+    let mut env = unsafe { jni_022::EnvUnowned::from_raw(env.get_raw().cast()) };
+    let outcome = env
+        .with_env(|env| {
+            let context = unsafe { jni_022::objects::JObject::from_raw(env, raw_context.cast()) };
+            rustls_platform_verifier::android::init_with_env(env, context)
+        })
+        .into_outcome();
+    match outcome {
+        Outcome::Ok(()) => Ok(()),
+        Outcome::Err(e) => Err(format!("initializing rustls platform verifier: {e}")),
+        Outcome::Panic(_) => Err("initializing rustls platform verifier panicked".into()),
+    }
+}
+
 /// See [`android_push_init`] for what is replayed and why. All steps are
 /// idempotent (guarded by `Once`/internally) so handling several pushes in one
 /// process is safe. Mirrors the matrix-svelte plugin `setup`.
@@ -285,35 +316,11 @@ fn init_cold_path_context(
     env: &mut jni::JNIEnv,
     context: &jni::objects::JObject,
 ) -> Result<(), String> {
-    use std::sync::Mutex;
-
-    // 1. TLS platform verifier (used by matrix-sdk's HTTP client). Its
-    //    `init_with_refs` is internally idempotent (`get_or_init`), but the JNI
-    //    work to build the refs isn't free, so skip it once it has succeeded.
-    //    The flag is only set on success so a failed attempt is retried on the
-    //    next push instead of being latched as a silent permanent failure.
-    static TLS_DONE: Mutex<bool> = Mutex::new(false);
-    {
-        let mut done = TLS_DONE.lock().unwrap();
-        if !*done {
-            let vm = env
-                .get_java_vm()
-                .map_err(|e| format!("getting JavaVM: {e}"))?;
-            let context_ref = env
-                .new_global_ref(context)
-                .map_err(|e| format!("global-ref'ing context: {e}"))?;
-            let loader = env
-                .call_method(context, "getClassLoader", "()Ljava/lang/ClassLoader;", &[])
-                .and_then(|v| v.l())
-                .map_err(|e| format!("getting ClassLoader: {e}"))?;
-            let loader_ref = env
-                .new_global_ref(&loader)
-                .map_err(|e| format!("global-ref'ing ClassLoader: {e}"))?;
-            rustls_platform_verifier::android::init_with_refs(vm, context_ref, loader_ref);
-            tracing::info!("cold-path: rustls platform verifier initialized");
-            *done = true;
-        }
-    }
+    // 1. TLS platform verifier (used by matrix-sdk's HTTP client). Idempotent:
+    //    the JNI work only runs until one attempt succeeds, so a failed attempt
+    //    is retried on the next push instead of being latched.
+    init_platform_verifier(env, context)?;
+    tracing::info!("cold-path: rustls platform verifier initialized");
 
     // 2. Keyring backend. Once the activity has started, tao owns `ndk_context`
     //    and the plugin `setup` initializes the keyring: don't touch either.

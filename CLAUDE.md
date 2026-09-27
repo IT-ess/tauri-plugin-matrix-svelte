@@ -39,10 +39,10 @@ The repo is a single Cargo workspace **and** a single pnpm workspace, both roote
   the example app (`example/matrix-svelte-client/src-tauri`), and — automatically, as a path dependency — the
   `tauri-plugin-notifications` submodule. There is one `Cargo.lock` and one `target/` at the root.
   Versions of dependencies shared by the plugin and the example live in `[workspace.dependencies]`; both crates
-  refer to them with `<dep>.workspace = true`, so they can never drift apart (this is what keeps
-  `rustls-platform-verifier` single-copy — see the Android TLS section). `[profile.*]` is only honoured at the
-  workspace root, so the example's release tuning lives in the root manifest too. `default-members` is the plugin,
-  so a bare `cargo build` at the root still builds only the plugin.
+  refer to them with `<dep>.workspace = true`, so they can never drift apart. The single shared `Cargo.lock`
+  is what keeps `rustls-platform-verifier` single-copy (see the Android TLS section). `[profile.*]` is only
+  honoured at the workspace root, so the example's release tuning lives in the root manifest too.
+  `default-members` is the plugin, so a bare `cargo build` at the root still builds only the plugin.
 - pnpm: `pnpm-workspace.yaml` lists `.` (the `tauri-plugin-matrix-svelte-api` package) and `example/*`. The example
   depends on the plugin package with `workspace:*`, i.e. a live symlink to the repo root — run `pnpm build` at the
   root after changing `guest-js/` so the example picks up the rebuilt `dist/`.
@@ -157,15 +157,29 @@ This is the most subtle part of the codebase — read `example/matrix-svelte-cli
 ### Android TLS / certificate verification
 
 `matrix-rust-sdk` dropped its Android `WebPkiServerVerifier` special case, so rustls now delegates to
-`rustls-platform-verifier`, i.e. Android's Java verifier. That verifier runs a `PKIXRevocationChecker` which
-must fetch OCSP/CRL over plain HTTP whenever the server doesn't staple a response — blocked by default, and
-it surfaces as a false `invalid peer certificate: Revoked`. The second `<domain-config>` block in the example's
-`gen/android/app/src/main/res/xml/network_security_config.xml` exists solely to permit those CA fetches; it is
-a list of CA infrastructure hostnames, **not** trust anchors, and it is finite by nature — a homeserver on a CA
-that isn't listed needs a new entry (see the README for the `openssl`/`adb logcat` recipe). Don't remove entries
-that look unrelated to Matrix, and note that the example app must resolve `rustls-platform-verifier` to the same
-version reqwest does — two copies in the tree means the app's `init_with_refs` initializes the wrong one and all
-TLS fails. The shared workspace `Cargo.lock` is what guarantees that now.
+`rustls-platform-verifier`, i.e. Android's Java verifier. Things to keep in mind:
+
+- **Revocation / cleartext**: the verifier's `PKIXRevocationChecker` downloads CRLs over plain HTTP. Since
+  `rustls-platform-verifier-android` 0.2.0 (pulled in by `rustls-platform-verifier` 0.7.1), the AAR bundles a
+  manifest with its own `android:networkSecurityConfig`, which allows cleartext only for the CRL hosts listed in
+  the CCADB. The manifest merger adds it to the app. The example therefore has **no**
+  `network_security_config.xml` and no `networkSecurityConfig` attribute. Don't add either back: an app-level
+  one replaces the library's and brings back false `invalid peer certificate: Revoked` errors. A CA missing
+  from the list is fixed upstream (rustls-platform-verifier#221), not here.
+- **Kotlin component**: Gradle fetches the AAR from the GitHub-hosted Maven repo (`maven-archive` branch), no
+  longer from the crate's bundled `maven/` dir. `gen/android/app/build.gradle.kts` reads the version of the
+  `rustls-platform-verifier-android` crate from the root `Cargo.lock` (`RustlsVersion` `ValueSource`) and forces
+  the unversioned `org.rustls:rustls-platform-verifier` dependency to it. The group really is `org.rustls`: the
+  upstream README's `rustls:` coordinate is a typo, and with it the version rule never matches.
+- **jni 0.21 vs 0.22**: `rustls-platform-verifier` 0.7 uses `jni` 0.22 (renamed `jni_022` in the example's
+  `Cargo.toml`), while wry and `tauri-plugin-notifications` are still on 0.21. `init_platform_verifier` in
+  `push_handler.rs` re-wraps the raw `JNIEnv`/context pointers and calls `init_with_env`. It is the single entry
+  point used by both the app `setup` and the silent-push cold path. It is idempotent, so no extra latch is needed.
+- **Single copy**: the example app must resolve `rustls-platform-verifier` to the same version reqwest does.
+  With two copies in the tree, the app initializes one while matrix-sdk uses the other, and all TLS fails. The
+  shared workspace `Cargo.lock` guarantees this. When bumping, check `cargo tree -i rustls-platform-verifier
+  --target aarch64-linux-android`, and run `cargo update -p rustls-platform-verifier@<old>` if reqwest stayed
+  on the old version.
 
 ### Custom `mxc://` media protocol
 
