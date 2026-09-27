@@ -17,6 +17,5 @@ class MainActivity : TauriActivity() {
   }
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
-    initNdkContext(this.applicationContext)
   }
 }

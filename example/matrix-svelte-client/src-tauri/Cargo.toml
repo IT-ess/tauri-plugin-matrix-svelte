@@ -40,13 +40,12 @@ tauri-plugin-persisted-scope = "2.4.0"
 tauri-plugin-safe-area-insets-css = "0.2.0"
 tauri-plugin-svelte.workspace = true
 tauri-plugin-single-instance = { version = "2.5.0", features = ["deep-link"] }
-tauri-plugin-web-auth = "1.0.0"
 time = "0.3.44"
 tracing.workspace = true
 tracing-subscriber = { workspace = true, features = ["time", "env-filter"] }
 
 [target."cfg(any(target_os = \"android\", target_os = \"ios\"))".dependencies]
-tauri-plugin-sharekit = { version = "0.3.1", default-features = false }
+tauri-plugin-sharekit = { git = "https://github.com/IT-ess/tauri-plugin-sharekit", branch = "android-target", default-features = false }
 # Used by the shared silent-push helpers (`push_shared.rs`) to encode avatars.
 base64.workspace = true
 
@@ -62,6 +61,7 @@ paranoid-android = "0.2"
 # Runtime for the Notification Service Extension's silent-push handler
 # (`ios_push.rs`), which drives the async Matrix fetch without a Tauri runtime.
 tokio = { version = "1.53.1", features = ["rt"] }
+tauri-plugin-web-auth = "1.0.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 tauri-plugin-devtools = "2.2.1"

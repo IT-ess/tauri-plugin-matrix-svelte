@@ -31,3 +31,5 @@ vite.config.ts.timestamp-*
 .aider*
 
 example/matrix-svelte-client/logs-app.log
+
+example/matrix-svelte-client/src-tauri/gen/android/gradle/gradle-daemon-jvm.properties
