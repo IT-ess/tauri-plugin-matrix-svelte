@@ -289,7 +289,7 @@
 			onNeedHistory={() => void loadMoreMessages()}
 			onFollowBottomChange={(following) => (isFollowing = following)}
 			containerClass="w-full flex-1 min-h-0"
-			viewportClass="bg-white px-4"
+			viewportClass="bg-white"
 		>
 			{#snippet header()}
 				{#if isLoadingMore}

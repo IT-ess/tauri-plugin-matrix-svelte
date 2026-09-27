@@ -318,6 +318,7 @@
 		aria-label="Swipe to reply"
 	>
 		<PopoverTrigger />
+		{#if !isOwn}
 		<Message.Avatar>
 			{#if !groupedWithNext}
 				<Avatar onclick={() => gotoProfile(senderId)} class="border-primary border">
@@ -329,6 +330,7 @@
 				</Avatar>
 			{/if}
 		</Message.Avatar>
+		{/if}
 		<DropdownMenu bind:open={showDropdown}>
 			<DropdownMenuTrigger />
 			<Message.Content class="w-fit max-w-[80%]">
