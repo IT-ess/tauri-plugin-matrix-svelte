@@ -109,13 +109,15 @@
 		console.log('Loading more messages !');
 
 		try {
-			const request = createMatrixRequest.paginateTimeline({
+			// Unlike submitAsyncRequest, this resolves once pagination is done, keeping the loading marker up meanwhile
+			await awaitPaginateTimeline({
 				roomId,
 				threadRootEventId: threadRoot,
 				numEvents: 50,
 				direction: 'backwards'
 			});
-			await submitAsyncRequest(request);
+		} catch (err) {
+			console.error(err);
 		} finally {
 			isLoadingMore = false;
 		}
@@ -293,7 +295,7 @@
 		>
 			{#snippet header()}
 				{#if isLoadingMore}
-					<Marker.Root role="status" class="justify-center pt-2">
+					<Marker.Root variant="separator" role="status" class="pt-2">
 						<Marker.Icon><Spinner /></Marker.Icon>
 					</Marker.Root>
 				{/if}
