@@ -16,3 +16,11 @@
 **/.git/**
 **/.svelte-kit/**
 example/matrix-svelte-client/build/**
+
+# Files the tauri-plugin-notifications build script (re)writes inside its own
+# source tree on every build (feature markers read by Package.swift / Gradle,
+# swift-bridge output). The submodule is a watched path dependency, so each
+# write would otherwise trigger another rebuild, forever.
+**/.push-notifications-enabled
+**/tauri-plugin-notifications/android/build.properties
+**/tauri-plugin-notifications/macos/Sources/generated/**
