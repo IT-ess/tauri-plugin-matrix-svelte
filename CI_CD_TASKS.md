@@ -72,7 +72,8 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 
 - [ ] **Gate 0:**
 - `gh secret list` shows every secret.
-- The reused pubkey matches the private key. Check: sign a temp file with `pnpm tauri signer sign`, then verify the signature against that pubkey with `minisign -V`.
+- [x] The reused pubkey matches the private key (2026-10-04: signed with `tauri signer sign -f <keyfile>`; ed25519 signature verified against the refs pubkey, key IDs match).
+- [ ] `TAURI_SIGNING_PRIVATE_KEY` secret holds the key **content**. Locally the env var is a *file path*, and Tauri accepts either, but CI needs the content. Set it with `gh secret set TAURI_SIGNING_PRIVATE_KEY < "$TAURI_SIGNING_PRIVATE_KEY"`.
 
 ## Phase 1 — Version bump + changelog (local first)
 - **`scripts/bump-version.mjs <patch|minor|major>`** (plain Node, no dependencies):
@@ -84,8 +85,8 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
   - Release notes: the same with `--strip all` written to a file.
 - Seed `CHANGELOG.md` with a header only. History before 0.4.0 is not backfilled.
 
-- [ ] **Gate 1:** run the script locally on a scratch branch.
-- `git diff` shows exactly the 8 files plus `Cargo.lock` after `cargo update -w`.
+- [x] **Gate 1:** run the script locally on a scratch branch. (Passed 2026-10-04: bump changed 7 files + Cargo.lock; cargo check and pnpm build OK; 75 changelog entries = 75 non-merge commits since 0.4.0; bump reverted.)
+- `git diff` shows exactly the 7 files plus `Cargo.lock` after `cargo update -w`.
 - `cargo check` and `pnpm build` still pass.
 - `git cliff --unreleased --tag 0.4.1` lists only the commits after `0.4.0`.
 - Discard the branch afterwards.
