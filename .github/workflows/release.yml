@@ -113,6 +113,9 @@ jobs:
         include:
           # 22.04: oldest supported glibc, so the AppImage runs on more distros.
           - os: ubuntu-22.04
+          # Unsigned for now (SmartScreen warns); the updater still verifies its own .sig.
+          - os: windows-latest
+          # macOS (aarch64, signed + notarized) pending: see Phase 4 in CI_CD_TASKS.md.
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4

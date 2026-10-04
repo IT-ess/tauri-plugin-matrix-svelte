@@ -147,6 +147,10 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 - then purge the draft in CN
 
 ## Phase 4 — Windows + macOS legs
+**Subtasks:**
+- [ ] **4a: Windows leg.** Add `windows-latest` to the `build_desktop` matrix (unsigned). It uploads the NSIS + MSI installers and their `.sig` files.
+- [ ] **4b: macOS leg.** Blocked until the user adds the Apple secrets: `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `MACOS_PROVISION_PROFILE`, `APPLE_API_ISSUER`, `APPLE_API_KEY_ID`, `APPLE_API_KEY`. Add `macos-latest` to the matrix, with a macOS-only step that decodes the profile and writes the `.p8`, and the `--target aarch64-apple-darwin --config …` build described below. Gate 4 can only be ticked once 4b is done.
+
 - **Windows** (windows-latest): same build, unsigned. CN gets the NSIS and MSI installers plus their `.sig` files.
 - **macOS** (macos-latest, arm64):
   1. decode `MACOS_PROVISION_PROFILE` to `$RUNNER_TEMP`
