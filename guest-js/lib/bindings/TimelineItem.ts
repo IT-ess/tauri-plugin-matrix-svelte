@@ -33,13 +33,7 @@ export type StateEvent =
 
 // Manually typed
 export type MessageAbility =
-	| 'canReact'
-	| 'canReplyTo'
-	| 'canEdit'
-	| 'canPin'
-	| 'canUnpin'
-	| 'canDelete'
-	| 'hasHtml';
+	'canReact' | 'canReplyTo' | 'canEdit' | 'canPin' | 'canUnpin' | 'canDelete' | 'hasHtml';
 
 /**
  * Renamed from "FrontendTimelineErrorItem"

@@ -37,8 +37,8 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"prepack": "svelte-kit sync && svelte-package -i ./guest-js/lib && publint",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --config ./vite.config.ts",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --config ./vite.config.ts --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint ."
 	},
@@ -48,26 +48,31 @@
 	"devDependencies": {
 		"@eslint/compat": "^2.1.1",
 		"@eslint/js": "^10.0.1",
-		"@sveltejs/adapter-auto": "^7.0.1",
-		"@sveltejs/kit": "^2.70.3",
-		"@sveltejs/package": "^2.5.8",
+		"@sveltejs/adapter-auto": "^8.0.0",
+		"@sveltejs/kit": "^3.0.0",
+		"@sveltejs/load-config": "^0.2.3",
+		"@sveltejs/package": "^3.0.0",
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",
 		"@tauri-store/svelte": "^3.2.1",
-		"eslint": "^10.11.0",
+		"eslint": "^10.12.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.23.0",
-		"globals": "^17.12.0",
+		"globals": "^17.13.0",
 		"prettier": "^3.9.9",
 		"prettier-plugin-svelte": "^4.1.1",
-		"publint": "^0.3.24",
+		"publint": "^0.3.25",
 		"svelte": "^5.57.1",
 		"svelte-check": "^4.7.6",
 		"typescript": "^6.0.3",
-		"typescript-eslint": "^8.70.1",
-		"vite": "^8.3.1"
+		"typescript-eslint": "^8.71.0",
+		"vite": "^8.3.2"
 	},
 	"dependencies": {
-		"@tauri-apps/api": "^2.12.0",
+		"@tauri-apps/api": "^2.12.1",
 		"file-type": "^22.1.1"
+	},
+	"imports": {
+		"#lib": "./guest-js/lib/index.js",
+		"#lib/*": "./guest-js/lib/*"
 	}
 }

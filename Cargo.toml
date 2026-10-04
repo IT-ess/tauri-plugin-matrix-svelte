@@ -17,7 +17,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.142"
 tauri = "2.12.0"
 tauri-plugin-android-fs = { version = "28.1.0", default-features = false }
-tauri-plugin-dialog = "2.8.0"
+tauri-plugin-dialog = "2.8.1"
 # Git submodule at the repo root (pinned to the `silent-notifications` branch).
 # Path-sourced (not git) so `cargo build --target aarch64-apple-ios` generates its
 # `.tauri/tauri-api` Swift bridge in the submodule, which the example app's iOS NSE

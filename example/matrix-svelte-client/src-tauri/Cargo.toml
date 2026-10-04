@@ -27,13 +27,13 @@ serde.workspace = true
 serde_json.workspace = true
 mime_serde_shim.workspace = true
 serde_urlencoded = "0.7.1"
-tauri-plugin-clipboard-manager = "2.4.0"
+tauri-plugin-clipboard-manager = "2.4.1"
 tauri-plugin-dialog.workspace = true
-tauri-plugin-deep-link = "2.5.0"
+tauri-plugin-deep-link = "2.6.1"
 tauri-plugin-fs = "2.6.0"
 # Path-sourced from the repo-root git submodule (see [workspace.dependencies]).
 tauri-plugin-notifications.workspace = true
-tauri-plugin-opener = "2.6.0"
+tauri-plugin-opener = "2.7.0"
 tauri-plugin-os = "2.4.0"
 tauri-plugin-persisted-scope = "2.4.0"
 tauri-plugin-safe-area-insets-css = "0.2.0"

@@ -8,3 +8,5 @@ onlyBuiltDependencies:
 
 allowBuilds:
   '@choochmeque/tauri-plugin-notifications-api': true
+
+minimumReleaseAge: 1

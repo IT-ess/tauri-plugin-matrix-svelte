@@ -1,8 +1,8 @@
 import type { EncryptedFile } from '../bindings/EncryptedFile.js';
 import type { UInt, MxcUri, RoomId, EventId } from './common.js';
 import type { MediaSource } from '../bindings/MediaSource.js';
-import type { AttachmentInfo } from '$lib/bindings/AttachementInfo.js';
-import type { Thumbnail } from '$lib/bindings/Thumbnail.js';
+import type { AttachmentInfo } from '#lib/bindings/AttachementInfo.js';
+import type { Thumbnail } from '#lib/bindings/Thumbnail.js';
 
 export type PlainMediaSource = { url: MxcUri }; // Corresponds to Plain variant, renamed to "url". We don't support Plain for now
 
