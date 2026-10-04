@@ -3,10 +3,11 @@
 A Tauri plugin that provides a high level abstraction of the [Matrix client](https://matrix.org) API and objects.
 It is compatible with both desktop and mobile devices.
 
-This plugin is an adapter for the [matrix-ui-serializable](https://github.com/IT-ess/matrix-ui-serializable) library, that wraps the [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk). 
+This plugin is an adapter for the [matrix-ui-serializable](https://github.com/IT-ess/matrix-ui-serializable) library, that wraps the [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk).
 Most of the state data (Rooms list, Room data) is accessible to the frontend through a Svelte 5 Rune store, allowing easy and fine-grained reactivity of your view.
 
 ## Showcase
+
 <div style="display: flex; justify-content: space-between; gap: 15px; margin: 0 -5px; max-width: 100%;">
   <img src="assets/room_list.png" alt="Room List" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
   <img src="assets/room.png" alt="Room" style="width: 32%; height: auto; max-width: 100%; margin: 0 5px;">
@@ -84,22 +85,27 @@ Then report it upstream, or bump `rustls-platform-verifier` if a newer release h
 ### Plugin configuration
 
 **Required** configuration variables in your `tauri.conf.json` in the plugin part, for the `matrix-svelte` key.
+
 - `android_sygnal_gateway_url`: Push gateway url for android
--	`ios_sygnal_gateway_url`: Push gateway url for iOS
--	`oauth_client_uri`: Client URI for OAuth 
--	`oauth_redirect_uri`: Redirect URI once the OAuth process is validated (must be the same host as redirect)
+- `ios_sygnal_gateway_url`: Push gateway url for iOS
+- `oauth_client_uri`: Client URI for OAuth
+- `oauth_redirect_uri`: Redirect URI once the OAuth process is validated (must be the same host as redirect)
 
 Optional:
+
 - `ios_app_group`: iOS App Group id (e.g. `group.com.example.app`) shared with a Notification Service Extension. When set, the Matrix store and salt file live in the App Group container and the session is saved in the shared keychain access group (with `after-first-unlock` accessibility), so the NSE can decrypt pushed events. **Breaking for existing installs**: enabling it (or changing the value) relocates the store and keychain entry with no migration — users are logged out and must re-authenticate. The `after-first-unlock` accessibility likewise only applies to sessions saved after enabling it.
 
 ### Plugin requirements
+
 This plugin works along two other plugins, [tauri-plugin-svelte](https://tb.dev.br/tauri-store/plugin-svelte/guide/getting-started) and [tauri-plugin-notifications](https://github.com/Choochmeque/tauri-plugin-notifications), that also must be initialized with default capabilities by your Tauri app before this plugin.
 
 ### Usage in Svelte
 
 #### Stores
-The `tauri-plugin-matrix-svelte-api` NPM package exposes the types and classes you need. 
-Basically, you get four kind of classes / Rune stores : 
+
+The `tauri-plugin-matrix-svelte-api` NPM package exposes the types and classes you need.
+Basically, you get four kind of classes / Rune stores :
+
 - `RoomsCollection`: that contains all the informations to implement the rooms list view of your client
 - `RoomStore`: a store that contains the timeline and other info related to a currently opened room
 - `ProfileStore`: a store that contains a Map of all known users profile (avatar, name...)
@@ -108,6 +114,7 @@ Basically, you get four kind of classes / Rune stores :
 These stores must be instantiated upon webview creation, in the `hooks.client.ts`.
 
 #### Commands and events
+
 Command wrappers and event types are exposed by the NPM package.
 The exposed commands cover the basic operations of a Matrix client.
 A lot of requests are async, and should be submitted with the `submitAsyncRequest` command.
@@ -135,12 +142,13 @@ the repo root.
 - [keyring-core](https://github.com/open-source-cooperative/keyring-core) : to store the Matrix session securely in the OS keychain
 
 # Contributing
+
 This project is opened to all kinds of contributions. I'm aware that the [documentation](https://docs.rs/tauri-plugin-matrix-svelte) isn't exhaustive and I do not have enough time to make it so. I can still [answer some questions](#chat-about-this-project) if needed !
 
 ## Possible improvements
 
 As mentionned in [matrix-ui-serializable's README](https://github.com/IT-ess/matrix-ui-serializable?tab=readme-ov-file#possible-improvements), the main flaw of this plugin is the full serialization of the stores whenever the state_updaters are called. To avoid serialization, passing data directly to the frontend through Tauri's raw IPC API may be possible, but that would require extra work that is perfectly done by tauri-plugin-svelte right now.
-The current implementation is a memory hog, especially with accounts with a lot of rooms. This could be improved with better room / room list pagination. 
+The current implementation is a memory hog, especially with accounts with a lot of rooms. This could be improved with better room / room list pagination.
 
 ## Chat about this project
 
@@ -148,7 +156,7 @@ Join this [Matrix room](https://matrix.to/#/#matrix-ui-serializable:matrix.org) 
 
 # AI Notice
 
-This project uses AI agent tools for some tasks. 
+This project uses AI agent tools for some tasks.
 Most of the code remains human-written, and all of the merged code has been reviewed by a human. AI commits are marked as such in the description / co-author field.
 
 # Special thanks to :

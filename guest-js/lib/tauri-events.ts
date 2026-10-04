@@ -42,12 +42,7 @@ export type ToastNotificationEventType = {
 };
 
 type ToastNotificationVariant =
-	| 'default'
-	| 'description'
-	| 'success'
-	| 'info'
-	| 'warning'
-	| 'error';
+	'default' | 'description' | 'success' | 'info' | 'warning' | 'error';
 
 // Channel events
 
