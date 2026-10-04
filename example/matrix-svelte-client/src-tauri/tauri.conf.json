@@ -26,10 +26,16 @@
 				"object-src": "'none'",
 				"media-src": "'self' blob: data: asset: http://asset.localhost http://mxc.localhost mxc: https: http://localhost"
 			},
-			"capabilities": ["default", "svelte", "ios", "mobile"]
+			"capabilities": ["default", "svelte", "ios", "mobile", "desktop"]
 		}
 	},
 	"plugins": {
+		"updater": {
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM1RDc5MzdBMDlEQzZBNUIKUldSYmF0d0plcFBYTmVSR2ZkZS9LUDYyTnNmaG5pWTllcHNCVGM3dVlLM0Y1Znl6a1NzdlRmYU4K",
+			"endpoints": [
+				"https://cdn.crabnebula.app/update/refs/matrix-svelte-client/{{target}}-{{arch}}/{{current_version}}"
+			]
+		},
 		"matrix-svelte": {
 			"android_sygnal_gateway_url": "https://android-sygnal.refs.it/_matrix/push/v1/notify",
 			"ios_sygnal_gateway_url": "https://sygnal.refs.it/_matrix/push/v1/notify",
@@ -55,6 +61,7 @@
 	},
 	"bundle": {
 		"active": true,
+		"createUpdaterArtifacts": true,
 		"macOS": {
 			"entitlements": "./Entitlements.plist",
 			"minimumSystemVersion": "12.0",

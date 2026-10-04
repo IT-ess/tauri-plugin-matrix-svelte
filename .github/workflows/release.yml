@@ -1,0 +1,189 @@
+# Release pipeline for the example app: bump + changelog, build every platform,
+# host the assets on CrabNebula Cloud, then reference them from a GitHub release.
+# Plan, gates and recovery notes: CI_CD_TASKS.md.
+#
+# Failed build leg? Use "Re-run failed jobs" — re-running the whole workflow bumps again.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+      dry_run:
+        description: Dry run (push the release commit to a ci-dryrun/* branch, no tag, CrabNebula "dryrun" channel)
+        type: boolean
+        default: false
+  # TEMPORARY (Gate 3): lets the workflow run before it exists on main. Push runs are
+  # always dry runs. Remove before merging.
+  push:
+    branches: [ci/release-pipeline]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  CN_APPLICATION: refs/matrix-svelte-client
+  BUMP: ${{ inputs.bump || 'patch' }}
+  DRY_RUN: ${{ github.event_name == 'push' || inputs.dry_run }}
+  # Dry runs land in a separate CrabNebula channel so they never collide with real versions.
+  CN_CHANNEL: ${{ (github.event_name == 'push' || inputs.dry_run) && '--channel dryrun' || '' }}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      sha: ${{ steps.push.outputs.sha }}
+    steps:
+      - name: Refuse real releases outside main
+        if: env.DRY_RUN == 'false' && github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Real releases must run on main (got ${{ github.ref }})."
+          exit 1
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          # setup-node >= v5 auto-enables a pnpm cache when package.json has
+          # "packageManager"; this job doesn't install pnpm.
+          package-manager-cache: false
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Bump versions
+        id: bump
+        run: |
+          version=$(node scripts/bump-version.mjs "$BUMP")
+          cargo update -w
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Changelog and release notes
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          npx --yes git-cliff@2.14.2 --unreleased --tag "$VERSION" --prepend CHANGELOG.md
+          npx --yes git-cliff@2.14.2 --unreleased --tag "$VERSION" --strip all -o notes.md
+      - name: Commit, tag and push
+        id: push
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898729+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore(release): $VERSION"
+          if [ "$DRY_RUN" = "true" ]; then
+            git push --force origin "HEAD:refs/heads/ci-dryrun/$VERSION"
+          else
+            git tag "$VERSION"
+            git push --atomic origin HEAD:refs/heads/main "refs/tags/$VERSION"
+          fi
+          # Later jobs check out this exact commit (a branch could move under them).
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: notes
+          path: notes.md
+
+  draft:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+      - uses: actions/download-artifact@v8
+        with:
+          name: notes
+          path: example/matrix-svelte-client/src-tauri
+      - uses: crabnebula-dev/cloud-release@v0
+        with:
+          working-directory: example/matrix-svelte-client/src-tauri
+          command: release draft ${{ env.CN_APPLICATION }} --framework tauri --notes-file notes.md ${{ env.CN_CHANNEL }}
+          api-key: ${{ secrets.CN_API_KEY }}
+
+  build_desktop:
+    needs: [prepare, draft]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 22.04: oldest supported glibc, so the AppImage runs on more distros.
+          - os: ubuntu-22.04
+          # Unsigned for now (SmartScreen warns); the updater still verifies its own .sig.
+          - os: windows-latest
+          # macOS (aarch64, signed + notarized) pending: see Phase 4 in CI_CD_TASKS.md.
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+          submodules: recursive
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev librsvg2-dev libssl-dev \
+            libayatana-appindicator3-dev libxdo-dev libdbus-1-dev patchelf \
+            build-essential pkg-config file
+      # Version comes from "packageManager" in package.json. Newer pnpm 11.x rejects
+      # the git-hosted notifications API package (allowBuilds needs its full tarball URL).
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      # Not actions-rust-lang/setup-rust-toolchain: it exports RUSTFLAGS="-D warnings",
+      # which fails on any warning and overrides the target flags in .cargo/config.toml.
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: pnpm install --frozen-lockfile
+      # The example imports the plugin's JS package via workspace:*, whose dist/ is gitignored.
+      - run: pnpm build
+      - name: Build
+        working-directory: example/matrix-svelte-client
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: pnpm tauri build
+      # `cn --framework tauri` only looks for <dir>/target/**/release/bundle next to
+      # tauri.conf.json. Our target/ is at the workspace root, and the example dir loops
+      # through node_modules back to the root, so stage the bundles in a clean dir.
+      - name: Stage bundles for CrabNebula
+        shell: bash
+        run: |
+          stage="$RUNNER_TEMP/cn"
+          mkdir -p "$stage"
+          cp example/matrix-svelte-client/src-tauri/tauri.conf.json "$stage/"
+          for b in target/release/bundle target/*/release/bundle; do
+            [ -d "$b" ] || continue
+            mkdir -p "$stage/$(dirname "$b")"
+            mv "$b" "$stage/$b"
+          done
+          # cn 0.13 uploads .rpm only as a download (no update platform/signature),
+          # so it gets its own explicit upload below.
+          mkdir -p "$RUNNER_TEMP/rpm"
+          for r in "$stage"/target/release/bundle/rpm/*.rpm*; do [ -e "$r" ] && mv "$r" "$RUNNER_TEMP/rpm/"; done
+          ls -l "$RUNNER_TEMP/rpm"
+          find "$stage/target" -maxdepth 5 -type f \( -name '*.sig' -o -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' -o -name '*.exe' -o -name '*.msi' -o -name '*.dmg' -o -name '*.tar.gz' \)
+      - uses: crabnebula-dev/cloud-release@v0
+        with:
+          working-directory: ${{ runner.temp }}/cn
+          command: release upload ${{ env.CN_APPLICATION }} --framework tauri ${{ env.CN_CHANNEL }}
+          api-key: ${{ secrets.CN_API_KEY }}
+      - name: Upload rpm as an update bundle
+        if: runner.os == 'Linux'
+        uses: crabnebula-dev/cloud-release@v0
+        with:
+          working-directory: ${{ runner.temp }}/rpm
+          command: >-
+            release upload ${{ env.CN_APPLICATION }} ${{ needs.prepare.outputs.version }}
+            --file matrix-svelte-client-${{ needs.prepare.outputs.version }}-1.x86_64.rpm
+            --update-platform linux-x86_64-rpm --public-platform rpm-x86_64 ${{ env.CN_CHANNEL }}
+          api-key: ${{ secrets.CN_API_KEY }}

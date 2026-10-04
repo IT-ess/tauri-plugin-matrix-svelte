@@ -67,5 +67,10 @@ paranoid-android = "0.2"
 tokio = { version = "1.53.1", features = ["rt"] }
 tauri-plugin-web-auth = "1.0.0"
 
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+# Desktop auto-updates served by CrabNebula Cloud (see CI_CD_TASKS.md).
+tauri-plugin-updater = "2.13.1"
+tauri-plugin-process = "2.4.0"
+
 [target.'cfg(target_os = "linux")'.dependencies]
 tauri-plugin-devtools = "2.2.1"
