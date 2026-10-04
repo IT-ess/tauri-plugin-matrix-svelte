@@ -137,7 +137,11 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
   - **Temporary push trigger.** `push: branches: [ci/release-pipeline]` is always a dry run. `workflow_dispatch` only works once the file is on main. **Remove it before merging.**
   - **Real releases** refuse to run outside `main`, and push `main` and the tag atomically.
 
-- [ ] **Gate 3:** run the workflow from a test branch with `bump=patch`. Push to a throwaway branch instead of main, guarded by an input `dry_run` that skips the push. Check that:
+  - **pnpm pinned** to 11.3.0 via `packageManager` in the root `package.json`. pnpm 11.28 rejects the git-hosted notifications API package unless `allowBuilds` lists its full tarball URL.
+  - **Plugin JS package.** CI runs a root `pnpm build` before building the app: the example imports the plugin's JS package via `workspace:*`, and its `dist/` is gitignored.
+  - **rpm upload.** cn 0.13.5 uploads `.rpm` only as a download, without its signature or update platform. CI stages the rpm separately and uploads it with `--update-platform linux-x86_64-rpm --public-platform rpm-x86_64`.
+  - **Phase 7 links.** The deb's public platform is **`debian-x86_64`**, not `deb-x86_64` as the docs say.
+- [x] **Gate 3:** Passed 2026-10-04 on run 37234029068. The `dryrun` draft 0.4.1 holds the deb (`linux-x86_64-deb`), AppImage (`linux-x86_64-appimage`) and rpm (`linux-x86_64-rpm`), each signed, plus the release notes. The release commit on `ci-dryrun/0.4.1` touches exactly the 7 version files, `Cargo.lock` and the CHANGELOG. The Linux job took 27 min on a cold cache and 16 min on a warm one. The `dryrun`-channel drafts are kept (the channel is isolated) and are in the PR cleanup list. Original gate text: run the workflow from a test branch with `bump=patch`. Push to a throwaway branch instead of main, guarded by an input `dry_run` that skips the push. Check that:
 - the CN draft shows the deb, rpm, AppImage and the `.sig` files
 - the CHANGELOG diff is correct
 - then purge the draft in CN
