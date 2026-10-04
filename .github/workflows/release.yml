@@ -47,13 +47,16 @@ jobs:
         run: |
           echo "::error::Real releases must run on main (got ${{ github.ref }})."
           exit 1
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
+          # setup-node >= v5 auto-enables a pnpm cache when package.json has
+          # "packageManager"; this job doesn't install pnpm.
+          package-manager-cache: false
       - uses: dtolnay/rust-toolchain@stable
       - name: Bump versions
         id: bump
@@ -83,7 +86,7 @@ jobs:
           fi
           # Later jobs check out this exact commit (a branch could move under them).
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: notes
           path: notes.md
@@ -92,10 +95,10 @@ jobs:
     needs: prepare
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.sha }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: notes
           path: example/matrix-svelte-client/src-tauri
@@ -118,7 +121,7 @@ jobs:
           # macOS (aarch64, signed + notarized) pending: see Phase 4 in CI_CD_TASKS.md.
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.sha }}
           submodules: recursive
@@ -131,8 +134,8 @@ jobs:
             build-essential pkg-config file
       # Version comes from "packageManager" in package.json. Newer pnpm 11.x rejects
       # the git-hosted notifications API package (allowBuilds needs its full tarball URL).
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: pnpm
