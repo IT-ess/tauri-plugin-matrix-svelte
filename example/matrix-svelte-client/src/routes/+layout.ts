@@ -1,6 +1,6 @@
 import type { LayoutLoad } from './$types';
 import { locale } from '@tauri-apps/plugin-os';
-import { setLocale } from '$lib/paraglide/runtime.js';
+import { setLocale } from '#lib/paraglide/runtime.js';
 
 // See: https://v2.tauri.app/start/frontend/sveltekit/ for more info
 export const prerender = true;

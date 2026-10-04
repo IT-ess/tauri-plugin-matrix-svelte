@@ -1,6 +1,6 @@
 <script lang="ts">
-	import * as Marker from '$lib/components/ui/marker';
-	import { m } from '$lib/paraglide/messages';
+	import * as Marker from '#lib/components/ui/marker/index.js';
+	import { m } from '#lib/paraglide/messages.js';
 	import { SvelteDate } from 'svelte/reactivity';
 	import type { VirtualTimelineItem } from 'tauri-plugin-matrix-svelte-api';
 

@@ -1,15 +1,15 @@
 <script lang="ts">
-	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
+	import * as RadioGroup from '#lib/components/ui/radio-group/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
 
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import * as Card from '$lib/components/ui/card/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
 	import { LoaderCircle, LogInIcon, Server, XIcon } from '@lucide/svelte';
-	import { m } from '$lib/paraglide/messages';
-	import * as Form from '$lib/components/ui/form/index';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
-	import * as InputGroup from '$lib/components/ui/input-group/index.js';
+	import { m } from '#lib/paraglide/messages.js';
+	import * as Form from '#lib/components/ui/form/index.js';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
 	import { Spinner } from '../ui/spinner';
 	import { listen } from '@tauri-apps/api/event';
 	import { hostname, platform } from '@tauri-apps/plugin-os';
@@ -23,7 +23,7 @@
 		type ValidationErrors
 	} from 'sveltekit-superforms/client';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
-	import { loginFormSchema, type LoginFormSchema } from '$lib/schemas/login';
+	import { loginFormSchema, type LoginFormSchema } from '#lib/schemas/login.js';
 	import { beforeNavigate } from '$app/navigation';
 	import {
 		buildClientFromHomeserverUrl,
@@ -151,7 +151,9 @@
 	});
 	const { form: formData, enhance } = form;
 
-	beforeNavigate(({ cancel, type }) => {
+	beforeNavigate(({ cancel, type, shallow }) => {
+		if (shallow) return;
+
 		if (type != 'goto') {
 			cancel(); // Stops the navigation when the back button has been pressed
 			if (activeStep == 'homeserverSelection') {
@@ -332,8 +334,10 @@
 {#snippet homeserverItem(address: string, description: string)}
 	<div class="flex w-full items-center gap-2">
 		<RadioGroup.Item value={address} id={address} />
-		<Label class="flex w-full flex-col items-start" for={address}
-			>{address} <span class="text-muted-foreground">{description}</span></Label
-		>
+
+		<Label class="flex w-full flex-col items-start" for={address}>
+			{address}
+			<span class="text-muted-foreground">{description}</span>
+		</Label>
 	</div>
 {/snippet}

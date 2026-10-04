@@ -3,13 +3,13 @@
 	import { setupViewTransition } from 'sveltekit-view-transition';
 	import { onDestroy, onMount } from 'svelte';
 	import { emit, listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { Button } from '$lib/components/ui/button/';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import { Button } from '#lib/components/ui/button//index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import { Toaster, toast } from 'svelte-sonner';
 	import { MediaQuery } from 'svelte/reactivity';
 	import type { LayoutProps } from './$types';
 	import { beforeNavigate, goto } from '$app/navigation';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import '@saurl/tauri-plugin-safe-area-insets-css-api';
 	import { loginStore, roomsCollection } from '../hooks.client';
 	import { platform } from '@tauri-apps/plugin-os';
@@ -23,7 +23,7 @@
 		type ToastNotificationEventType,
 		type VerificationEmojisEventType
 	} from 'tauri-plugin-matrix-svelte-api';
-	import { gotoProfile, gotoRoom, gotoRoomPreview, pollWithBackoff } from '$lib/utils.svelte';
+	import { gotoProfile, gotoRoom, gotoRoomPreview, pollWithBackoff } from '#lib/utils.svelte.js';
 	import { onNotificationClicked } from '@choochmeque/tauri-plugin-notifications-api';
 	import type { PluginListener } from '@tauri-apps/api/core';
 
@@ -159,7 +159,9 @@
 		notificationClickedListener?.unregister();
 	});
 
-	beforeNavigate(({ cancel, to }) => {
+	beforeNavigate(({ cancel, to, shallow }) => {
+		if (shallow) return;
+
 		// Current bug: `matrix:` URIs aren't supported by the browser so it doesn't
 		// even trigger navigation correctly and this handler isn't reached.
 		if (to && (to.url.protocol == 'matrix:' || to.url.hostname == 'matrix.to')) {

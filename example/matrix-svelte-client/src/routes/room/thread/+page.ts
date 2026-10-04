@@ -1,7 +1,7 @@
 import type { PageLoad } from './$types';
 import { emit } from '@tauri-apps/api/event';
 import { error } from '@sveltejs/kit';
-import { roomNameToPlainString } from '$lib/utils.svelte';
+import { roomNameToPlainString } from '#lib/utils.svelte.js';
 import {
 	MatrixSvelteEmitEvent,
 	type UpdateCurrentActiveRoom

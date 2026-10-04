@@ -2,9 +2,9 @@
 	import { Drawer as DrawerPrimitive } from 'vaul-svelte';
 	import DrawerPortal from './drawer-portal.svelte';
 	import DrawerOverlay from './drawer-overlay.svelte';
-	import { cn } from '$lib/utils.svelte.js';
+	import { cn } from '#lib/utils.svelte.js';
 	import type { ComponentProps } from 'svelte';
-	import type { WithoutChildrenOrChild } from '$lib/utils.svelte.js';
+	import type { WithoutChildrenOrChild } from '#lib/utils.svelte.js';
 
 	let {
 		ref = $bindable(null),

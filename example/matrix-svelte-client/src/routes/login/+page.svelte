@@ -1,5 +1,5 @@
 <script lang="ts">
-	import LoginSteps from '$lib/components/login/login-steps.svelte';
+	import LoginSteps from '#lib/components/login/login-steps.svelte';
 	import { goto } from '$app/navigation';
 	import type { PageData } from './$types';
 	import { platform } from '@tauri-apps/plugin-os';
@@ -10,11 +10,11 @@
 		submitMatrixLoginRequest,
 		isLoggedIn
 	} from 'tauri-plugin-matrix-svelte-api';
-	import { gotoRoomsList } from '$lib/utils.svelte';
+	import { gotoRoomsList } from '#lib/utils.svelte.js';
 	import { resolve } from '$app/paths';
-	import matrix from '$lib/assets/matrix.png';
-	import svelte from '$lib/assets/svelte.png';
-	import tauri from '$lib/assets/tauri.webp';
+	import matrix from '#lib/assets/matrix.png';
+	import svelte from '#lib/assets/svelte.png';
+	import tauri from '#lib/assets/tauri.webp';
 
 	let { data }: { data: PageData } = $props();
 
@@ -46,7 +46,7 @@
 		if (skipVerification) {
 			await gotoRoomsList('dm');
 		} else {
-			await goto(resolve('/verification'));
+			await goto(resolve('verification'));
 		}
 	};
 
@@ -60,7 +60,7 @@
 						console.log('logged in');
 
 						isLoading = false;
-						await goto(resolve('/verification'));
+						await goto(resolve('verification'));
 					}
 				}, 400);
 			});

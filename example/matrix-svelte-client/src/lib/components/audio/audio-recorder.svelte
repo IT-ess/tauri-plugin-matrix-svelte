@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { TrashIcon, PauseIcon, PlayIcon } from '@lucide/svelte';
 	import AudioWaveform from 'svelte-audio-waveform';
 	import RecordingWaveform from './recording-waveform.svelte';

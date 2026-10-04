@@ -4,8 +4,8 @@
 		TooltipContent,
 		TooltipProvider,
 		TooltipTrigger
-	} from '$lib/components/ui/tooltip';
-	import { Button } from '$lib/components/ui/button';
+	} from '#lib/components/ui/tooltip/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import type { ReactionsByKeyBySender } from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {

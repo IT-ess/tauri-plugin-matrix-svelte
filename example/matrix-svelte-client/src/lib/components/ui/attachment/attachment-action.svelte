@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { Button, type ButtonProps } from "$lib/components/ui/button/index.js";
-	import { cn } from "$lib/utils.svelte.js";
+	import { Button, type ButtonProps } from '#lib/components/ui/button/index.js';
+	import { cn } from '#lib/utils.svelte.js';
 
 	let {
 		ref = $bindable(null),
 		class: className,
-		variant = "ghost",
-		size = "icon-xs",
+		variant = 'ghost',
+		size = 'icon-xs',
 		...restProps
 	}: ButtonProps = $props();
 </script>

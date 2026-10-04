@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { ImageUp, LoaderIcon } from '@lucide/svelte';
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
-	import { m } from '$lib/paraglide/messages';
-	import { cn, getCustomMxcUriFromOriginal, getInitials } from '$lib/utils.svelte';
+	import { Avatar, AvatarFallback, AvatarImage } from '#lib/components/ui/avatar/index.js';
+	import { m } from '#lib/paraglide/messages.js';
+	import { cn, getCustomMxcUriFromOriginal, getInitials } from '#lib/utils.svelte.js';
 	import { uploadMedia } from 'tauri-plugin-matrix-svelte-api';
 
 	let {

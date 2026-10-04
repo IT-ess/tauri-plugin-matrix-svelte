@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
-	import { Card } from '$lib/components/ui/card';
+	import { Avatar, AvatarFallback, AvatarImage } from '#lib/components/ui/avatar/index.js';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
 	import {
 		getCustomMxcUriFromOriginal,
 		getInitials,
 		roomNameToPlainString
-	} from '$lib/utils.svelte';
-	import { m } from '$lib/paraglide/messages';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
+	} from '#lib/utils.svelte.js';
+	import { m } from '#lib/paraglide/messages.js';
+	import { buttonVariants } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { User, Users } from '@lucide/svelte';
 	import {
 		createMatrixRequest,

@@ -6,15 +6,15 @@
 		DialogTitle,
 		DialogDescription,
 		DialogFooter
-	} from '$lib/components/ui/dialog';
-	import { Input } from '$lib/components/ui/input';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
+	} from '#lib/components/ui/dialog/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { CircleCheck, CircleX, Loader } from '@lucide/svelte';
 	import { Debounced } from 'runed';
 	import { tryGetRoomPreviewFromAddress } from 'tauri-plugin-matrix-svelte-api';
-	import { m } from '$lib/paraglide/messages';
-	import { gotoRoomPreview } from '$lib/utils.svelte';
+	import { m } from '#lib/paraglide/messages.js';
+	import { gotoRoomPreview } from '#lib/utils.svelte.js';
 
 	interface Props {
 		open: boolean;
@@ -72,7 +72,7 @@
 			<div class="flex gap-1">
 				{#if debouncedResult.current}
 					{#await debouncedResult.current}
-						<Loader class="size-5 text-blue-500 animate-spin" />
+						<Loader class="size-5 animate-spin text-blue-500" />
 					{:then}
 						<CircleCheck class="size-5 text-green-500" />
 					{:catch err}

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
-	import { Separator } from '$lib/components/ui/separator';
-	import { m } from '$lib/paraglide/messages';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Popover, PopoverContent, PopoverTrigger } from '#lib/components/ui/popover/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
+	import { m } from '#lib/paraglide/messages.js';
 	import { MoreVerticalIcon, ShieldCheckIcon } from '@lucide/svelte';
 	import type { FrontendDevice as Device } from 'tauri-plugin-matrix-svelte-api';
 

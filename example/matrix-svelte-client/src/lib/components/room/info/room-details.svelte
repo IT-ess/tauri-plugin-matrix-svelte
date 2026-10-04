@@ -1,10 +1,10 @@
 <script lang="ts">
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import { m } from '$lib/paraglide/messages';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { buttonVariants } from '#lib/components/ui/button/index.js';
+	import { m } from '#lib/paraglide/messages.js';
 	import { toast } from 'svelte-sonner';
-	import EditableAvatar from '$lib/components/common/editable-avatar.svelte';
-	import EditableField from '$lib/components/common/editable-field.svelte';
+	import EditableAvatar from '#lib/components/common/editable-avatar.svelte';
+	import EditableField from '#lib/components/common/editable-field.svelte';
 	import { defineRoomInformations, type RoomStore } from 'tauri-plugin-matrix-svelte-api';
 	import { roomsCollection } from '../../../../hooks.client';
 

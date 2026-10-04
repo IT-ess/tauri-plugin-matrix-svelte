@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
-	import { Badge } from '$lib/components/ui/badge';
+	import { Avatar, AvatarFallback, AvatarImage } from '#lib/components/ui/avatar/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	import {
 		getCustomMxcUriFromOriginal,
 		getInitials,
 		roomNameToPlainString
-	} from '$lib/utils.svelte';
+	} from '#lib/utils.svelte.js';
 	import type { JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {

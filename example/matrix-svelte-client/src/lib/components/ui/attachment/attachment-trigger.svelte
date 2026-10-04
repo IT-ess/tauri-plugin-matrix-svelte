@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { cn, type WithElementRef } from "$lib/utils.svelte.js";
-	import type { Snippet } from "svelte";
-	import type { HTMLButtonAttributes } from "svelte/elements";
+	import { cn, type WithElementRef } from '#lib/utils.svelte.js';
+	import type { Snippet } from 'svelte';
+	import type { HTMLButtonAttributes } from 'svelte/elements';
 
 	let {
 		ref = $bindable(null),
 		class: className,
-		type = "button",
+		type = 'button',
 		child,
 		...restProps
 	}: WithElementRef<HTMLButtonAttributes> & {
@@ -14,9 +14,9 @@
 	} = $props();
 
 	const mergedProps = $derived({
-		class: cn("absolute inset-0 z-10 outline-none", className),
-		"data-slot": "attachment-trigger",
-		...restProps,
+		class: cn('absolute inset-0 z-10 outline-none', className),
+		'data-slot': 'attachment-trigger',
+		...restProps
 	});
 </script>
 

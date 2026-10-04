@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { m } from '$lib/paraglide/messages';
-	import * as Collapsible from '$lib/components/ui/collapsible';
-	import { Button } from '$lib/components/ui/button';
+	import { m } from '#lib/paraglide/messages.js';
+	import * as Collapsible from '#lib/components/ui/collapsible/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { ChevronDownIcon } from '@lucide/svelte';
-	import { adaptBaseUriToPlatform } from '$lib/utils.svelte';
+	import { adaptBaseUriToPlatform } from '#lib/utils.svelte.js';
 	import type { Attachment } from 'svelte/attachments';
 	import { fetchMatrixPillInfo, type FrontendTextMessage } from 'tauri-plugin-matrix-svelte-api';
 

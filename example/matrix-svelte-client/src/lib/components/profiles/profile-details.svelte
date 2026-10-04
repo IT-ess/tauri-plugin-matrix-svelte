@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { ChevronLeft, MessageCircle } from '@lucide/svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Separator } from '$lib/components/ui/separator';
-	import * as Avatar from '$lib/components/ui/avatar/index.js';
-	import { m } from '$lib/paraglide/messages';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
+	import * as Avatar from '#lib/components/ui/avatar/index.js';
+	import { m } from '#lib/paraglide/messages.js';
 	import {
 		getDmRoomIdOrCreateIt,
 		MatrixSvelteListenEvent,
 		type ProfileModel
 	} from 'tauri-plugin-matrix-svelte-api';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { getCustomMxcUriFromOriginal, getInitials, goBack, gotoRoom } from '$lib/utils.svelte';
+	import { getCustomMxcUriFromOriginal, getInitials, goBack, gotoRoom } from '#lib/utils.svelte.js';
 	import { onDestroy } from 'svelte';
 	import { Spinner } from '../ui/spinner';
 

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
-	import * as Message from '$lib/components/ui/message';
-	import * as Bubble from '$lib/components/ui/bubble';
+	import { Avatar, AvatarFallback, AvatarImage } from '#lib/components/ui/avatar/index.js';
+	import * as Message from '#lib/components/ui/message/index.js';
+	import * as Bubble from '#lib/components/ui/bubble/index.js';
 	import {
 		Copy,
 		MessageSquareReply,
@@ -16,11 +16,11 @@
 		getInitials,
 		gotoProfile,
 		gotoThread
-	} from '$lib/utils.svelte';
+	} from '#lib/utils.svelte.js';
 	import AudioMessage from './audio-message.svelte';
 	import VideoMessage from './video-message.svelte';
 	import FileMessage from './file-message.svelte';
-	import { Badge } from '$lib/components/ui/badge';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { platform } from '@tauri-apps/plugin-os';
 	import DesktopActions from './item-actions/desktop-actions.svelte';
 	import {
@@ -28,17 +28,17 @@
 		DropdownMenuContent,
 		DropdownMenuItem,
 		DropdownMenuTrigger
-	} from '$lib/components/ui/dropdown-menu';
-	import { Popover, PopoverContent } from '$lib/components/ui/popover';
-	import { Button } from '$lib/components/ui/button';
-	import PopoverTrigger from '$lib/components/ui/popover/popover-trigger.svelte';
+	} from '#lib/components/ui/dropdown-menu/index.js';
+	import { Popover, PopoverContent } from '#lib/components/ui/popover/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import PopoverTrigger from '#lib/components/ui/popover/popover-trigger.svelte';
 	import { Tween } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
 	import EditTextMessage from './item-actions/edit-text-message.svelte';
 	import Reactions from './item-actions/reactions.svelte';
-	import { getLocale } from '$lib/paraglide/runtime';
+	import { getLocale } from '#lib/paraglide/runtime.js';
 	import TextMessage from './text-message.svelte';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import ThreadPreview from '../thread/thread-preview.svelte';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { usePress, useSwipe, type GestureCustomEvent } from 'svelte-gestures';
@@ -319,17 +319,17 @@
 	>
 		<PopoverTrigger />
 		{#if !isOwn}
-		<Message.Avatar>
-			{#if !groupedWithNext}
-				<Avatar onclick={() => gotoProfile(senderId)} class="border-primary border">
-					<AvatarImage
-						src={getCustomMxcUriFromOriginal(roomMembers[senderId]?.avatar)}
-						alt={sender}
-					/>
-					<AvatarFallback>{getInitials(sender ?? '?')}</AvatarFallback>
-				</Avatar>
-			{/if}
-		</Message.Avatar>
+			<Message.Avatar>
+				{#if !groupedWithNext}
+					<Avatar onclick={() => gotoProfile(senderId)} class="border-primary border">
+						<AvatarImage
+							src={getCustomMxcUriFromOriginal(roomMembers[senderId]?.avatar)}
+							alt={sender}
+						/>
+						<AvatarFallback>{getInitials(sender ?? '?')}</AvatarFallback>
+					</Avatar>
+				{/if}
+			</Message.Avatar>
 		{/if}
 		<DropdownMenu bind:open={showDropdown}>
 			<DropdownMenuTrigger />

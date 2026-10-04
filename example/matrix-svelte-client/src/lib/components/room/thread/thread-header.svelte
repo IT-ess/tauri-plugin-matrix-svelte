@@ -5,10 +5,10 @@
 		getInitials,
 		gotoRoom,
 		roomNameToPlainString
-	} from '$lib/utils.svelte';
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
+	} from '#lib/utils.svelte.js';
+	import { Avatar, AvatarFallback, AvatarImage } from '#lib/components/ui/avatar/index.js';
 	import { roomsCollection } from '../../../../hooks.client';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 
 	let {
 		roomId,

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import * as Drawer from '$lib/components/ui/drawer/index.js';
+	import * as Drawer from '#lib/components/ui/drawer/index.js';
 	import { Camera, CirclePlus, Images, Paperclip, Video } from '@lucide/svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { m } from '$lib/paraglide/messages';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { m } from '#lib/paraglide/messages.js';
 
 	let {
 		openMediaDrawer = $bindable(false),

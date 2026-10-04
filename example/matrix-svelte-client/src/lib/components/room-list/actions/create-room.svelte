@@ -1,25 +1,25 @@
 <script lang="ts">
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { Button, buttonVariants } from '$lib/components/ui/button';
-	import { m } from '$lib/paraglide/messages';
-	import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
-	import { Label } from '$lib/components/ui/label';
-	import { Input } from '$lib/components/ui/input';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Button, buttonVariants } from '#lib/components/ui/button/index.js';
+	import { m } from '#lib/paraglide/messages.js';
+	import { Tabs, TabsContent, TabsList, TabsTrigger } from '#lib/components/ui/tabs/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
 	import { InfoIcon } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
-	import { Spinner } from '$lib/components/ui/spinner';
-	import EditableAvatar from '$lib/components/common/editable-avatar.svelte';
-	import RoomSelector from '$lib/components/room-selector/room-selector.svelte';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
+	import EditableAvatar from '#lib/components/common/editable-avatar.svelte';
+	import RoomSelector from '#lib/components/room-selector/room-selector.svelte';
 	import { onDestroy } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { gotoRoom } from '$lib/utils.svelte';
+	import { gotoRoom } from '#lib/utils.svelte.js';
 	import { roomsCollection } from '../../../../hooks.client';
 	import {
 		createMatrixRequest,
 		submitAsyncRequest,
 		MatrixSvelteListenEvent
 	} from 'tauri-plugin-matrix-svelte-api';
-	import { Switch } from '$lib/components/ui/switch/index.js';
+	import { Switch } from '#lib/components/ui/switch/index.js';
 
 	type Props = {
 		actionCreateRoomOpen: boolean;

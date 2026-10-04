@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { m } from '$lib/paraglide/messages';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { m } from '#lib/paraglide/messages.js';
 	import HomeserverSelection from './homeserver-selection.svelte';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms/client';
-	import type { LoginFormSchema } from '$lib/schemas/login';
+	import type { LoginFormSchema } from '#lib/schemas/login.js';
 	import type { MatrixLoginPayload } from 'tauri-plugin-matrix-svelte-api';
 
 	let {
