@@ -138,6 +138,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: pnpm install --frozen-lockfile
+      # The example imports the plugin's JS package via workspace:*, whose dist/ is gitignored.
+      - run: pnpm build
       - name: Build
         working-directory: example/matrix-svelte-client
         env:
