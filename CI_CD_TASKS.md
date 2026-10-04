@@ -73,7 +73,7 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 - [ ] **Gate 0:**
 - `gh secret list` shows every secret.
 - [x] The reused pubkey matches the private key (2026-10-04: signed with `tauri signer sign -f <keyfile>`; ed25519 signature verified against the refs pubkey, key IDs match).
-- [ ] `TAURI_SIGNING_PRIVATE_KEY` secret holds the key **content**. Locally the env var is a *file path*, and Tauri accepts either, but CI needs the content. Set it with `gh secret set TAURI_SIGNING_PRIVATE_KEY < "$TAURI_SIGNING_PRIVATE_KEY"`.
+- [x] `TAURI_SIGNING_PRIVATE_KEY` secret holds the key **content** (re-set 2026-10-04 20:12Z). Locally the env var is a *file path*, and Tauri accepts either, but CI needs the content. Set it with `gh secret set TAURI_SIGNING_PRIVATE_KEY < "$TAURI_SIGNING_PRIVATE_KEY"`.
 
 ## Phase 1 — Version bump + changelog (local first)
 - **`scripts/bump-version.mjs <patch|minor|major>`** (plain Node, no dependencies):
