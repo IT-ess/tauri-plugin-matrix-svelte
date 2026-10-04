@@ -93,7 +93,7 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 
 ## Phase 2 — Updater in the example app (desktop only)
 - Cargo dependencies, desktop-only (`cfg(not(any(target_os="android", target_os="ios")))`):
-  - `tauri-plugin-updater` and `tauri-plugin-process`, added via `[workspace.dependencies]` as the CLAUDE.md convention requires
+  - `tauri-plugin-updater` and `tauri-plugin-process`, added directly to the example's `Cargo.toml`: `[workspace.dependencies]` is only for deps shared with the plugin
   - `tauri-plugin-dialog` already exists
 - Register both plugins in `src-tauri/src/lib.rs`, inside the existing desktop `cfg` block (next to `single_instance`, around line 183).
 - Add a desktop-only capability with `updater:default` and `process:allow-restart`, listed in `app.security.capabilities`.
@@ -107,10 +107,11 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
   - `downloadAndInstall()`
   - `relaunch()`
 
-- [ ] **Gate 2:**
+- [x] **Gate 2:** (2026-10-04: signed `pnpm tauri build` OK with deb/rpm/AppImage + `.sig`; `cargo check --target aarch64-linux-android` OK and `cargo tree` shows no updater on Android/iOS; `pnpm check` clean. App launch confirmed by user.)
 - `pnpm tauri build` succeeds locally with `TAURI_SIGNING_PRIVATE_KEY` set, and produces `.sig` files.
 - The app starts, and an update check against CN returns 204 or 404 without crashing.
-- Android and iOS still compile, since the updater is excluded there.
+- Android and iOS still compile, since the updater is excluded there. (iOS can't build on Linux; checked via `cargo tree --target aarch64-apple-ios`.)
+- Phase 5 note: pin NDK `30.0.16248370` (local version).
 
 ## Phase 3 — Workflow skeleton: prepare + draft + Linux (`.github/workflows/release.yml`)
 - **Workflow settings:** `on: workflow_dispatch` (input `bump`), `concurrency: release` with `cancel-in-progress: false` (unlike the CN doc: a release must never be cancelled halfway), `env.CN_APPLICATION: refs/matrix-svelte-client`.

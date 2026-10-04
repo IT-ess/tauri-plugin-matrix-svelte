@@ -6,6 +6,7 @@ import {
 	RoomsCollection,
 	RoomStore
 } from 'tauri-plugin-matrix-svelte-api';
+import { checkForAppUpdates } from '#lib/updater.js';
 
 // Create the store that will track the login state
 const loginStore = new LoginStore();
@@ -26,6 +27,9 @@ export const init: ClientInit = async () => {
 
 	const splashscreenEvent = new CustomEvent('app-init-done');
 	window.dispatchEvent(splashscreenEvent);
+
+	// Fire and forget: shows a dialog only when a newer release is published.
+	checkForAppUpdates();
 
 	if (!hasSessionStoredBool) {
 		goto('/login');
