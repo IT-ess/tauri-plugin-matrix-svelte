@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { cn, type WithElementRef } from "$lib/utils.svelte.js";
-	import type { HTMLAttributes } from "svelte/elements";
+	import { cn, type WithElementRef } from '#lib/utils.svelte.js';
+	import type { HTMLAttributes } from 'svelte/elements';
 
 	let {
 		ref = $bindable(null),
 		class: className,
-		align = "start",
+		align = 'start',
 		children,
 		...restProps
 	}: WithElementRef<HTMLAttributes<HTMLDivElement>> & {
-		align?: "start" | "end";
+		align?: 'start' | 'end';
 	} = $props();
 </script>
 
@@ -18,7 +18,7 @@
 	data-slot="message"
 	data-align={align}
 	class={cn(
-		"text-sm gap-2 group/message relative flex w-full min-w-0 data-[align=end]:flex-row-reverse",
+		'group/message relative flex w-full min-w-0 gap-2 text-sm data-[align=end]:flex-row-reverse',
 		className
 	)}
 	{...restProps}

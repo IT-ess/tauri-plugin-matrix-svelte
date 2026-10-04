@@ -7,7 +7,7 @@ import {
 	requestPermission,
 	Visibility
 } from '@choochmeque/tauri-plugin-notifications-api';
-import { m } from '$lib/paraglide/messages';
+import { m } from '#lib/paraglide/messages.js';
 import { toast } from 'svelte-sonner';
 import { getLocale } from './paraglide/runtime';
 import { registerNotifications } from 'tauri-plugin-matrix-svelte-api';

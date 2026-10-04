@@ -1,7 +1,7 @@
 <script lang="ts">
-	import * as Sheet from '$lib/components/ui/sheet/index';
-	import { Button, buttonVariants } from '$lib/components/ui/button/index';
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
+	import * as Sheet from '#lib/components/ui/sheet/index.js';
+	import { Button, buttonVariants } from '#lib/components/ui/button/index.js';
+	import { Avatar, AvatarFallback, AvatarImage } from '#lib/components/ui/avatar/index.js';
 	import {
 		BellRing,
 		MonitorSmartphone,
@@ -13,12 +13,12 @@
 		LogOut,
 		Pencil
 	} from '@lucide/svelte';
-	import { cn, getCustomMxcUriFromOriginal, getInitials } from '$lib/utils.svelte';
+	import { cn, getCustomMxcUriFromOriginal, getInitials } from '#lib/utils.svelte.js';
 	import Badge from '../ui/badge/badge.svelte';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
 	import { loginStore } from '../../../hooks.client';
 	import { checkIfLastDevice, disconnectAndClearSession } from 'tauri-plugin-matrix-svelte-api';
 

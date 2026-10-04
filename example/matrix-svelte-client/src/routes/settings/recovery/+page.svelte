@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { Label } from '$lib/components/ui/label';
-	import { Switch } from '$lib/components/ui/switch';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Switch } from '#lib/components/ui/switch/index.js';
 	import { CheckIcon, ChevronLeft, CopyIcon, LoaderCircle } from '@lucide/svelte';
-	import * as InputGroup from '$lib/components/ui/input-group/index.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
-	import { Button } from '$lib/components/ui/button';
-	import { m } from '$lib/paraglide/messages';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { m } from '#lib/paraglide/messages.js';
 	import { toast } from 'svelte-sonner';
 	import { setupNewBackup } from 'tauri-plugin-matrix-svelte-api';
-	import { gotoRoomsList } from '$lib/utils.svelte';
+	import { gotoRoomsList } from '#lib/utils.svelte.js';
 
 	let hasCopied = $state(false);
 	let canProceed = $state(false);

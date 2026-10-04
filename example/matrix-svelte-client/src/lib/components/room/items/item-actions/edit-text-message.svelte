@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { CheckIcon, XIcon } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
-	import { cn } from '$lib/utils.svelte';
+	import { cn } from '#lib/utils.svelte.js';
 	import { onMount } from 'svelte';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 
 	interface Props {
 		message: string;

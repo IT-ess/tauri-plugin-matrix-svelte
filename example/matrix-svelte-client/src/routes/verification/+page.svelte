@@ -9,15 +9,15 @@
 <script lang="ts">
 	import { defaults, setError, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zod4 } from 'sveltekit-superforms/adapters';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
+	import * as Form from '#lib/components/ui/form/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
 
 	import { goto } from '$app/navigation';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
-	import { buttonVariants } from '$lib/components/ui/button/index.js';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
+	import { buttonVariants } from '#lib/components/ui/button/index.js';
 	import type { PageProps } from './$types';
-	import { m } from '$lib/paraglide/messages';
-	import * as Card from '$lib/components/ui/card/index.js';
+	import { m } from '#lib/paraglide/messages.js';
+	import * as Card from '#lib/components/ui/card/index.js';
 	import { toast } from 'svelte-sonner';
 	import { ChevronLeft, DatabaseBackup, LoaderCircle, MonitorSmartphone } from '@lucide/svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';

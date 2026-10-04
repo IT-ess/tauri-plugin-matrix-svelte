@@ -1,9 +1,9 @@
 <script lang="ts">
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { Button, buttonVariants } from '$lib/components/ui/button';
-	import { m } from '$lib/paraglide/messages';
-	import { Spinner } from '$lib/components/ui/spinner';
-	import RoomSelector from '$lib/components/room-selector/room-selector.svelte';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Button, buttonVariants } from '#lib/components/ui/button/index.js';
+	import { m } from '#lib/paraglide/messages.js';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
+	import RoomSelector from '#lib/components/room-selector/room-selector.svelte';
 	import { createMatrixRequest, submitAsyncRequest } from 'tauri-plugin-matrix-svelte-api';
 	import { roomsCollection } from '../../../../../hooks.client';
 

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { ChevronLeft } from '@lucide/svelte';
-	import NotificationsSwitch from '$lib/components/settings/notifications-switch.svelte';
-	import { gotoRoomsList } from '$lib/utils.svelte';
+	import NotificationsSwitch from '#lib/components/settings/notifications-switch.svelte';
+	import { gotoRoomsList } from '#lib/utils.svelte.js';
 
 	let { data }: { data: PageData } = $props();
 </script>

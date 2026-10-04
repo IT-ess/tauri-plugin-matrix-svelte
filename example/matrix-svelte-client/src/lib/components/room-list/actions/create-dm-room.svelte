@@ -1,10 +1,10 @@
 <script lang="ts">
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 
-	import { buttonVariants } from '$lib/components/ui/button';
+	import { buttonVariants } from '#lib/components/ui/button/index.js';
 
-	import SearchProfile from '$lib/components/profiles/search-profile.svelte';
-	import { m } from '$lib/paraglide/messages';
+	import SearchProfile from '#lib/components/profiles/search-profile.svelte';
+	import { m } from '#lib/paraglide/messages.js';
 
 	type Props = {
 		actionCreateDMRoomOpen: boolean;

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { PlusIcon, SearchIcon } from '@lucide/svelte';
-	import { Input } from '$lib/components/ui/input';
+	import { Input } from '#lib/components/ui/input/index.js';
 	import ProfileItem from './profile-item.svelte';
-	import * as m from '$lib/paraglide/messages';
+	import * as m from '#lib/paraglide/messages.js';
 	import InviteProfileItem from './invite-profile-item.svelte';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import SearchProfile from './search-profile.svelte';
-	import { buttonVariants } from '$lib/components/ui/button';
+	import { buttonVariants } from '#lib/components/ui/button/index.js';
 	import Button from '../ui/button/button.svelte';
 	import { roomsCollection } from '../../../hooks.client';
 	import { onMount } from 'svelte';
@@ -111,9 +111,9 @@
 			{#each filteredIds as userId (userId)}
 				<ProfileItem {userId} />
 			{:else}
-				<div class="text-center py-8">
+				<div class="py-8 text-center">
 					<p class="text-muted-foreground">{m.contact_selection_no_results()}</p>
-					<p class="text-sm text-muted-foreground mt-1">
+					<p class="text-muted-foreground mt-1 text-sm">
 						{m.contact_selection_no_results_help_text()}
 					</p>
 				</div>

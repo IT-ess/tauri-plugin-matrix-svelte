@@ -1,13 +1,13 @@
 <script lang="ts">
-	import * as Card from '$lib/components/ui/card/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
 	import RoomListItem from './room-list-item.svelte';
-	import * as Tabs from '$lib/components/ui/tabs/index.js';
+	import * as Tabs from '#lib/components/ui/tabs/index.js';
 	import ListActions from './actions/list-actions.svelte';
 	import SearchRooms from './search-rooms.svelte';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import InviteProfileItem from '../profiles/invite-profile-item.svelte';
 	import { useSearchParams } from 'runed/kit';
-	import { lazyEffect, roomsListSearchParamsSchema } from '$lib/utils.svelte';
+	import { lazyEffect, roomsListSearchParamsSchema } from '#lib/utils.svelte.js';
 	import { roomsCollection } from '../../../hooks.client';
 	import {
 		filterRoomList,

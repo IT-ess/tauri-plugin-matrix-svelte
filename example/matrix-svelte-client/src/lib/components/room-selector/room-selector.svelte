@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { Badge } from '$lib/components/ui/badge';
-	import { ScrollArea } from '$lib/components/ui/scroll-area';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { ScrollArea } from '#lib/components/ui/scroll-area/index.js';
 	import { XIcon } from '@lucide/svelte';
-	import * as Tabs from '$lib/components/ui/tabs/index.js';
-	import { m } from '$lib/paraglide/messages';
+	import * as Tabs from '#lib/components/ui/tabs/index.js';
+	import { m } from '#lib/paraglide/messages.js';
 	import SelectableRoomItem from './selectable-room-item.svelte';
-	import { cn, lazyEffect, roomNameToPlainString } from '$lib/utils.svelte';
-	import SearchRooms from '$lib/components/room-list/search-rooms.svelte';
+	import { cn, lazyEffect, roomNameToPlainString } from '#lib/utils.svelte.js';
+	import SearchRooms from '#lib/components/room-list/search-rooms.svelte';
 	import { roomsCollection } from '../../../hooks.client';
 	import { filterRoomList, type JoinedRoomInfo } from 'tauri-plugin-matrix-svelte-api';
 

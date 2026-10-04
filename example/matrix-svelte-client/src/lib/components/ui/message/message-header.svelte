@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { cn, type WithElementRef } from "$lib/utils.svelte.js";
-	import type { HTMLAttributes } from "svelte/elements";
+	import { cn, type WithElementRef } from '#lib/utils.svelte.js';
+	import type { HTMLAttributes } from 'svelte/elements';
 
 	let {
 		ref = $bindable(null),
@@ -13,7 +13,10 @@
 <div
 	bind:this={ref}
 	data-slot="message-header"
-	class={cn("text-xs font-medium text-muted-foreground px-3.5 group-has-data-[variant=ghost]/message:px-0 flex max-w-full min-w-0 items-center", className)}
+	class={cn(
+		'text-muted-foreground flex max-w-full min-w-0 items-center px-3.5 text-xs font-medium group-has-data-[variant=ghost]/message:px-0',
+		className
+	)}
 	{...restProps}
 >
 	{@render children?.()}

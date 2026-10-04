@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { decode } from 'blurhash';
-	import { Button } from '$lib/components/ui/button';
-	import { m } from '$lib/paraglide/messages';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { m } from '#lib/paraglide/messages.js';
 	import { Play } from '@lucide/svelte';
 	import type { MediaRequestParameters } from 'tauri-plugin-matrix-svelte-api';
 	import { Channel, invoke } from '@tauri-apps/api/core';
-	import { getCustomMxcUriFromOriginal } from '$lib/utils.svelte';
+	import { getCustomMxcUriFromOriginal } from '#lib/utils.svelte.js';
 	import {
 		videoMessageInfoThumbnailSourceIsPlain,
 		videoMessageSourceIsPlain,

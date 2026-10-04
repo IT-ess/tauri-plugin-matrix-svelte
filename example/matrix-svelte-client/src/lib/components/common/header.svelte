@@ -1,6 +1,6 @@
 <script lang="ts">
-	import ProfileMenu from '$lib/components/common/profile-menu.svelte';
-	import * as m from '$lib/paraglide/messages';
+	import ProfileMenu from '#lib/components/common/profile-menu.svelte';
+	import * as m from '#lib/paraglide/messages.js';
 
 	let {
 		currentInvitesNumber

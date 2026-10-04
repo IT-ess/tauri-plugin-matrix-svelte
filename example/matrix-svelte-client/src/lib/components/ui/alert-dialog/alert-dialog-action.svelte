@@ -4,8 +4,8 @@
 		buttonVariants,
 		type ButtonVariant,
 		type ButtonSize
-	} from '$lib/components/ui/button/index.js';
-	import { cn } from '$lib/utils.svelte.js';
+	} from '#lib/components/ui/button/index.js';
+	import { cn } from '#lib/utils.svelte.js';
 
 	let {
 		ref = $bindable(null),

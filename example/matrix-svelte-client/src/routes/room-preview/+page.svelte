@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { ChevronLeft, Globe, History, User, Users } from '@lucide/svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Separator } from '$lib/components/ui/separator';
-	import * as Avatar from '$lib/components/ui/avatar/index.js';
-	import { m } from '$lib/paraglide/messages';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
+	import * as Avatar from '#lib/components/ui/avatar/index.js';
+	import { m } from '#lib/paraglide/messages.js';
 	import {
 		createMatrixRequest,
 		MatrixSvelteListenEvent,
@@ -15,10 +15,10 @@
 		goBack,
 		gotoRoom,
 		gotoRoomsList
-	} from '$lib/utils.svelte';
-	import { Spinner } from '$lib/components/ui/spinner';
+	} from '#lib/utils.svelte.js';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import type { PageProps } from './$types';
-	import Badge from '$lib/components/ui/badge/badge.svelte';
+	import Badge from '#lib/components/ui/badge/badge.svelte';
 	import { toast } from 'svelte-sonner';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { onDestroy } from 'svelte';
@@ -132,7 +132,7 @@
 					<p class="mx-4 text-center">{topic}</p>
 				{/if}
 			</div>
-			<div class="flex flex-col gap-2 pb-safe-offset-4 px-safe-offset-6">
+			<div class="pb-safe-offset-4 px-safe-offset-6 flex flex-col gap-2">
 				<Separator class="mt-4" />
 				{#if state == 'Joined'}
 					{@render summaryText(m.room_preview_already_joined())}
@@ -194,7 +194,7 @@
 </div>
 
 {#snippet summaryText(text: string)}
-	<p class="text-center py-8 font-medium">{text}</p>
+	<p class="py-8 text-center font-medium">{text}</p>
 {/snippet}
 
 {#snippet actionButton(text: string, handler?: () => Promise<void>)}

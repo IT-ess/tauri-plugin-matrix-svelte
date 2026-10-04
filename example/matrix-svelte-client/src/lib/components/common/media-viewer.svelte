@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fade, scale } from 'svelte/transition';
-	import { Button } from '$lib/components/ui/button';
-	import { Textarea } from '$lib/components/ui/textarea';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Textarea } from '#lib/components/ui/textarea/index.js';
 	import { beforeNavigate } from '$app/navigation';
 	import {
 		XIcon,
@@ -13,10 +13,10 @@
 		Share,
 		Download
 	} from '@lucide/svelte';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import { encodeImageToBlurhash } from './encode-blurhash.svelte';
 	import { platform } from '@tauri-apps/plugin-os';
-	import { cn } from '$lib/utils.svelte';
+	import { cn } from '#lib/utils.svelte.js';
 	import { shareFile } from '@choochmeque/tauri-plugin-sharekit-api';
 	import {
 		androidShareMatrixMedia,
@@ -103,13 +103,9 @@
 				}
 				break;
 			}
+
 			case 'file': {
-				return {
-					kind: 'file',
-					info: {
-						size
-					}
-				};
+				return { kind: 'file', info: { size } };
 			}
 		}
 	};
@@ -199,8 +195,9 @@
 	};
 
 	// Before navigate interceptor
+	beforeNavigate(({ cancel, shallow }) => {
+		if (shallow) return;
 
-	beforeNavigate(({ cancel }) => {
 		cancel();
 		onClose();
 	});
@@ -364,6 +361,7 @@
 					}}
 					disabled={isLoading}>{m.button_cancel()}</Button
 				>
+
 				<Button class="flex-1" onclick={handleSend} disabled={isLoading}>
 					{#if isLoading}
 						<LoaderIcon class="animate-spin" size={18} />

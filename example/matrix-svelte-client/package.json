@@ -48,8 +48,9 @@
 		"@internationalized/date": "^3.12.4",
 		"@lucide/svelte": "^1.48.0",
 		"@saurl/tauri-plugin-safe-area-insets-css-api": "^0.1.0",
-		"@sveltejs/adapter-static": "^3.0.10",
-		"@sveltejs/kit": "^2.70.3",
+		"@sveltejs/adapter-static": "^4.0.0",
+		"@sveltejs/kit": "^3.0.0",
+		"@sveltejs/load-config": "^0.2.2",
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",
 		"@tauri-apps/cli": "^2.12.0",
 		"@tauri-apps/plugin-clipboard-manager": "^2.4.0",
@@ -91,5 +92,9 @@
 		"vite": "^8.3.1",
 		"vitest": "^5.0.2",
 		"zod": "^4.6.5"
+	},
+	"imports": {
+		"#lib": "./src/lib/index.js",
+		"#lib/*": "./src/lib/*"
 	}
 }

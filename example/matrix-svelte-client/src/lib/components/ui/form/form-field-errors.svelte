@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as FormPrimitive from 'formsnap';
-	import { cn, type WithoutChild } from '$lib/utils.svelte.js';
+	import { cn, type WithoutChild } from '#lib/utils.svelte.js';
 
 	let {
 		ref = $bindable(null),

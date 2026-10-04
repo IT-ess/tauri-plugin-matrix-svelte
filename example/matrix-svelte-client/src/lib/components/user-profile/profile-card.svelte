@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { Card, CardContent, CardFooter } from '$lib/components/ui/card';
-	import { Button } from '$lib/components/ui/button';
+	import { Card, CardContent, CardFooter } from '#lib/components/ui/card/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { toast } from 'svelte-sonner';
-	import EditableField from '$lib/components/common/editable-field.svelte';
+	import EditableField from '#lib/components/common/editable-field.svelte';
 	import { LoaderIcon } from '@lucide/svelte';
-	import { m } from '$lib/paraglide/messages';
-	import EditableAvatar from '$lib/components/common/editable-avatar.svelte';
+	import { m } from '#lib/paraglide/messages.js';
+	import EditableAvatar from '#lib/components/common/editable-avatar.svelte';
 	import { loginStore } from '../../../hooks.client';
 	import { editUserInformation } from 'tauri-plugin-matrix-svelte-api';
 

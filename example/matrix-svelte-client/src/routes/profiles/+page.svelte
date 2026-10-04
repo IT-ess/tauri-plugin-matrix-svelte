@@ -1,9 +1,9 @@
 <script lang="ts">
-	import ProfileList from '$lib/components/profiles/profile-list.svelte';
+	import ProfileList from '#lib/components/profiles/profile-list.svelte';
 	import type { PageProps } from './$types';
 	import { ChevronLeft } from '@lucide/svelte';
-	import { m } from '$lib/paraglide/messages';
-	import { gotoRoomsList } from '$lib/utils.svelte';
+	import { m } from '#lib/paraglide/messages.js';
+	import { gotoRoomsList } from '#lib/utils.svelte.js';
 
 	let { data }: PageProps = $props();
 </script>

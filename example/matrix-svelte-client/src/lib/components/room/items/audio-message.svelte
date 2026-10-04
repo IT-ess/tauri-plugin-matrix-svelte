@@ -1,6 +1,6 @@
 <script lang="ts">
-	import AudioPlayer from '$lib/components/audio/audio-player.svelte';
-	import { getCustomMxcUriFromOriginal } from '$lib/utils.svelte';
+	import AudioPlayer from '#lib/components/audio/audio-player.svelte';
+	import { getCustomMxcUriFromOriginal } from '#lib/utils.svelte.js';
 	import {
 		audioMessageSourceIsPlain,
 		type AudioMessageEventContent

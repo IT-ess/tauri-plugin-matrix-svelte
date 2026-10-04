@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import RoomHeader from '$lib/components/room/room-header.svelte';
-	import RoomTimeline from '$lib/components/room/room-timeline.svelte';
+	import RoomHeader from '#lib/components/room/room-header.svelte';
+	import RoomTimeline from '#lib/components/room/room-timeline.svelte';
 
 	let { data }: PageProps = $props();
 </script>

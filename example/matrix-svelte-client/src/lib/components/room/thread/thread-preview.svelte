@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { gotoThread } from '$lib/utils.svelte';
+	import Badge from '#lib/components/ui/badge/badge.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { gotoThread } from '#lib/utils.svelte.js';
 	import { MessagesSquare } from '@lucide/svelte';
 	import type { ThreadSummary } from 'tauri-plugin-matrix-svelte-api';
 

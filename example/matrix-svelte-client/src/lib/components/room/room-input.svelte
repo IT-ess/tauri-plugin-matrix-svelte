@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import { ReplyIcon, XIcon, SendIcon, Mic } from '@lucide/svelte';
 	import { fade } from 'svelte/transition';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import type { ChangeEventHandler } from 'svelte/elements';
-	import AudioRecorder from '$lib/components/audio/audio-recorder.svelte';
-	import { getMediaFromFSPath, getThumbnailInfoFromBlob } from '$lib/utils.svelte';
+	import AudioRecorder from '#lib/components/audio/audio-recorder.svelte';
+	import { getMediaFromFSPath, getThumbnailInfoFromBlob } from '#lib/utils.svelte.js';
 	import AddMediaDrawer from '../media/add-media-drawer.svelte';
 	import { createMatrixRequest, submitAsyncRequest } from 'tauri-plugin-matrix-svelte-api';
 	import { type MediaViewerInfo } from '../media/utils';

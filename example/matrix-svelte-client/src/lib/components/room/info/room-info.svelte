@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getCustomMxcUriFromOriginal, getInitials, gotoRoom } from '$lib/utils.svelte';
+	import { getCustomMxcUriFromOriginal, getInitials, gotoRoom } from '#lib/utils.svelte.js';
 	import {
 		ChevronLeft,
 		Link,
@@ -10,14 +10,14 @@
 	} from '@lucide/svelte';
 	import { getMatrixToPermalinkForRoom, type RoomStore } from 'tauri-plugin-matrix-svelte-api';
 	import { roomsCollection } from '../../../../hooks.client';
-	import { m } from '$lib/paraglide/messages';
-	import { Button } from '$lib/components/ui/button';
-	import { Label } from '$lib/components/ui/label';
-	import { Separator } from '$lib/components/ui/separator';
-	import * as Item from '$lib/components/ui/item/index.js';
+	import { m } from '#lib/paraglide/messages.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
+	import * as Item from '#lib/components/ui/item/index.js';
 	import InviteMembers from './members/invite-members.svelte';
 	import LeaveRoom from './leave-room.svelte';
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
+	import { Avatar, AvatarFallback, AvatarImage } from '#lib/components/ui/avatar/index.js';
 	import RoomDetails from './room-details.svelte';
 	import { toast } from 'svelte-sonner';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';

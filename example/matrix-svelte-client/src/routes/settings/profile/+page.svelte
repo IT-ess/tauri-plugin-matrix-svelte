@@ -1,8 +1,8 @@
 <script lang="ts">
-	import ProfileCard from '$lib/components/user-profile/profile-card.svelte';
+	import ProfileCard from '#lib/components/user-profile/profile-card.svelte';
 	import { ChevronLeft } from '@lucide/svelte';
-	import { m } from '$lib/paraglide/messages.js';
-	import { gotoRoomsList } from '$lib/utils.svelte';
+	import { m } from '#lib/paraglide/messages.js';
+	import { gotoRoomsList } from '#lib/utils.svelte.js';
 </script>
 
 <div

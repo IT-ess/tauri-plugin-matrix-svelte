@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { decode } from 'blurhash';
-	import { cn, getCustomMxcUriFromOriginal } from '$lib/utils.svelte';
+	import { cn, getCustomMxcUriFromOriginal } from '#lib/utils.svelte.js';
 	import {
 		imageMessageSourceIsPlain,
 		type ImageMessageEventContent,

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn, type WithElementRef, type WithoutChildren } from '$lib/utils.svelte.js';
+	import { cn, type WithElementRef, type WithoutChildren } from '#lib/utils.svelte.js';
 	import type { HTMLTextareaAttributes } from 'svelte/elements';
 
 	let {
@@ -19,5 +19,4 @@
 		className
 	)}
 	bind:value
-	{...restProps}
-></textarea>
+	{...restProps}></textarea>

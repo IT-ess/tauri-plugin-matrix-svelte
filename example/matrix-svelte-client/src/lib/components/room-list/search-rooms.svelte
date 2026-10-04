@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { SearchIcon, X } from '@lucide/svelte';
-	import { Input } from '$lib/components/ui/input';
-	import { m } from '$lib/paraglide/messages';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { m } from '#lib/paraglide/messages.js';
 
 	let { searchQuery = $bindable() }: { searchQuery: string } = $props();
 </script>

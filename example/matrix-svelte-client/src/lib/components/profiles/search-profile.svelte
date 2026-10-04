@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { LoaderCircle, Search } from '@lucide/svelte';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
-	import { Input } from '$lib/components/ui/input';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
 	import ProfileItem from './profile-item.svelte';
-	import { m } from '$lib/paraglide/messages';
-	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
+	import { m } from '#lib/paraglide/messages.js';
+	import { ScrollArea } from '#lib/components/ui/scroll-area/index.js';
 	import {
 		createMatrixRequest,
 		searchUsers,

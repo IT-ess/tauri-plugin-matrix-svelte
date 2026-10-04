@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
-	import { Tooltip, TooltipContent, TooltipProvider } from '$lib/components/ui/tooltip';
-	import { Button } from '$lib/components/ui/button';
+	import { Popover, PopoverContent, PopoverTrigger } from '#lib/components/ui/popover/index.js';
+	import { Tooltip, TooltipContent, TooltipProvider } from '#lib/components/ui/tooltip/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { Menu, ReplyIcon, SmilePlusIcon } from '@lucide/svelte';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import type { MessageAbility, ReactionsByKeyBySender } from 'tauri-plugin-matrix-svelte-api';
 
 	type Props = {

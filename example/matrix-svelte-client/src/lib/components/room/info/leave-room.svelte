@@ -1,7 +1,7 @@
 <script lang="ts">
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
-	import { m } from '$lib/paraglide/messages';
-	import { gotoRoomsList } from '$lib/utils.svelte';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
+	import { m } from '#lib/paraglide/messages.js';
+	import { gotoRoomsList } from '#lib/utils.svelte.js';
 	import { createMatrixRequest, submitAsyncRequest } from 'tauri-plugin-matrix-svelte-api';
 
 	let {

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { ChevronLeft } from '@lucide/svelte';
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
+	import { Avatar, AvatarFallback, AvatarImage } from '#lib/components/ui/avatar/index.js';
 	import {
 		getCustomMxcUriFromOriginal,
 		getInitials,
 		gotoRoomInfo,
 		gotoRoomsList,
 		roomNameToPlainString
-	} from '$lib/utils.svelte';
+	} from '#lib/utils.svelte.js';
 	import { roomsCollection } from '../../../hooks.client';
 
 	let {

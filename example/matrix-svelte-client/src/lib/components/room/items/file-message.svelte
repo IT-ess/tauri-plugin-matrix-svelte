@@ -1,13 +1,13 @@
 <script lang="ts">
-	import * as Attachment from '$lib/components/ui/attachment';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import * as Attachment from '#lib/components/ui/attachment/index.js';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import { DownloadIcon, ExternalLinkIcon, FileIcon, RotateCwIcon } from '@lucide/svelte';
-	import { getLocale } from '$lib/paraglide/runtime';
+	import { getLocale } from '#lib/paraglide/runtime.js';
 	import { BaseDirectory, exists } from '@tauri-apps/plugin-fs';
 	import { onMount } from 'svelte';
 	import { openPath } from '@tauri-apps/plugin-opener';
 	import { appCacheDir } from '@tauri-apps/api/path';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import { shareFile } from '@choochmeque/tauri-plugin-sharekit-api';
 	import { platform } from '@tauri-apps/plugin-os';
 	import {

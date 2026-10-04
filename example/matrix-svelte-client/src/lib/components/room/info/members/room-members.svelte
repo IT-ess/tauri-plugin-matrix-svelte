@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { Input } from '$lib/components/ui/input';
-	import { m } from '$lib/paraglide/messages';
-	import { getCustomMxcUriFromOriginal, getInitials, gotoRoomInfo } from '$lib/utils.svelte';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { m } from '#lib/paraglide/messages.js';
+	import { getCustomMxcUriFromOriginal, getInitials, gotoRoomInfo } from '#lib/utils.svelte.js';
 	import { ChevronLeft, Search } from '@lucide/svelte';
 	import type { FrontendRoomMember, RoomStore } from 'tauri-plugin-matrix-svelte-api';
-	import * as Item from '$lib/components/ui/item/index.js';
-	import * as Avatar from '$lib/components/ui/avatar/index.js';
+	import * as Item from '#lib/components/ui/item/index.js';
+	import * as Avatar from '#lib/components/ui/avatar/index.js';
 	import MemberActions from './member-actions.svelte';
 
 	let {

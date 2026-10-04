@@ -1,15 +1,15 @@
 <script lang="ts">
 	import DeviceItem from './device-item.svelte';
 	import { ChevronLeft } from '@lucide/svelte';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import { LoaderCircle, ShieldCheck, ShieldX } from '@lucide/svelte';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
 	import { Channel } from '@tauri-apps/api/core';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { emit } from '@tauri-apps/api/event';
 	import { MatrixSvelteEmitEvent, verifyDevice } from 'tauri-plugin-matrix-svelte-api';
 	import type { FrontendDevice as Device, VerifyDeviceEvent } from 'tauri-plugin-matrix-svelte-api';
-	import { gotoRoomsList } from '$lib/utils.svelte';
+	import { gotoRoomsList } from '#lib/utils.svelte.js';
 
 	let { data } = $props();
 

@@ -1,19 +1,19 @@
 <script lang="ts">
-	import * as Drawer from '$lib/components/ui/drawer/index.js';
-	import { m } from '$lib/paraglide/messages';
-	import * as Avatar from '$lib/components/ui/avatar/index.js';
-	import { Button } from '$lib/components/ui/button';
+	import * as Drawer from '#lib/components/ui/drawer/index.js';
+	import { m } from '#lib/paraglide/messages.js';
+	import * as Avatar from '#lib/components/ui/avatar/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { Ban, User, X } from '@lucide/svelte';
-	import { getCustomMxcUriFromOriginal, getInitials, gotoProfile } from '$lib/utils.svelte';
+	import { getCustomMxcUriFromOriginal, getInitials, gotoProfile } from '#lib/utils.svelte.js';
 	import {
 		createMatrixRequest,
 		submitAsyncRequest,
 		type FrontendRoomMember,
 		type TimelineUiState
 	} from 'tauri-plugin-matrix-svelte-api';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
-	import { Label } from '$lib/components/ui/label';
-	import { Input } from '$lib/components/ui/input';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
 
 	type ClickedUser = {
 		id: string;

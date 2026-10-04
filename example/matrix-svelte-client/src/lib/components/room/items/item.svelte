@@ -4,7 +4,7 @@
 		MediaRequestParameters,
 		TimelineItem
 	} from 'tauri-plugin-matrix-svelte-api';
-	import * as Marker from '$lib/components/ui/marker';
+	import * as Marker from '#lib/components/ui/marker/index.js';
 	import MessageLike from './message-like.svelte';
 	import Virtual from './virtual.svelte';
 

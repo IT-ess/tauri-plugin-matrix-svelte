@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Card } from '$lib/components/ui/card';
-	import { Badge } from '$lib/components/ui/badge';
+	import { Card } from '#lib/components/ui/card/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	import DeviceActions from './device-actions.svelte';
 	import {
 		ShieldCheckIcon,
@@ -10,7 +10,7 @@
 		TabletSmartphoneIcon,
 		PanelsTopLeftIcon
 	} from '@lucide/svelte';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import type { FrontendDevice as Device } from 'tauri-plugin-matrix-svelte-api';
 
 	interface Props {

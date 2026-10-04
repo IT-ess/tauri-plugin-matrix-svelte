@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import * as Marker from '$lib/components/ui/marker';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Marker from '#lib/components/ui/marker/index.js';
 	import { ArrowDownIcon } from '@lucide/svelte';
 	import { fade } from 'svelte/transition';
 	import './room.css';
@@ -24,8 +24,8 @@
 	} from 'tauri-plugin-matrix-svelte-api';
 	import { toast } from 'svelte-sonner';
 	import { afterNavigate } from '$app/navigation';
-	import { m } from '$lib/paraglide/messages';
-	import { threadRootPlaceholder } from '$lib/utils.svelte';
+	import { m } from '#lib/paraglide/messages.js';
+	import { threadRootPlaceholder } from '#lib/utils.svelte.js';
 
 	type Props = {
 		roomId: string;
@@ -63,6 +63,7 @@
 	// A thread page renders before the backend swaps the store to the thread timeline, and that
 	// timeline stays empty until its first pagination completes: show the root and a spinner meanwhile.
 	let tlState = $derived(roomStore.state.tlState);
+
 	let isThreadLoading = $derived(
 		threadRoot !== null &&
 			(tlState?.timelineKind !== 'thread' ||
@@ -286,7 +287,9 @@
 
 	// We use afterNavigate instead of onMount because sometimes the navigation
 	// is done between rooms, thus this component is already mounted
-	afterNavigate(() => {
+	afterNavigate(({ shallow }) => {
+		if (shallow) return;
+
 		if (openingFocus) {
 			// We wait for the timeline to be mounted
 			setTimeout(() => {

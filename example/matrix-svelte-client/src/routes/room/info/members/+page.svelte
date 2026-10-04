@@ -1,5 +1,5 @@
 <script lang="ts">
-	import RoomMembers from '$lib/components/room/info/members/room-members.svelte';
+	import RoomMembers from '#lib/components/room/info/members/room-members.svelte';
 	import { roomStore } from '../../../../hooks.client';
 	import type { PageProps } from './$types';
 

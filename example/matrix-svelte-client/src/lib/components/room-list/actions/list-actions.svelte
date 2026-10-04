@@ -4,11 +4,11 @@
 		DropdownMenuContent,
 		DropdownMenuItem,
 		DropdownMenuTrigger
-	} from '$lib/components/ui/dropdown-menu';
-	import { Button } from '$lib/components/ui/button';
+	} from '#lib/components/ui/dropdown-menu/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { Hash, Plus, UserPen, Users } from '@lucide/svelte';
 	import CreateDmRoom from './create-dm-room.svelte';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import CreateRoom from './create-room.svelte';
 	import AddRoomByAddress from './add-room-by-address.svelte';
 
