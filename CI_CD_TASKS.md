@@ -130,6 +130,13 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
   - upload with `release upload … --framework tauri`
 - Every build job checks out `ref: <tag>` with `submodules: recursive`.
 
+- **As built (2026-10-04)** — what changed from the plan above:
+  - **Bundle staging.** `cn --framework tauri` only finds bundles under `<dir>/target/**/release/bundle`, next to `tauri.conf.json`. Our `target/` is at the workspace root. Running `cn` from the example dir loops forever through `node_modules` → repo root. So each build job moves its bundles plus `tauri.conf.json` into `$RUNNER_TEMP/cn` and uploads from there. This was verified locally: `cn` finds the version and scans for assets.
+  - **Rust setup.** `dtolnay/rust-toolchain` + `Swatinem/rust-cache`, not `actions-rust-lang/setup-rust-toolchain`. That action exports `RUSTFLAGS=-D warnings`, which overrides the `.cargo/config.toml` target flags and fails on any warning.
+  - **Dry runs.** A dry run pushes the release commit to `ci-dryrun/<version>` (no tag). It drafts and uploads on the CN channel **`dryrun`**, so it never collides with real versions. Later jobs check out the exact commit SHA.
+  - **Temporary push trigger.** `push: branches: [ci/release-pipeline]` is always a dry run. `workflow_dispatch` only works once the file is on main. **Remove it before merging.**
+  - **Real releases** refuse to run outside `main`, and push `main` and the tag atomically.
+
 - [ ] **Gate 3:** run the workflow from a test branch with `bump=patch`. Push to a throwaway branch instead of main, guarded by an input `dry_run` that skips the push. Check that:
 - the CN draft shows the deb, rpm, AppImage and the `.sig` files
 - the CHANGELOG diff is correct
