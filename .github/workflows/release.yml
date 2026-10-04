@@ -160,9 +160,24 @@ jobs:
             mkdir -p "$stage/$(dirname "$b")"
             mv "$b" "$stage/$b"
           done
+          # cn 0.13 uploads .rpm only as a download (no update platform/signature),
+          # so it gets its own explicit upload below.
+          mkdir -p "$RUNNER_TEMP/rpm"
+          for r in "$stage"/target/release/bundle/rpm/*.rpm*; do [ -e "$r" ] && mv "$r" "$RUNNER_TEMP/rpm/"; done
+          ls -l "$RUNNER_TEMP/rpm"
           find "$stage/target" -maxdepth 5 -type f \( -name '*.sig' -o -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' -o -name '*.exe' -o -name '*.msi' -o -name '*.dmg' -o -name '*.tar.gz' \)
       - uses: crabnebula-dev/cloud-release@v0
         with:
           working-directory: ${{ runner.temp }}/cn
           command: release upload ${{ env.CN_APPLICATION }} --framework tauri ${{ env.CN_CHANNEL }}
+          api-key: ${{ secrets.CN_API_KEY }}
+      - name: Upload rpm as an update bundle
+        if: runner.os == 'Linux'
+        uses: crabnebula-dev/cloud-release@v0
+        with:
+          working-directory: ${{ runner.temp }}/rpm
+          command: >-
+            release upload ${{ env.CN_APPLICATION }} ${{ needs.prepare.outputs.version }}
+            --file matrix-svelte-client-${{ needs.prepare.outputs.version }}-1.x86_64.rpm
+            --update-platform linux-x86_64-rpm --public-platform rpm-x86_64 ${{ env.CN_CHANNEL }}
           api-key: ${{ secrets.CN_API_KEY }}
