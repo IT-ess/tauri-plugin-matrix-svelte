@@ -148,7 +148,7 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 
 ## Phase 4 — Windows + macOS legs
 **Subtasks:**
-- [ ] **4a: Windows leg.** Add `windows-latest` to the `build_desktop` matrix (unsigned). It uploads the NSIS + MSI installers and their `.sig` files.
+- [x] **4a: Windows leg.** Passed 2026-10-05 on run 37236496049. The `dryrun` draft holds `_x64-setup.exe` (`windows-x86_64-nsis` / `nsis-x86_64`) and `_x64_en-US.msi` (`windows-x86_64-msi` / `wix-x86_64`), both signed. The job took 42 min on a cold cache. Actions are on their Node 24 majors, with no deprecation annotations. Still to do: install the `.exe` on a Windows machine and check it starts. Add `windows-latest` to the `build_desktop` matrix (unsigned). It uploads the NSIS + MSI installers and their `.sig` files.
 - [ ] **4b: macOS leg.** Blocked until the user adds the Apple secrets: `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `MACOS_PROVISION_PROFILE`, `APPLE_API_ISSUER`, `APPLE_API_KEY_ID`, `APPLE_API_KEY`. Add `macos-latest` to the matrix, with a macOS-only step that decodes the profile and writes the `.p8`, and the `--target aarch64-apple-darwin --config …` build described below. Gate 4 can only be ticked once 4b is done.
 
 - **Windows** (windows-latest): same build, unsigned. CN gets the NSIS and MSI installers plus their `.sig` files.
