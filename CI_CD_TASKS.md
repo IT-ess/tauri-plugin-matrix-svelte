@@ -178,6 +178,9 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
   - **NDK.** Pinned to `30.0.16248370` (r30) and installed with the runner's preinstalled `sdkmanager`, so no `setup-android`/`setup-ndk` actions.
   - **JDK.** 25 via `actions/setup-java@v6`.
   - **Upload.** The APK is renamed to `matrix-svelte-client_<version>_aarch64.apk` and uploaded with an explicit `--file`, since cn's mobile auto-discovery is undocumented.
+- **CI results (2026-10-16):**
+  - **Build.** Runs 38939749992 and 38942220649 built and uploaded `matrix-svelte-client_0.4.1_aarch64.apk` (55 MB) to the `dryrun` draft. The job took 17 min on a cold cache.
+  - **Signature check.** The "Verify APK signature" step pins the release certificate SHA-256 (`d0409d42…8a317f`) and passed. Remaining: the device checks below.
 - [ ] **Gate 5:** the signed APK is on the CN draft, and it installs and logs in on a device. Also confirm a cold push still works, since R8 runs in release builds (see the memory note).
 
 ## Phase 6 — iOS leg
