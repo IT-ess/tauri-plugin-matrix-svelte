@@ -239,6 +239,16 @@ jobs:
           [ "${#apks[@]}" -eq 1 ] || { echo "::error::expected 1 release APK, found: ${apks[*]}"; exit 1; }
           mkdir -p "$RUNNER_TEMP/apk"
           cp "${apks[0]}" "$RUNNER_TEMP/apk/matrix-svelte-client_${VERSION}_aarch64.apk"
+      # Android only installs an update signed with the same key as the installed app,
+      # so refuse to ship an APK signed with anything but the release key.
+      - name: Verify APK signature
+        env:
+          RELEASE_CERT_SHA256: d0409d42cd8841761a342bb05165f0fffc13f4f41f40fda8bd3fe351dd8a317f
+        run: |
+          apksigner="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner"
+          "$apksigner" verify --print-certs "$RUNNER_TEMP/apk/matrix-svelte-client_${VERSION}_aarch64.apk" | tee "$RUNNER_TEMP/certs.txt"
+          grep -q "SHA-256 digest: $RELEASE_CERT_SHA256" "$RUNNER_TEMP/certs.txt" \
+            || { echo "::error::APK is not signed with the release key"; exit 1; }
       # Explicit --file: cn's mobile auto-discovery isn't documented, and the Gradle
       # output name (app-universal-release.apk) says nothing about the app or version.
       - uses: crabnebula-dev/cloud-release@v0
