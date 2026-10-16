@@ -173,6 +173,11 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 - Build: `pnpm tauri android build --apk --target aarch64`. A single ABI matches `.cargo/config.toml` and halves build time.
 - Upload with `--framework tauri`. If CN doesn't pick up the APK, upload it explicitly with `--file <apk>`.
 
+- **As built (2026-10-16):**
+  - **Secrets.** `ANDROID_KEY_BASE64`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD` were set from the local `keystore.properties`, so CI uses the same keystore as local builds.
+  - **NDK.** Pinned to `30.0.16248370` (r30) and installed with the runner's preinstalled `sdkmanager`, so no `setup-android`/`setup-ndk` actions.
+  - **JDK.** 25 via `actions/setup-java@v6`.
+  - **Upload.** The APK is renamed to `matrix-svelte-client_<version>_aarch64.apk` and uploaded with an explicit `--file`, since cn's mobile auto-discovery is undocumented.
 - [ ] **Gate 5:** the signed APK is on the CN draft, and it installs and logs in on a device. Also confirm a cold push still works, since R8 runs in release builds (see the memory note).
 
 ## Phase 6 — iOS leg

@@ -187,3 +187,62 @@ jobs:
             --file matrix-svelte-client-${{ needs.prepare.outputs.version }}-1.x86_64.rpm
             --update-platform linux-x86_64-rpm --public-platform rpm-x86_64 ${{ env.CN_CHANNEL }}
           api-key: ${{ secrets.CN_API_KEY }}
+
+  build_android:
+    needs: [prepare, draft]
+    runs-on: ubuntu-24.04
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      # Same NDK as local builds (r30).
+      NDK_VERSION: 30.0.16248370
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+          submodules: recursive
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          # Single ABI: .cargo/config.toml only tunes aarch64, and it halves build time.
+          targets: aarch64-linux-android
+      - uses: Swatinem/rust-cache@v2
+      - name: Install Android NDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" > /dev/null
+          echo "NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Android signing
+        working-directory: example/matrix-svelte-client/src-tauri/gen/android
+        env:
+          ANDROID_KEY_BASE64: ${{ secrets.ANDROID_KEY_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          base64 -d <<< "$ANDROID_KEY_BASE64" > "$RUNNER_TEMP/keystore.jks"
+          printf 'keyAlias=%s\npassword=%s\nstoreFile=%s\n' \
+            "$ANDROID_KEY_ALIAS" "$ANDROID_KEY_PASSWORD" "$RUNNER_TEMP/keystore.jks" > keystore.properties
+      - name: Build
+        working-directory: example/matrix-svelte-client
+        run: pnpm tauri android build --apk --target aarch64
+      - name: Stage APK
+        run: |
+          mapfile -t apks < <(find example/matrix-svelte-client/src-tauri/gen/android/app/build/outputs/apk -name '*-release.apk')
+          [ "${#apks[@]}" -eq 1 ] || { echo "::error::expected 1 release APK, found: ${apks[*]}"; exit 1; }
+          mkdir -p "$RUNNER_TEMP/apk"
+          cp "${apks[0]}" "$RUNNER_TEMP/apk/matrix-svelte-client_${VERSION}_aarch64.apk"
+      # Explicit --file: cn's mobile auto-discovery isn't documented, and the Gradle
+      # output name (app-universal-release.apk) says nothing about the app or version.
+      - uses: crabnebula-dev/cloud-release@v0
+        with:
+          working-directory: ${{ runner.temp }}/apk
+          command: release upload ${{ env.CN_APPLICATION }} ${{ env.VERSION }} --file matrix-svelte-client_${{ env.VERSION }}_aarch64.apk ${{ env.CN_CHANNEL }}
+          api-key: ${{ secrets.CN_API_KEY }}
