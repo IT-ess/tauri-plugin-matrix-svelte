@@ -256,3 +256,66 @@ jobs:
           working-directory: ${{ runner.temp }}/apk
           command: release upload ${{ env.CN_APPLICATION }} ${{ env.VERSION }} --file matrix-svelte-client_${{ env.VERSION }}_aarch64.apk ${{ env.CN_CHANNEL }}
           api-key: ${{ secrets.CN_API_KEY }}
+
+  # Runs only when every build leg succeeded, so a release is never half-published.
+  publish:
+    needs: [prepare, build_desktop, build_android]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: notes
+      - name: Publish on CrabNebula
+        uses: crabnebula-dev/cloud-release@v0
+        with:
+          command: release publish ${{ env.CN_APPLICATION }} ${{ env.VERSION }} ${{ env.CN_CHANNEL }}
+          api-key: ${{ secrets.CN_API_KEY }}
+      - name: Read published assets
+        id: show
+        uses: crabnebula-dev/cloud-release@v0
+        with:
+          command: release show ${{ env.CN_APPLICATION }} ${{ env.VERSION }} ${{ env.CN_CHANNEL }}
+          api-key: ${{ secrets.CN_API_KEY }}
+      # The GitHub release only links to CrabNebula; no binaries are attached.
+      - name: Write release body
+        env:
+          RELEASE_JSON: ${{ steps.show.outputs.stdout }}
+          BASE_URL: https://cdn.crabnebula.app/download/${{ env.CN_APPLICATION }}/latest
+          QUERY: ${{ env.DRY_RUN == 'true' && '?channel=dryrun' || '' }}
+        run: |
+          {
+            cat notes.md
+            printf '\n## Downloads\n\nHosted on CrabNebula Cloud. Desktop apps update themselves.\n\n| Platform | File |\n|---|---|\n'
+            jq -r --arg base "$BASE_URL" --arg q "$QUERY" '
+              def kind:
+                if endswith(".dmg") then "macOS (Apple silicon)"
+                elif endswith("-setup.exe") then "Windows (.exe installer)"
+                elif endswith(".msi") then "Windows (.msi installer)"
+                elif endswith(".AppImage") then "Linux (AppImage)"
+                elif endswith(".deb") then "Linux (.deb: Debian, Ubuntu)"
+                elif endswith(".rpm") then "Linux (.rpm: Fedora, openSUSE)"
+                elif endswith(".apk") then "Android (arm64)"
+                elif endswith(".ipa") then "iOS (Ad Hoc: registered devices only)"
+                else empty end;
+              [.assets[] | .filename as $f | ($f | kind) as $l
+                | "| \($l) | [\($f)](\($base)/\($f)\($q)) |"] | sort | .[]
+            ' <<< "$RELEASE_JSON"
+          } > body.md
+          cat body.md
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ needs.prepare.outputs.sha }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            # Draft releases don't create their tag, so this leaves no trace outside Releases.
+            gh release create "dryrun-$VERSION" -R "$GITHUB_REPOSITORY" --draft --target "$SHA" \
+              --title "[dry run] $VERSION" --notes-file body.md
+          else
+            gh release create "$VERSION" -R "$GITHUB_REPOSITORY" --verify-tag \
+              --title "$VERSION" --notes-file body.md
+          fi

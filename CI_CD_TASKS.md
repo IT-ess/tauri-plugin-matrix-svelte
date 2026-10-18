@@ -205,6 +205,12 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
   3. No binaries are attached to the GitHub release; it only references CN.
 - **Recovery:** if a build leg fails, use "Re-run failed jobs". The tag and draft already exist, so re-running the whole workflow would bump again. Document this in `CI_CD_TASKS.md`.
 
+- **As built (2026-10-18):**
+  - **When it runs.** The `publish` job needs every build leg, so a failure anywhere means nothing is published.
+  - **CrabNebula.** It runs `cn release publish <app> <version>`, then reads the published asset list with `cn release show`.
+  - **Release body.** The body is built from that real asset list, mapped by file extension and skipping update-only assets such as `.app.tar.gz`, so links never point at guessed filenames.
+  - **Dry runs** publish only on the `dryrun` channel. Their links carry `?channel=dryrun`, and they create a **draft** GitHub release `dryrun-<version>`, which creates no tag.
+  - **No market-page link.** CrabNebula's public market page URL isn't documented, and the page only exists once the app is public. Add a link by hand if the app is made public.
 - [ ] **Gate 7 (dry run):** do the real `patch` release, then check that:
 - the GitHub release exists with the changelog, and every link downloads the right file
 - a desktop build of the previous version offers the update via the updater and relaunches on the new version
