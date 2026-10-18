@@ -215,6 +215,12 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 - the GitHub release exists with the changelog, and every link downloads the right file
 - a desktop build of the previous version offers the update via the updater and relaunches on the new version
 
+- **Dry-run publish results (2026-10-18, run 39162415702):**
+  - **Publish.** It created the draft GitHub release `[dry run] 0.4.1`, published CN 0.4.1 on `dryrun`, and every `latest/…?channel=dryrun` link resolves (206). The same links without the channel return 404, so production is untouched.
+  - **Updater.** For a 0.4.0 client the update endpoint returns 0.4.1 with a url and signature, on both Linux and Windows.
+  - **Updater endpoint fix.** The generic `{{target}}-{{arch}}` endpoint always serves the AppImage on Linux and the NSIS installer on Windows, so a deb, rpm or MSI install would download the wrong format. The endpoints are now `{{target}}-{{arch}}-{{bundle_type}}` first, then generic. A bundle-specific request that is up to date gets 204 and stops. An unknown platform gets 400, and the plugin moves on to the generic endpoint, which covers macOS (`app`) and dev builds. This was checked against CN and the plugin 2.13.1 source.
+  - **Versioned links.** `…/download/<app>/<version>/<file>` returns 404: CN only serves `latest/`. Links in older GitHub releases break once a newer version ships (decision pending).
+
 **Open check inside Gate 7:**
 - CN documents only `latest/...` download URLs, so links in older GitHub releases will later point to newer files.
 - Test whether replacing `latest` with the version works (`…/download/refs/matrix-svelte-client/0.4.1/<file>`).
