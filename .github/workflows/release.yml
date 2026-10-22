@@ -313,7 +313,7 @@ jobs:
         run: |
           if [ "$DRY_RUN" = "true" ]; then
             # Draft releases don't create their tag, so this leaves no trace outside Releases.
-            gh release create "dryrun-$VERSION" -R "$GITHUB_REPOSITORY" --draft --target "$SHA" \
+            gh release create "dryrun-$VERSION-$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" --draft --target "$SHA" \
               --title "[dry run] $VERSION" --notes-file body.md
           else
             gh release create "$VERSION" -R "$GITHUB_REPOSITORY" --verify-tag \
