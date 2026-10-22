@@ -17,10 +17,6 @@ on:
         description: Dry run (push the release commit to a ci-dryrun/* branch, no tag, CrabNebula "dryrun" channel)
         type: boolean
         default: false
-  # TEMPORARY (Gate 3): lets the workflow run before it exists on main. Push runs are
-  # always dry runs. Remove before merging.
-  push:
-    branches: [ci/release-pipeline]
 
 concurrency:
   group: release
@@ -28,10 +24,10 @@ concurrency:
 
 env:
   CN_APPLICATION: refs/matrix-svelte-client
-  BUMP: ${{ inputs.bump || 'patch' }}
-  DRY_RUN: ${{ github.event_name == 'push' || inputs.dry_run }}
+  BUMP: ${{ inputs.bump }}
+  DRY_RUN: ${{ inputs.dry_run }}
   # Dry runs land in a separate CrabNebula channel so they never collide with real versions.
-  CN_CHANNEL: ${{ (github.event_name == 'push' || inputs.dry_run) && '--channel dryrun' || '' }}
+  CN_CHANNEL: ${{ inputs.dry_run && '--channel dryrun' || '' }}
 
 jobs:
   prepare:

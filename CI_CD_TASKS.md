@@ -143,7 +143,7 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
   - **Bundle staging.** `cn --framework tauri` only finds bundles under `<dir>/target/**/release/bundle`, next to `tauri.conf.json`. Our `target/` is at the workspace root. Running `cn` from the example dir loops forever through `node_modules` → repo root. So each build job moves its bundles plus `tauri.conf.json` into `$RUNNER_TEMP/cn` and uploads from there. This was verified locally: `cn` finds the version and scans for assets.
   - **Rust setup.** `dtolnay/rust-toolchain` + `Swatinem/rust-cache`, not `actions-rust-lang/setup-rust-toolchain`. That action exports `RUSTFLAGS=-D warnings`, which overrides the `.cargo/config.toml` target flags and fails on any warning.
   - **Dry runs.** A dry run pushes the release commit to `ci-dryrun/<version>` (no tag). It drafts and uploads on the CN channel **`dryrun`**, so it never collides with real versions. Later jobs check out the exact commit SHA.
-  - **Temporary push trigger.** `push: branches: [ci/release-pipeline]` is always a dry run. `workflow_dispatch` only works once the file is on main. **Remove it before merging.**
+  - **Temporary push trigger.** `push: branches: [ci/release-pipeline]` was always a dry run; it let the workflow run before it existed on main. **Removed 2026-10-22**, together with the temporary `minimumReleaseAge: 1`. From now on dry runs go through `workflow_dispatch` with `dry_run: true`.
   - **Real releases** refuse to run outside `main`, and push `main` and the tag atomically.
 
   - **pnpm pinned** to 11.3.0 via `packageManager` in the root `package.json`. pnpm 11.28 rejects the git-hosted notifications API package unless `allowBuilds` lists its full tarball URL.
