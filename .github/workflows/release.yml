@@ -110,8 +110,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # 22.04: oldest supported glibc, so the AppImage runs on more distros.
-          - os: ubuntu-22.04
+          # 24.04 (glibc 2.39): desktop users are expected to run current distros.
+          - os: ubuntu-24.04
           # Unsigned for now (SmartScreen warns); the updater still verifies its own .sig.
           - os: windows-latest
           # macOS (aarch64, signed + notarized) pending: see Phase 4 in CI_CD_TASKS.md.

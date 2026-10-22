@@ -99,7 +99,7 @@ input `patch|minor|major`, optional `dry_run`). Design notes and gate history: `
   entry with git-cliff (`cliff.toml`, from the Conventional Commits since the last tag), commits
   `chore(release): X`, and pushes `main` and tag `X` atomically. Tags have **no `v` prefix**. Don't bump versions by
   hand; the script refuses to write anything if a file doesn't have its expected number of version fields.
-- **Builds**: Linux (ubuntu-22.04 on purpose: older glibc, so the deb/rpm/AppImage run on Debian 12 / Ubuntu 22.04),
+- **Builds**: Linux on ubuntu-24.04 (glibc 2.39, so the deb/rpm/AppImage need a current distro, e.g. Ubuntu 24.04+),
   Windows (NSIS + MSI, **unsigned**), and Android (single aarch64 APK). Each leg uploads to the CrabNebula Cloud draft
   of app `refs/matrix-svelte-client`. `publish` runs only if every leg succeeded. It publishes the CN release and
   creates the GitHub release, which links each asset by CN permalink (`cdn.crabnebula.app/asset/<id>`) and attaches no

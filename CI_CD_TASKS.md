@@ -132,7 +132,7 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
   5. commit `chore(release): X`, tag `X`, push main and the tag
   6. outputs: `version`; `notes.md` is passed on as an artifact
 - **Job `draft`:** checkout at the tag, then `cloud-release` running `release draft $CN_APPLICATION --framework tauri --notes-file notes.md`.
-- **Job `build_desktop`, Linux leg only for now** (ubuntu-22.04, chosen for the older glibc so the AppImage runs on more distros):
+- **Job `build_desktop`, Linux leg only for now** (ubuntu-22.04 at first for its older glibc; **moved to ubuntu-24.04 on 2026-10-22** because desktop users are expected to run current distros, so binaries need glibc ≥ 2.39):
   - apt packages: `libwebkit2gtk-4.1-dev librsvg2-dev libssl-dev libayatana-appindicator3-dev libdbus-1-dev build-essential pkg-config`
   - Rust: `actions-rust-lang/setup-rust-toolchain` with cache, keyed per job
   - build from the example dir: `pnpm install --frozen-lockfile && pnpm tauri build`, with the `TAURI_SIGNING_*` env set
