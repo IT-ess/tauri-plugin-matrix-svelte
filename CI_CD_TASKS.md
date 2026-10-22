@@ -2,9 +2,10 @@
 
 Status: phases run in order; tick a gate only once it passes, and start the next phase only after its gate is ticked.
 
-
 ## Context
+
 There is no `.github/` directory, no CHANGELOG, and no updater. Releases (tags `0.2.0`…`0.4.0`, no `v` prefix) are built by hand, and iOS goes through `gen/apple/export-appstore.sh`. The goal is one GitHub Actions workflow that:
+
 - bumps every version,
 - writes a CHANGELOG entry,
 - builds Windows / macOS arm64 / Linux (deb, rpm, AppImage) / Android / iOS,
@@ -15,6 +16,7 @@ There is no `.github/` directory, no CHANGELOG, and no updater. Releases (tags `
 The repo is public, so standard GitHub-hosted runners (including macOS arm64) cost nothing.
 
 **Decisions made with the user:**
+
 - **Trigger:** manual `workflow_dispatch` with a `patch|minor|major` input.
 - **macOS:** signed and notarized.
 - **iOS:** Ad Hoc IPA hosted on CN.
@@ -23,6 +25,7 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 **Tracking:** this file is the checklist. Each phase ends with a gate.
 
 ## Facts the design relies on (verified)
+
 - **Version locations** (all currently `0.4.0`):
   - root `Cargo.toml` `[workspace.package].version` (the plugin and the example both inherit it)
   - root `package.json`
@@ -52,12 +55,15 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
   - Download URL: `https://cdn.crabnebula.app/download/<org>/<app>/latest/<file>` or `…/latest/platform/<public-platform>`.
 
 ## Phase 0 — Accounts & secrets
+
 **Already done (verified):**
+
 - The CN app exists: **`CN_APPLICATION=refs/matrix-svelte-client`**. `cn_linux release list` on that slug returns an empty list, while an unknown slug errors.
 - `CN_API_KEY`, `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` are set in the local shell. They are shared with the `refs` project, so the updater **pubkey** is the one in `~/Documents/Repos/Refs/tauri-refs/refs-app/src-tauri/tauri.conf.json` (`plugins.updater.pubkey`).
 - The GitHub repo currently has **no** secrets (`gh secret list` is empty).
 
 **Steps:**
+
 1. Copy the three values from the local env into repo secrets without echoing them: `gh secret set CN_API_KEY --body "$CN_API_KEY"`, and the same for the other two. Ask for confirmation before running.
 2. Add the remaining repo secrets (user):
    - **macOS:**
@@ -73,9 +79,10 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 - [ ] **Gate 0:**
 - `gh secret list` shows every secret.
 - [x] The reused pubkey matches the private key (2026-10-04: signed with `tauri signer sign -f <keyfile>`; ed25519 signature verified against the refs pubkey, key IDs match).
-- [x] `TAURI_SIGNING_PRIVATE_KEY` secret holds the key **content** (re-set 2026-10-04 20:12Z). Locally the env var is a *file path*, and Tauri accepts either, but CI needs the content. Set it with `gh secret set TAURI_SIGNING_PRIVATE_KEY < "$TAURI_SIGNING_PRIVATE_KEY"`.
+- [x] `TAURI_SIGNING_PRIVATE_KEY` secret holds the key **content** (re-set 2026-10-04 20:12Z). Locally the env var is a _file path_, and Tauri accepts either, but CI needs the content. Set it with `gh secret set TAURI_SIGNING_PRIVATE_KEY < "$TAURI_SIGNING_PRIVATE_KEY"`.
 
 ## Phase 1 — Version bump + changelog (local first)
+
 - **`scripts/bump-version.mjs <patch|minor|major>`** (plain Node, no dependencies):
   - computes the next version from root `package.json`
   - rewrites every file in the version list above with anchored regexes
@@ -92,6 +99,7 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 - Discard the branch afterwards.
 
 ## Phase 2 — Updater in the example app (desktop only)
+
 - Cargo dependencies, desktop-only (`cfg(not(any(target_os="android", target_os="ios")))`):
   - `tauri-plugin-updater` and `tauri-plugin-process`, added directly to the example's `Cargo.toml`: `[workspace.dependencies]` is only for deps shared with the plugin
   - `tauri-plugin-dialog` already exists
@@ -114,6 +122,7 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 - Phase 5 note: pin NDK `30.0.16248370` (local version).
 
 ## Phase 3 — Workflow skeleton: prepare + draft + Linux (`.github/workflows/release.yml`)
+
 - **Workflow settings:** `on: workflow_dispatch` (input `bump`), `concurrency: release` with `cancel-in-progress: false` (unlike the CN doc: a release must never be cancelled halfway), `env.CN_APPLICATION: refs/matrix-svelte-client`.
 - **Job `prepare`** (ubuntu-24.04, `contents: write`):
   1. checkout with `fetch-depth: 0` and submodules
@@ -147,9 +156,11 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 - then purge the draft in CN
 
 ## Phase 4 — Windows + macOS legs
+
 **Subtasks:**
+
 - [x] **4a: Windows leg.** Passed 2026-10-05 on run 37236496049. The `dryrun` draft holds `_x64-setup.exe` (`windows-x86_64-nsis` / `nsis-x86_64`) and `_x64_en-US.msi` (`windows-x86_64-msi` / `wix-x86_64`), both signed. The job took 42 min on a cold cache. Actions are on their Node 24 majors, with no deprecation annotations. Still to do: install the `.exe` on a Windows machine and check it starts. Add `windows-latest` to the `build_desktop` matrix (unsigned). It uploads the NSIS + MSI installers and their `.sig` files.
-- [ ] **4b: macOS leg.** Blocked until the user adds the Apple secrets: `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `MACOS_PROVISION_PROFILE`, `APPLE_API_ISSUER`, `APPLE_API_KEY_ID`, `APPLE_API_KEY`. Add `macos-latest` to the matrix, with a macOS-only step that decodes the profile and writes the `.p8`, and the `--target aarch64-apple-darwin --config …` build described below. Gate 4 can only be ticked once 4b is done.
+- [ ] **4b: macOS leg.** **Postponed** (2026-10-22) until the Apple Developer membership is renewed. Full instructions and the YAML are in `CI_CD_APPLE.md`. Blocked until the user adds the Apple secrets: `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `MACOS_PROVISION_PROFILE`, `APPLE_API_ISSUER`, `APPLE_API_KEY_ID`, `APPLE_API_KEY`. Add `macos-latest` to the matrix, with a macOS-only step that decodes the profile and writes the `.p8`, and the `--target aarch64-apple-darwin --config …` build described below. Gate 4 can only be ticked once 4b is done.
 
 - **Windows** (windows-latest): same build, unsigned. CN gets the NSIS and MSI installers plus their `.sig` files.
 - **macOS** (macos-latest, arm64):
@@ -164,6 +175,7 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 - The app launches and keychain session persistence works, which proves the provisioning profile is embedded.
 
 ## Phase 5 — Android leg
+
 - Runner ubuntu-latest, with:
   - JDK 25 (temurin, `actions/setup-java@v4`; Gradle 9.6 supports it)
   - `android-actions/setup-android@v3`
@@ -184,6 +196,9 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 - [ ] **Gate 5:** the signed APK is on the CN draft, and it installs and logs in on a device. Also confirm a cold push still works, since R8 runs in release builds (see the memory note).
 
 ## Phase 6 — iOS leg
+
+**Postponed** (2026-10-22) with the macOS leg until the Apple Developer membership is renewed. The up-to-date instructions and YAML are in `CI_CD_APPLE.md`; the outline below is the original plan.
+
 - Runner macos-latest, with `maxim-lobanov/setup-xcode` (latest-stable) and `rustup target add aarch64-apple-ios`.
 - Signing setup:
   - create a temporary keychain and import `IOS_DIST_CERTIFICATE` (`security create-keychain/import/set-key-partition-list`)
@@ -197,6 +212,7 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 - [ ] **Gate 6:** the IPA is on the CN draft, the entitlement check in the script passed, and the IPA installs on a registered device with silent pushes working.
 
 ## Phase 7 — Publish + GitHub release
+
 - **Job `publish`**, `needs: [prepare, build_desktop, build_android, build_ios]`:
   1. `cloud-release` runs `release publish $CN_APPLICATION --framework tauri`
   2. `gh release create X --notes-file body.md`, where `body.md` is `notes.md` plus a downloads table of CN links:
@@ -223,16 +239,19 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
   - **Permalinks instead (2026-10-22).** The GitHub release now links each asset by its CN permalink, `https://cdn.crabnebula.app/asset/<asset id>`, with the ids read from `cn release show`. These URLs need no channel parameter, are independent of which release is latest, and serve the file under its real name. All six links were checked (206). This is the same URL form CN's update endpoint hands to the updater. Re-check one old link after the first release that follows it.
 
 **Open check inside Gate 7:**
+
 - CN documents only `latest/...` download URLs, so links in older GitHub releases will later point to newer files.
 - Test whether replacing `latest` with the version works (`…/download/refs/matrix-svelte-client/0.4.1/<file>`).
 - If it works, use versioned links. If not, keep the `latest` links labelled "latest" and also link the CN release page.
 
 ## Free-tier notes
+
 - Public repo, so standard runners (ubuntu, windows, macos arm64) are free and unlimited.
 - Jobs run in parallel: 5 build jobs, well under the 20-concurrent-job limit.
 - The rust cache shares a 10 GB repo cap. Use `Swatinem/rust-cache` (via setup-rust-toolchain) with `save-if` limited to the release workflow, so the matrix-sdk builds don't evict each other on every run.
 
 ## Files created/modified
+
 - **New:**
   - `.github/workflows/release.yml`
   - `scripts/bump-version.mjs`
@@ -247,4 +266,5 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
   - CLAUDE.md (a short "Releasing" section)
 
 ## Verification
+
 Each phase gate above is the verification step. End to end means Gate 7: a real release run, then the GitHub release and CN links checked, then an update installed from the previous version on desktop, then the APK and IPA installed on devices.
