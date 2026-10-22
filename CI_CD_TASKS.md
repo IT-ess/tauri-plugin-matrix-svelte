@@ -263,7 +263,7 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
 - **Modified:**
   - root `Cargo.toml` (workspace dependencies)
   - example `src-tauri/Cargo.toml`, `src/lib.rs`, `tauri.conf.json`, `package.json`
-  - CLAUDE.md (a short "Releasing" section)
+  - CLAUDE.md (a short "Releasing" section) — done 2026-10-22
 
 ## Verification
 
