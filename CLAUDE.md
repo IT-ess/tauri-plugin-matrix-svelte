@@ -92,7 +92,7 @@ app's builder chain — it depends on both being ready first.
 ## Releasing
 
 Releases of the example app run from `.github/workflows/release.yml` (Actions → **Release** → Run workflow on `main`,
-input `patch|minor|major`, optional `dry_run`). Design notes and gate history: `CI_CD_TASKS.md`.
+input `patch|minor|major`, optional `dry_run`). Design notes and gate history: `docs/plans/CI_CD_TASKS.md`.
 
 - **Flow**: `prepare` bumps every version with `scripts/bump-version.mjs` (Cargo workspace, both `package.json`,
   `tauri.conf.json`, iOS `project.yml` + `Info.plist`s) and runs `cargo update -w`. It then prepends the `CHANGELOG.md`
@@ -108,7 +108,7 @@ input `patch|minor|major`, optional `dry_run`). Design notes and gate history: `
 - **Dry runs** push the release commit to `ci-dryrun/<version>` (no tag), publish on CN channel `dryrun`, and create
   a *draft* GitHub release `dryrun-<version>-<run id>`. Clean those up by hand.
 - **macOS and iOS are postponed** until the Apple Developer membership is renewed. Everything needed to add them,
-  including the YAML, is in `CI_CD_APPLE.md`.
+  including the YAML, is in `docs/plans/CI_CD_APPLE.md`.
 
 Things that look removable but aren't:
 

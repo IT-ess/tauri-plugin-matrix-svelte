@@ -1,6 +1,6 @@
 # Release pipeline for the example app: bump + changelog, build every platform,
 # host the assets on CrabNebula Cloud, then reference them from a GitHub release.
-# Plan, gates and recovery notes: CI_CD_TASKS.md.
+# Plan, gates and recovery notes: docs/plans/CI_CD_TASKS.md (Apple legs: docs/plans/CI_CD_APPLE.md).
 #
 # Failed build leg? Use "Re-run failed jobs" — re-running the whole workflow bumps again.
 name: Release
@@ -114,7 +114,7 @@ jobs:
           - os: ubuntu-24.04
           # Unsigned for now (SmartScreen warns); the updater still verifies its own .sig.
           - os: windows-latest
-          # macOS (aarch64, signed + notarized) pending: see Phase 4 in CI_CD_TASKS.md.
+          # macOS (aarch64, signed + notarized) pending: see docs/plans/CI_CD_APPLE.md.
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7

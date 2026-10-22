@@ -257,7 +257,7 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
   - `scripts/bump-version.mjs`
   - `cliff.toml`
   - `CHANGELOG.md`
-  - `CI_CD_TASKS.md`
+  - `docs/plans/CI_CD_TASKS.md` and `docs/plans/CI_CD_APPLE.md`
   - `example/.../src-tauri/capabilities/desktop.json`
   - a small updater check module in the example frontend
 - **Modified:**
