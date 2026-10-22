@@ -1,0 +1,8 @@
+{
+	"$schema": "../gen/schemas/desktop-schema.json",
+	"identifier": "desktop",
+	"description": "Capability for the main desktop window (auto-updates)",
+	"windows": ["main"],
+	"permissions": ["updater:default", "process:allow-restart"],
+	"platforms": ["linux", "macOS", "windows"]
+}

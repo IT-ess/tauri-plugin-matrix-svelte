@@ -188,6 +188,9 @@ pub fn run() {
                      .expect("no main window")
                      .set_focus();
         }));
+        builder = builder
+            .plugin(tauri_plugin_updater::Builder::new().build())
+            .plugin(tauri_plugin_process::init());
     }
 
     #[cfg(mobile)]

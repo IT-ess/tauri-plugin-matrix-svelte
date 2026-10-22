@@ -89,6 +89,54 @@ Consumers must set a `matrix-svelte` key in `tauri.conf.json`'s plugin config wi
 This plugin must be initialized *after* `tauri-plugin-svelte` and `tauri-plugin-notifications` in the consuming
 app's builder chain — it depends on both being ready first.
 
+## Releasing
+
+Releases of the example app run from `.github/workflows/release.yml` (Actions → **Release** → Run workflow on `main`,
+input `patch|minor|major`, optional `dry_run`). Design notes and gate history: `docs/plans/CI_CD_TASKS.md`.
+
+- **Flow**: `prepare` bumps every version with `scripts/bump-version.mjs` (Cargo workspace, both `package.json`,
+  `tauri.conf.json`, iOS `project.yml` + `Info.plist`s) and runs `cargo update -w`. It then prepends the `CHANGELOG.md`
+  entry with git-cliff (`cliff.toml`, from the Conventional Commits since the last tag), commits
+  `chore(release): X`, and pushes `main` and tag `X` atomically. Tags have **no `v` prefix**. Don't bump versions by
+  hand; the script refuses to write anything if a file doesn't have its expected number of version fields.
+- **Builds**: Linux on ubuntu-24.04 (glibc 2.39, so the deb/rpm/AppImage need a current distro, e.g. Ubuntu 24.04+),
+  Windows (NSIS + MSI, **unsigned**), and Android (single aarch64 APK). Each leg uploads to the CrabNebula Cloud draft
+  of app `refs/matrix-svelte-client`. `publish` runs only if every leg succeeded. It publishes the CN release and
+  creates the GitHub release, which links each asset by CN permalink (`cdn.crabnebula.app/asset/<id>`) and attaches no
+  binaries. `/download/…/latest/<file>` links are not used because they break once a newer version ships.
+- **A leg failed?** Use "Re-run failed jobs". Re-running the whole workflow bumps the version again.
+- **Dry runs** push the release commit to `ci-dryrun/<version>` (no tag), publish on CN channel `dryrun`, and create
+  a *draft* GitHub release `dryrun-<version>-<run id>`. Clean those up by hand.
+- **macOS and iOS are postponed** until the Apple Developer membership is renewed. Everything needed to add them,
+  including the YAML, is in `docs/plans/CI_CD_APPLE.md`.
+
+Things that look removable but aren't:
+
+- **pnpm is pinned** to 11.3.0 via `packageManager` in the root `package.json`. Newer pnpm 11.x refuses to run the
+  build script of the git-hosted `@choochmeque/tauri-plugin-notifications-api` unless `allowBuilds` lists its full
+  tarball URL. CI also runs a root `pnpm build` before building the app, because the example imports the plugin's
+  JS package via `workspace:*` and its `dist/` is gitignored.
+- **Bundle staging**: `cn release upload --framework tauri` only finds bundles in `<dir>/target/**/release/bundle`
+  next to `tauri.conf.json`. Our `target/` is at the workspace root, and run from the example dir `cn` loops forever
+  through `node_modules` → repo root. So each leg moves its bundles into `$RUNNER_TEMP/cn` and uploads from there.
+  The `.rpm` gets its own explicit upload: cn 0.13 registers it only as a download, without its update platform or
+  signature. The APK is uploaded with an explicit `--file`.
+- **Rust setup** is `dtolnay/rust-toolchain` + `Swatinem/rust-cache`, not `actions-rust-lang/setup-rust-toolchain`.
+  That action exports `RUSTFLAGS="-D warnings"`, which fails on any warning and overrides the target flags in
+  `.cargo/config.toml`.
+- **Android signing**: the keystore comes from the `ANDROID_KEY_*` secrets (the same keystore as local builds).
+  "Verify APK signature" fails the leg unless the APK carries the release certificate, whose SHA-256 is pinned in the
+  workflow. Android only installs updates signed with the installed app's key. If the key ever changes on purpose,
+  update that digest.
+- **Desktop updater** (`tauri-plugin-updater`, desktop-only `cfg`, `capabilities/desktop.json`):
+  - **Endpoints.** `plugins.updater.endpoints` lists `{{target}}-{{arch}}-{{bundle_type}}` first, then
+    `{{target}}-{{arch}}`. The generic CN endpoint always serves the AppImage on Linux and the NSIS installer on
+    Windows, so deb, rpm and MSI installs need the bundle-specific one. CN answers 400 for unknown platforms (macOS
+    `app`, dev builds), and the updater then falls back to the generic endpoint.
+  - **Signing key.** It is shared with the `refs` project, so the `pubkey` comes from there. The repo secrets
+    `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` hold the key **content**. Locally, the env
+    var may be a path instead.
+
 ## Architecture
 
 ### Rust plugin core (`src/`)

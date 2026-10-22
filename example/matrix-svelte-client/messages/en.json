@@ -217,5 +217,9 @@
 	"room_preview_error": "Cannot get preview of this room:",
 	"timeline_focus_error": "Message is too far in this timeline or not there",
 	"timeline_pill_event_in": "Message in",
-	"timeline_new_messages": "New messages"
+	"timeline_new_messages": "New messages",
+	"update_available_title": "Update available",
+	"update_available_body": "Version {version} is available. Install it and restart now?",
+	"update_install": "Update",
+	"update_later": "Later"
 }
