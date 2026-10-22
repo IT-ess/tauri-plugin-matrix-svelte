@@ -67,8 +67,8 @@ targets:
           - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
-        CFBundleShortVersionString: 0.4.0
-        CFBundleVersion: "0.4.0"
+        CFBundleShortVersionString: 0.4.1
+        CFBundleVersion: "0.4.1"
         # Required (with the communication-notifications entitlement) for the
         # NSE's INSendMessageIntent rewrite: sender avatar as notification icon.
         NSUserActivityTypes:
@@ -133,8 +133,8 @@ targets:
       path: NotificationService/Info.plist
       properties:
         CFBundleDisplayName: matrix-svelte-client NSE
-        CFBundleShortVersionString: 0.4.0
-        CFBundleVersion: "0.4.0"
+        CFBundleShortVersionString: 0.4.1
+        CFBundleVersion: "0.4.1"
         # App Group whose container is passed to the Rust handler as
         # `data_dir` — where the plugin keeps the Matrix store both the app
         # and the extension read.

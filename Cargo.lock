@@ -3951,7 +3951,7 @@ dependencies = [
 
 [[package]]
 name = "matrix-svelte-client"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -6910,7 +6910,7 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-matrix-svelte"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "android-native-keyring-store",
  "anyhow",
