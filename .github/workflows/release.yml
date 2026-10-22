@@ -284,13 +284,13 @@ jobs:
       - name: Write release body
         env:
           RELEASE_JSON: ${{ steps.show.outputs.stdout }}
-          BASE_URL: https://cdn.crabnebula.app/download/${{ env.CN_APPLICATION }}/latest
-          QUERY: ${{ env.DRY_RUN == 'true' && '?channel=dryrun' || '' }}
         run: |
           {
             cat notes.md
             printf '\n## Downloads\n\nHosted on CrabNebula Cloud. Desktop apps update themselves.\n\n| Platform | File |\n|---|---|\n'
-            jq -r --arg base "$BASE_URL" --arg q "$QUERY" '
+            # Permalinks: /asset/<id> serves that exact asset whatever the latest release is,
+            # unlike /download/…/latest/<file>, which breaks once a newer version ships.
+            jq -r '
               def kind:
                 if endswith(".dmg") then "macOS (Apple silicon)"
                 elif endswith("-setup.exe") then "Windows (.exe installer)"
@@ -302,7 +302,7 @@ jobs:
                 elif endswith(".ipa") then "iOS (Ad Hoc: registered devices only)"
                 else empty end;
               [.assets[] | .filename as $f | ($f | kind) as $l
-                | "| \($l) | [\($f)](\($base)/\($f)\($q)) |"] | sort | .[]
+                | "| \($l) | [\($f)](https://cdn.crabnebula.app/asset/\(.id)) |"] | sort | .[]
             ' <<< "$RELEASE_JSON"
           } > body.md
           cat body.md

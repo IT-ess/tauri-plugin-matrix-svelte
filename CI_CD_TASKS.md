@@ -219,7 +219,8 @@ The repo is public, so standard GitHub-hosted runners (including macOS arm64) co
   - **Publish.** It created the draft GitHub release `[dry run] 0.4.1`, published CN 0.4.1 on `dryrun`, and every `latest/…?channel=dryrun` link resolves (206). The same links without the channel return 404, so production is untouched.
   - **Updater.** For a 0.4.0 client the update endpoint returns 0.4.1 with a url and signature, on both Linux and Windows.
   - **Updater endpoint fix.** The generic `{{target}}-{{arch}}` endpoint always serves the AppImage on Linux and the NSIS installer on Windows, so a deb, rpm or MSI install would download the wrong format. The endpoints are now `{{target}}-{{arch}}-{{bundle_type}}` first, then generic. A bundle-specific request that is up to date gets 204 and stops. An unknown platform gets 400, and the plugin moves on to the generic endpoint, which covers macOS (`app`) and dev builds. This was checked against CN and the plugin 2.13.1 source.
-  - **Versioned links.** `…/download/<app>/<version>/<file>` returns 404: CN only serves `latest/`. Links in older GitHub releases break once a newer version ships (decision pending).
+  - **Versioned links.** `…/download/<app>/<version>/<file>` returns 404: CN only serves `latest/`, so those links break once a newer version ships.
+  - **Permalinks instead (2026-10-22).** The GitHub release now links each asset by its CN permalink, `https://cdn.crabnebula.app/asset/<asset id>`, with the ids read from `cn release show`. These URLs need no channel parameter, are independent of which release is latest, and serve the file under its real name. All six links were checked (206). This is the same URL form CN's update endpoint hands to the updater. Re-check one old link after the first release that follows it.
 
 **Open check inside Gate 7:**
 - CN documents only `latest/...` download URLs, so links in older GitHub releases will later point to newer files.
