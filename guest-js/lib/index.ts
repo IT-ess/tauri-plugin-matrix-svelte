@@ -301,6 +301,18 @@ export function getMatrixToPermalinkForRoom(roomId: string): Promise<string> {
 }
 
 /**
+ * Report an event as inappropriate to the homeserver's administrator.
+ * The room must be joined.
+ */
+export function reportEvent(
+	roomId: RoomId,
+	eventId: EventId,
+	reason: string | null
+): Promise<null> {
+	return invoke('plugin:matrix-svelte|report_event', { roomId, eventId, reason });
+}
+
+/**
  *
  * Register push notifications on mobile and OS notifications on desktop. On desktop just send empty strings.
  */

@@ -4,6 +4,7 @@
 	import * as Bubble from '#lib/components/ui/bubble/index.js';
 	import {
 		Copy,
+		FlagIcon,
 		MessageSquareReply,
 		MessagesSquare,
 		ReplyIcon,
@@ -27,6 +28,7 @@
 		DropdownMenu,
 		DropdownMenuContent,
 		DropdownMenuItem,
+		DropdownMenuSeparator,
 		DropdownMenuTrigger
 	} from '#lib/components/ui/dropdown-menu/index.js';
 	import { Popover, PopoverContent } from '#lib/components/ui/popover/index.js';
@@ -36,6 +38,7 @@
 	import { cubicOut } from 'svelte/easing';
 	import EditTextMessage from './item-actions/edit-text-message.svelte';
 	import Reactions from './item-actions/reactions.svelte';
+	import ReportContent from './item-actions/report-content.svelte';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import TextMessage from './text-message.svelte';
 	import { m } from '#lib/paraglide/messages.js';
@@ -110,6 +113,7 @@
 
 	let showDropdown = $state(false);
 	let isEditing = $state(false);
+	let isReportDialogOpen = $state(false);
 	let reactionsPopoverAnchor = $state<HTMLElement | null>(null);
 
 	// Format timestamp
@@ -267,6 +271,8 @@
 	};
 
 	let canReplyTo = $derived(abilities.includes('canReplyTo'));
+	// Local echoes have no event id yet, and there is nothing left to report on a redacted event
+	let canReport = $derived(!isOwn && !!eventId && data.kind !== 'redacted');
 </script>
 
 <!-- Overlaid on the bubble's top edge (not the content's, which starts with the sender name)
@@ -505,6 +511,17 @@
 						{m.button_delete()}</DropdownMenuItem
 					>
 				{/if}
+				{#if canReport}
+					<DropdownMenuSeparator />
+					<DropdownMenuItem
+						variant="destructive"
+						onclick={() => (isReportDialogOpen = true)}
+						class="text-md"
+					>
+						<FlagIcon class="size-4" />
+						{m.report_content_action()}</DropdownMenuItem
+					>
+				{/if}
 			</DropdownMenuContent>
 		</DropdownMenu>
 	</Message.Root>
@@ -534,3 +551,7 @@
 		</div>
 	</PopoverContent>
 </Popover>
+
+{#if canReport}
+	<ReportContent bind:open={isReportDialogOpen} {roomId} {eventId} />
+{/if}

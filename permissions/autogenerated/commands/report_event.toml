@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-report-event"
+description = "Enables the report_event command without any pre-configured scope."
+commands.allow = ["report_event"]
+
+[[permission]]
+identifier = "deny-report-event"
+description = "Denies the report_event command without any pre-configured scope."
+commands.deny = ["report_event"]

@@ -598,6 +598,18 @@ pub(crate) async fn get_matrix_to_permalink_for_room(room_id: OwnedRoomId) -> Re
         .map_err(Into::into)
 }
 
+/// Report an event as inappropriate to the homeserver's administrator.
+#[command]
+pub(crate) async fn report_event(
+    room_id: OwnedRoomId,
+    event_id: OwnedEventId,
+    reason: Option<String>,
+) -> Result<()> {
+    matrix_ui_serializable::commands::report_content(room_id, event_id, reason)
+        .await
+        .map_err(Into::into)
+}
+
 //
 // Helpers
 //

@@ -38,6 +38,7 @@ Default permissions for the plugin
 - `allow-fetch-matrix-pill-info`
 - `allow-handle-matrix-uri-command`
 - `allow-get-matrix-to-permalink-for-room`
+- `allow-report-event`
 - `allow-android-share-matrix-media`
 - `allow-register-notifications`
 
@@ -722,6 +723,32 @@ Enables the register_notifications command without any pre-configured scope.
 <td>
 
 Denies the register_notifications command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:allow-report-event`
+
+</td>
+<td>
+
+Enables the report_event command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`matrix-svelte:deny-report-event`
+
+</td>
+<td>
+
+Denies the report_event command without any pre-configured scope.
 
 </td>
 </tr>
